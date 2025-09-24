@@ -571,7 +571,7 @@ Namespace UI
 
 				'Draw Shadow
 				If _owner.ShadowThickness > 0 Then
-					Dim shadowRect As New Rectangle(_owner.ShadowThickness, _owner.ShadowThickness, Me.Width, Me.Height)
+					Dim shadowRect As New Rectangle(_owner.ShadowThickness * 2, _owner.ShadowThickness * 2, Me.Width, Me.Height)
 					Using shadowBrush As New SolidBrush(Color.FromArgb(_owner.ShadowAlpha, Color.Black)) '60
 						g.FillRectangle(shadowBrush, shadowRect)
 					End Using
