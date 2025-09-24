@@ -52,7 +52,7 @@ Namespace UI
 		Private ShowDelayTimer As Timer 'Timer used to delay showing the tooltip
 		Private WithEvents HideDelayTimer As New Timer 'Timer used to delay hiding the tooltip
 		Private _hoveredcontrol As Control 'The control currently being hovered over
-		Private _shadowalpha As Integer = 100 'Used only for get/set of ShadowAlpha property to control range.
+		Private _shadowalpha As Integer = 80 'Used only for get/set of ShadowAlpha property to control range.
 		Private _fadeinrate As Integer = 50 'Used only for get/set of FadeInRate property to control range.
 		Private _fadeoutrate As Integer = 50 'Used only for get/set of FadeOutRate property to control range.
 		Private _manualTooltipActive As Boolean = False 'Used to temporarily disable mouse enter events when showing/hiding tooltips programmatically.
@@ -352,7 +352,7 @@ Namespace UI
 		''' Gets or sets a value indicating the alpha value of the tooltip shadow color.
 		''' </summary>
 		''' <returns>An <see cref="Integer"/> representing the Alpha value of the tooltip's shadow.</returns>
-		<Category("Appearance"), Description("Alpha Value of the tooltip's Shadow RGB Color, 0 - 255, 0 = Transparent"), DefaultValue(100), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		<Category("Appearance"), Description("Alpha Value of the tooltip's Shadow RGB Color, 0 - 255, 0 = Transparent"), DefaultValue(80), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
 		Public Property ShadowAlpha As Integer
 			Get
 				Return _shadowalpha
