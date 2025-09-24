@@ -287,6 +287,8 @@ Namespace UI
 		Public Property Font As Font = New Font("Segoe UI", 10, FontStyle.Regular)
 		''' <summary>
 		''' Gets or sets the background color of the tooltip.
+		''' The transparency key of the tooltip is set to SystemColors.Control(R240,G240,B240),
+		''' so setting the BackColor to this value will make the tooltip background invisible.
 		''' </summary>
 		''' <value>The <see cref="Color"/> used for the tooltip background.</value>
 		<Category("Appearance"), Description("The background color of the tooltip."), DefaultValue(GetType(Color), "WhiteSmoke"), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
