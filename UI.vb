@@ -238,13 +238,10 @@ Namespace UI
 		End Sub
 		Private Sub StartHideDelayTimer(Optional PlusFadeInRate As Boolean = False)
 			HideDelayTimer?.Stop()
-			If HideDelay < 1 Then
-				HideDelayTimer.Interval = 1
-			Else
+			If HideDelay > 0 Then
 				HideDelayTimer.Interval = HideDelay + If(PlusFadeInRate, FadeInRate * 10, 0) '*10 adjusts for the fact that the fade timer ticks ten times
+				HideDelayTimer.Start()
 			End If
-			HideDelayTimer.Start()
-			Debug.Print(HideDelayTimer.Interval.ToString)
 		End Sub
 		Private Function ResizeImage(original As Image, maxHeight As Integer) As Image
 			If original Is Nothing Then Return Nothing
@@ -396,8 +393,8 @@ Namespace UI
 		''' <summary>
 		''' Gets or sets a value for the hide delay of the tooltip.
 		''' </summary>
-		''' <value>An <see cref="Integer"/> representing the milliseconds before the tooltip is hidden. 0 means hide immediately upon leaving the control.</value>
-		<Category("Behavior"), Description("The milliseconds before the tooltip is hidden."), DefaultValue(500), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		''' <value>An <see cref="Integer"/> representing the milliseconds before the tooltip is hidden. 0 = don't hide until hidden intentionally.</value>
+		<Category("Behavior"), Description("The milliseconds before the tooltip is hidden. 0 = disable auto-hide"), DefaultValue(500), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
 		Public Property HideDelay As Integer = 500
 		''' <summary>
 		''' Gets or sets a value indicating how the image is to be aligned relative to the text.
