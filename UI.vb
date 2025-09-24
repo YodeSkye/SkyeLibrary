@@ -95,16 +95,53 @@ Namespace UI
 			End If
 			MyBase.Dispose(disposing)
 		End Sub
-        Private Sub OnMouseEnter(sender As Object, e As EventArgs)
-            If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
+		Private Sub OnMouseEnter(sender As Object, e As EventArgs)
 
-            Dim ctrl As Control = CType(sender, Control)
+			If Not _manualTooltipActive Then
+				HideTooltip()
+			End If
 
-			'Cancel any pending hide
-			HideDelayTimer.Stop()
+			'If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
+
+			'Dim ctrl As Control = CType(sender, Control)
+
+			''Cancel any pending hide
+			'HideDelayTimer.Stop()
+
+			''If we're already showing for this control, do nothing
+			'If _hoveredcontrol Is ctrl AndAlso IsVisible Then Exit Sub
+
+			''Update hovered control
+			'_hoveredcontrol = ctrl
+
+			''Check if tooltip content exists
+			'If tooltips.ContainsKey(ctrl) AndAlso Not String.IsNullOrWhiteSpace(tooltips(ctrl)) Then
+			'	' Reset and start show delay
+			'	If ShowDelayTimer Is Nothing Then
+			'		ShowDelayTimer = New Timer()
+			'		AddHandler ShowDelayTimer.Tick, AddressOf ShowTooltipDelayed
+			'	Else
+			'		ShowDelayTimer.Stop()
+			'	End If
+			'	If ShowDelay < 1 Then
+			'		ShowDelayTimer.Interval = 1
+			'	Else
+			'		ShowDelayTimer.Interval = ShowDelay
+			'	End If
+			'	ShowDelayTimer.Start()
+			'End If
+
+		End Sub
+        Private Sub OnMouseHover(sender As Object, e As EventArgs)
+			If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
+
+			Dim ctrl As Control = CType(sender, Control)
 
 			'If we're already showing for this control, do nothing
 			If _hoveredcontrol Is ctrl AndAlso IsVisible Then Exit Sub
+
+			'Cancel any pending hide
+			HideDelayTimer.Stop()
 
 			'Update hovered control
 			_hoveredcontrol = ctrl
@@ -125,7 +162,6 @@ Namespace UI
 				End If
 				ShowDelayTimer.Start()
 			End If
-
 		End Sub
 		Private Sub OnMouseLeave(sender As Object, e As EventArgs)
 			ShowDelayTimer?.Stop()
@@ -440,8 +476,9 @@ Namespace UI
 		Public Sub SetText(ctrl As Control, value As String)
 			'SetToolTip(ctrl, value)
 			If Not tooltips.ContainsKey(ctrl) Then
-				tooltips.Add(ctrl, value)
-				AddHandler ctrl.MouseEnter, AddressOf OnMouseEnter
+                tooltips.Add(ctrl, value)
+                AddHandler ctrl.MouseEnter, AddressOf OnMouseEnter
+                AddHandler ctrl.MouseHover, AddressOf OnMouseHover
 				AddHandler ctrl.MouseLeave, AddressOf OnMouseLeave
 			Else
 				tooltips(ctrl) = value
