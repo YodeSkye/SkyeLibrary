@@ -240,7 +240,7 @@ Namespace UI
 			HideTooltip()
 
 			'Measure Text Size
-			Dim textSize As Size = TextRenderer.MeasureText(request.Text, Me.Font)
+			Dim textSize As Size = TextRenderer.MeasureText(request.Text, Me.Font, New Size(0, 0), TextFormatFlags.NoPrefix)
 			Dim totalSize As Size = New Size(textSize.Width + TextPadding * 2, textSize.Height + TextPadding * 2)
 			request.Image = ResizeImage(request.Image, textSize.Height)
 			If request.Image IsNot Nothing Then totalSize.Width += request.Image.Width + TextPadding
@@ -621,7 +621,7 @@ Namespace UI
 							textRect = New Rectangle(_owner.TextPadding, _owner.TextPadding - _owner.ShadowThickness, Me.Width - TooltipImage.Width - _owner.TextPadding * 2, Me.Height - _owner.TextPadding)
 					End Select
 				End If
-				TextRenderer.DrawText(g, TooltipText, _owner.Font, textRect, _owner.ForeColor, TextFormatFlags.Left Or TextFormatFlags.Top Or TextFormatFlags.WordBreak)
+				TextRenderer.DrawText(g, TooltipText, _owner.Font, textRect, _owner.ForeColor, TextFormatFlags.Left Or TextFormatFlags.Top Or TextFormatFlags.WordBreak Or TextFormatFlags.NoPrefix)
 
 			End Sub
 			Private Sub Form_Click(sender As Object, e As EventArgs) Handles MyBase.Click
