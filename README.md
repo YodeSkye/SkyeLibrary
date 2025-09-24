@@ -1,5 +1,5 @@
 ﻿
-# 🎵 SkyeTag
+# SkyeLibrary
 
 **SkyeLibrary** is a .NET WinForms UI Control library and a Windows API Library, along with a few helper functions.
 
