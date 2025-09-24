@@ -52,8 +52,9 @@ Namespace UI
 		Private ShowDelayTimer As Timer 'Timer used to delay showing the tooltip
 		Private WithEvents HideDelayTimer As New Timer 'Timer used to delay hiding the tooltip
 		Private _hoveredcontrol As Control 'The control currently being hovered over
+		Private _shadowalpha As Integer = 100 'Used only for get/set of ShadowAlpha property to control range.
 		Private _fadeinrate As Integer = 50 'Used only for get/set of FadeInRate property to control range.
-        Private _fadeoutrate As Integer = 50 'Used only for get/set of FadeOutRate property to control range.
+		Private _fadeoutrate As Integer = 50 'Used only for get/set of FadeOutRate property to control range.
 		Private _manualTooltipActive As Boolean = False 'Used to temporarily disable mouse enter events when showing/hiding tooltips programmatically.
 
 		'Properties
@@ -348,6 +349,19 @@ Namespace UI
 		<Category("Appearance"), Description("Thickness of the tooltip shadow."), DefaultValue(2), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
 		Public Property ShadowThickness As Integer = 2
 		''' <summary>
+		''' Gets or sets a value indicating the alpha value of the tooltip shadow color.
+		''' </summary>
+		''' <returns>An <see cref="Integer"/> representing the Alpha value of the tooltip's shadow.</returns>
+		<Category("Appearance"), Description("Alpha Value of the tooltip's Shadow RGB Color, 0 - 255, 0 = Transparent"), DefaultValue(100), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property ShadowAlpha As Integer
+			Get
+				Return _shadowalpha
+			End Get
+			Set(value As Integer)
+				_shadowalpha = Math.Max(0, Math.Min(255, value))
+			End Set
+		End Property
+		''' <summary>
 		''' Gets or sets a value for the fade-in rate of the tooltip.
 		''' </summary>
 		''' <value>An <see cref="Integer"/> representing the fade-in rate in milliseconds. 0 means show immediately.</value>
@@ -524,7 +538,7 @@ Namespace UI
 				'Draw Shadow
 				If _owner.ShadowThickness > 0 Then
 					Dim shadowRect As New Rectangle(_owner.ShadowThickness, _owner.ShadowThickness, Me.Width, Me.Height)
-					Using shadowBrush As New SolidBrush(Color.FromArgb(60, Color.Black))
+					Using shadowBrush As New SolidBrush(Color.FromArgb(_owner.ShadowAlpha, Color.Black)) '60
 						g.FillRectangle(shadowBrush, shadowRect)
 					End Using
 				End If
