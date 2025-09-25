@@ -74,6 +74,7 @@ Public Class WinAPI
     Public Declare Auto Function SetWindowLong Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal nIndex As Integer, ByVal dwNewLong As Integer) As Integer
     Public Declare Auto Function SetWindowPos Lib "user32.dll" (hWnd As IntPtr, hWndInsertAfter As IntPtr, X As Integer, Y As Integer, cx As Integer, cy As Integer, uFlags As UInteger) As Boolean
     Public Declare Auto Function ShowWindow Lib "user32.dll" (hWnd As IntPtr, nCmdShow As Integer) As Boolean
+    Public Declare Auto Function IsWindow Lib "user32.dll" (ByVal hwnd As IntPtr) As Boolean
 
     'Causes a window or control to use a different set of visual style information than its class normally uses.
     Public Declare Auto Function SetWindowTheme Lib "uxtheMe.dll" (hwnd As IntPtr, appname As String, idlist As String) As Integer

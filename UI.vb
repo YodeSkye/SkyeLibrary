@@ -542,7 +542,6 @@ Namespace UI
 				Me.FormBorderStyle = FormBorderStyle.None
 				Me.ShowInTaskbar = False
 				Me.StartPosition = FormStartPosition.Manual
-				'Me.TopMost = True
 				Me.TransparencyKey = Me.BackColor
 			End Sub
 			Protected Overrides ReadOnly Property CreateParams As CreateParams
