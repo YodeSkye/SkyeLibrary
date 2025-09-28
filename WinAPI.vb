@@ -54,6 +54,11 @@ Public Class WinAPI
     Public Const WS_EX_TRANSPARENT As Integer = &H20
     Public Const WS_MINIMIZEBOX As Integer = 131072 '&H20000 'Turn on the WS_MINIMIZEBOX style flag for borderless windows so you can minimize/restore from the taskbar.
     Public Const WS_MAXIMIZE As Integer = 16777216 '&H1000000
+    Public Const RDW_INVALIDATE As UInteger = &H1
+    Public Const RDW_ERASE As UInteger = &H4
+    Public Const RDW_FRAME As UInteger = &H400
+    Public Const RDW_ALLCHILDREN As UInteger = &H80
+    Public Const RDW_UPDATENOW As UInteger = &H100
     Public Const SW_SHOWNOACTIVATE As Integer = 4
     Public Const SWP_NOACTIVATE As UInteger = &H10
     Public Const SWP_SHOWWINDOW As UInteger = &H40
@@ -79,6 +84,7 @@ Public Class WinAPI
     Public Declare Auto Function SetWindowPos Lib "user32.dll" (hWnd As IntPtr, hWndInsertAfter As IntPtr, X As Integer, Y As Integer, cx As Integer, cy As Integer, uFlags As UInteger) As Boolean
     Public Declare Auto Function ShowWindow Lib "user32.dll" (hWnd As IntPtr, nCmdShow As Integer) As Boolean
     Public Declare Auto Function IsWindow Lib "user32.dll" (ByVal hwnd As IntPtr) As Boolean
+    Public Declare Auto Function RedrawWindow Lib "user32.dll" (hWnd As IntPtr, lprcUpdate As IntPtr, hrgnUpdate As IntPtr, flags As UInteger) As Boolean
 
     'Causes a window or control to use a different set of visual style information than its class normally uses.
     Public Declare Auto Function SetWindowTheme Lib "uxtheMe.dll" (hwnd As IntPtr, appname As String, idlist As String) As Integer
