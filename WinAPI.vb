@@ -56,7 +56,9 @@ Public Class WinAPI
     Public Const SWP_NOACTIVATE As UInteger = &H10
     Public Const SWP_SHOWWINDOW As UInteger = &H40
     Public Const SWP_NOZORDER As UInteger = &H4
+    Public Const SWP_NOMOVE As UInteger = &H2
     Public Const SWP_NOSIZE As UInteger = &H1
+    Public Const SWP_FRAMECHANGED As UInteger = &H20
     Public Shared ReadOnly HWND_TOPMOST As IntPtr = New IntPtr(-1)
     Public Structure RECT
         Dim Left As Integer
