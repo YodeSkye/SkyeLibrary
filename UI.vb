@@ -551,7 +551,7 @@ Namespace UI
 					'cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOPMOST
 					'cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_NOACTIVATE
 					cp.Style = WinAPI.WS_POPUP
-					cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOOLWINDOW Or WinAPI.WS_EX_TOPMOST Or WinAPI.WS_EX_NOACTIVATE Or WinAPI.WS_EX_TRANSPARENT
+					cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOOLWINDOW Or WinAPI.WS_EX_TOPMOST Or WinAPI.WS_EX_NOACTIVATE 'Or WinAPI.WS_EX_TRANSPARENT
 					Return cp
 				End Get
 			End Property
