@@ -49,7 +49,9 @@ Public Class WinAPI
     Public Const GWL_EXSTYLE As Integer = -20
     Public Const WS_EX_TOOLWINDOW As Integer = 128 '&H80
     Public Const WS_EX_TOPMOST As Integer = &H8
+    Public Const WS_POPUP As Integer = &H80000000
     Public Const WS_EX_NOACTIVATE As Integer = &H8000000
+    Public Const WS_EX_TRANSPARENT As Integer = &H20
     Public Const WS_MINIMIZEBOX As Integer = 131072 '&H20000 'Turn on the WS_MINIMIZEBOX style flag for borderless windows so you can minimize/restore from the taskbar.
     Public Const WS_MAXIMIZE As Integer = 16777216 '&H1000000
     Public Const SW_SHOWNOACTIVATE As Integer = 4
