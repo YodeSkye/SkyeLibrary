@@ -28,6 +28,8 @@ Public Class WinAPI
     Public Const WM_NCACTIVATE As Integer = &H86
     Public Const WM_SIZE As Integer = &H5
     Public Const WM_GET_CUSTOM_DATA As UInteger = &H8001
+    Public Const WM_THEMECHANGED As Integer = &H31A
+    Public Const WM_SYSCOLORCHANGE As Integer = &H15
     Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As String, ByVal nMaxCount As Integer) As Integer
     Public Declare Auto Function SendMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As IntPtr
     Public Declare Auto Function PostMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Boolean

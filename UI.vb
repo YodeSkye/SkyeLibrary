@@ -533,28 +533,34 @@ Namespace UI
 							Catch ex As Exception 'Ignore clipboard errors
 							End Try
 						End If
-						HideTooltip()
+                        HideTooltip()
+					Case WinAPI.WM_THEMECHANGED Or WinAPI.WM_SYSCOLORCHANGE
+						'Force Reinitialization
+						If Not Me.IsDisposed Then
+							Me.RecreateHandle()
+						End If
 				End Select
 				MyBase.WndProc(m)
 			End Sub
 			Public Sub New(owner As ToolTipEX)
 				_owner = owner
-				Me.FormBorderStyle = FormBorderStyle.None
-				Me.ShowInTaskbar = False
-				Me.StartPosition = FormStartPosition.Manual
-				Me.TransparencyKey = Me.BackColor
+				Initialize()
 			End Sub
 			Protected Overrides ReadOnly Property CreateParams As CreateParams
 				Get
 					Dim cp As CreateParams = MyBase.CreateParams
-					'cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOOLWINDOW
-					'cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOPMOST
-					'cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_NOACTIVATE
 					cp.Style = WinAPI.WS_POPUP
 					cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOOLWINDOW Or WinAPI.WS_EX_TOPMOST Or WinAPI.WS_EX_NOACTIVATE 'Or WinAPI.WS_EX_TRANSPARENT
 					Return cp
 				End Get
 			End Property
+			Protected Overrides Sub OnHandleCreated(e As EventArgs)
+				MyBase.OnHandleCreated(e)
+
+				'Reapply any visual/theme settings that depend on the handle
+				Initialize()
+			End Sub
+
 			Protected Overrides Sub Dispose(disposing As Boolean)
 				If disposing Then
 					_owner = Nothing
@@ -634,6 +640,12 @@ Namespace UI
 			End Function
 
 			'Procedures
+			Private Sub Initialize()
+				Me.FormBorderStyle = FormBorderStyle.None
+				Me.ShowInTaskbar = False
+				Me.StartPosition = FormStartPosition.Manual
+				Me.TransparencyKey = Me.BackColor
+			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
 				If Me.Visible Then
 					FadeInTimer?.Stop()
