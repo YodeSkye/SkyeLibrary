@@ -236,7 +236,7 @@ Namespace UI
 			StartHideDelayTimer(True)
 		End Sub
 		Private Sub ShowTooltip(request As TooltipRequest)
-			Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{request.Text}' on {request.TargetControl.Name} at {DateTime.Now}")
+			Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{If(request.Text, "(null text)")}' " & $"on {If(request.TargetControl?.Name, "(no control)")} at {DateTime.Now}")
 
 			HideDelayTimer?.Stop()
 			HideTooltip()
@@ -650,6 +650,7 @@ Namespace UI
 				Me.TransparencyKey = Me.BackColor
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
+				Trace.WriteLine($"[Popup] popup ShowTooltip at {x},{y} {DateTime.Now}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
 				If Me.Visible Then
 					FadeInTimer?.Stop()
 					FadeOutTimer?.Stop()
@@ -677,6 +678,7 @@ Namespace UI
 				End If
 			End Sub
 			Public Sub HideTooltip()
+				Trace.WriteLine($"[ToolTipEX] popup HideTooltip called at {DateTime.Now}, IsVisible={Me.Visible}")
 				If Me.Visible Then FadeInTimer?.Stop()
 				If _owner.FadeOutRate > 0 Then
 					FadeOutTimer?.Stop()
