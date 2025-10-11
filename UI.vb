@@ -236,6 +236,8 @@ Namespace UI
 			StartHideDelayTimer(True)
 		End Sub
 		Private Sub ShowTooltip(request As TooltipRequest)
+			Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{request.Text}' on {request.TargetControl.Name} at {DateTime.Now}")
+
 			HideDelayTimer?.Stop()
 			HideTooltip()
 
@@ -270,6 +272,7 @@ Namespace UI
 		''' Hides the tooltip if it is currently visible.
 		''' </summary>
 		Public Sub HideTooltip()
+			Trace.WriteLine($"[ToolTipEX] HideTooltip called at {DateTime.Now}, IsVisible={IsVisible}")
 			If IsVisible Then popup.HideTooltip()
 		End Sub
 		Private Sub StartHideDelayTimer(Optional PlusFadeInRate As Boolean = False)
@@ -556,7 +559,7 @@ Namespace UI
 			End Property
 			Protected Overrides Sub OnHandleCreated(e As EventArgs)
 				MyBase.OnHandleCreated(e)
-
+				Trace.WriteLine($"[ToolTipPopup] Handle created at {DateTime.Now}")
 				'Reapply any visual/theme settings that depend on the handle
 				Initialize()
 			End Sub
@@ -653,10 +656,6 @@ Namespace UI
 					Me.Hide()
 				End If
 				Me.Location = New Point(x, y)
-				'If Not Me.Visible Then
-				'WinAPI.ShowWindow(Me.Handle, WinAPI.SW_SHOWNOACTIVATE)
-				'WinAPI.SetWindowPos(Me.Handle, WinAPI.HWND_TOPMOST, x, y, Me.Width, Me.Height, WinAPI.SWP_NOACTIVATE Or &H1 Or &H2)
-				'End If
 				If Me.Visible Then
 					WinAPI.SetWindowPos(Me.Handle, IntPtr.Zero, x, y, 0, 0, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_NOSIZE Or WinAPI.SWP_NOZORDER)
 				Else
