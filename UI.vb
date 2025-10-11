@@ -236,7 +236,7 @@ Namespace UI
 			StartHideDelayTimer(True)
 		End Sub
 		Private Sub ShowTooltip(request As TooltipRequest)
-			Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{If(request.Text, "(null text)")}' " & $"on {If(request.TargetControl?.Name, "(no control)")} at {DateTime.Now}")
+			Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{If(request.Text, "(null text)")}' " & $"on {If(request.TargetControl?.Name, "(no control)")}")
 
 			HideDelayTimer?.Stop()
 			HideTooltip()
@@ -272,7 +272,7 @@ Namespace UI
 		''' Hides the tooltip if it is currently visible.
 		''' </summary>
 		Public Sub HideTooltip()
-			Trace.WriteLine($"[ToolTipEX] HideTooltip called at {DateTime.Now}, IsVisible={IsVisible}")
+			Trace.WriteLine($"[ToolTipEX] HideTooltip called, IsVisible={IsVisible}")
 			If IsVisible Then popup.HideTooltip()
 		End Sub
 		Private Sub StartHideDelayTimer(Optional PlusFadeInRate As Boolean = False)
@@ -559,7 +559,7 @@ Namespace UI
 			End Property
 			Protected Overrides Sub OnHandleCreated(e As EventArgs)
 				MyBase.OnHandleCreated(e)
-				Trace.WriteLine($"[ToolTipPopup] Handle created at {DateTime.Now}")
+				Trace.WriteLine($"[ToolTipPopup] Handle created")
 				'Reapply any visual/theme settings that depend on the handle
 				Initialize()
 			End Sub
@@ -650,7 +650,7 @@ Namespace UI
 				Me.TransparencyKey = Me.BackColor
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
-				Trace.WriteLine($"[Popup] popup ShowTooltip at {x},{y} {DateTime.Now}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
+				Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
 				If Me.Visible Then
 					FadeInTimer?.Stop()
 					FadeOutTimer?.Stop()
@@ -678,7 +678,7 @@ Namespace UI
 				End If
 			End Sub
 			Public Sub HideTooltip()
-				Trace.WriteLine($"[ToolTipEX] popup HideTooltip called at {DateTime.Now}, IsVisible={Me.Visible}")
+				Trace.WriteLine($"[ToolTipPopup] HideTooltip called, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
 				If Me.Visible Then FadeInTimer?.Stop()
 				If _owner.FadeOutRate > 0 Then
 					FadeOutTimer?.Stop()
