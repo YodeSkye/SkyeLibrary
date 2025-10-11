@@ -651,54 +651,88 @@ Namespace UI
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
 				Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
+
+				'If already visible, reset state
 				If Me.Visible Then
 					FadeInTimer?.Stop()
 					FadeOutTimer?.Stop()
 					Me.Hide()
 				End If
+
+				'Ensure handle exists
+				If Not Me.IsHandleCreated Then Me.CreateHandle()
+
+				'Position the popup
 				Me.Location = New Point(x, y)
+
 				If Me.Visible Then
+					'Already visible ? just move it
 					WinAPI.SetWindowPos(Me.Handle, IntPtr.Zero, x, y, 0, 0, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_NOSIZE Or WinAPI.SWP_NOZORDER)
 				Else
+					'Force show + topmost
+					'Me.Show()                ' <— add this
+					'Me.BringToFront()        ' <— add this
+					'optional: only call Activate if you still see disappearing issues
+					'Me.Activate()
+
 					WinAPI.ShowWindow(Me.Handle, WinAPI.SW_SHOWNOACTIVATE)
 					WinAPI.SetWindowPos(Me.Handle, WinAPI.HWND_TOPMOST, x, y, Me.Width, Me.Height, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW Or WinAPI.SWP_NOZORDER)
 				End If
+
+				'Fade-in effect
 				If _owner.FadeInRate > 0 Then
 					FadeInTimer?.Stop()
 					FadeInTimer?.Dispose()
 					Me.Opacity = 0
 					FadeInTimer = New Timer()
 					AddHandler FadeInTimer.Tick,
-					Sub()
-						Me.Opacity += 0.1
-						If Me.Opacity >= 1 Then FadeInTimer.Stop()
-					End Sub
+						Sub()
+							Me.Opacity += 0.1
+							If Me.Opacity >= 1 Then FadeInTimer.Stop()
+						End Sub
 					FadeInTimer.Interval = _owner.FadeInRate
 					FadeInTimer.Start()
 				End If
+
 			End Sub
 			Public Sub HideTooltip()
-				Trace.WriteLine($"[ToolTipPopup] HideTooltip called, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
-				If Me.Visible Then FadeInTimer?.Stop()
-				If _owner.FadeOutRate > 0 Then
+
+				'If already invisible, skip redundant work
+				If Not Me.Visible AndAlso Me.Opacity <= 0 Then Return
+
+				'Stop any fade-in in progress
+				FadeInTimer?.Stop()
+
+				If _owner.FadeOutRate > 0 AndAlso Me.Visible Then
+					Trace.WriteLine($"[ToolTipPopup] HideTooltip starting fade-out, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
+					'Start fade-out
 					FadeOutTimer?.Stop()
 					FadeOutTimer?.Dispose()
 					FadeOutTimer = New Timer()
 					AddHandler FadeOutTimer.Tick,
 						Sub()
+							'Defensive: ensure handle still exists
+							If Not Me.IsHandleCreated Then
+								FadeOutTimer.Stop()
+								Return
+							End If
+
 							Me.Opacity -= 0.1
 							If Me.Opacity <= 0 Then
 								FadeOutTimer.Stop()
+								Me.Opacity = 0
 								Me.Hide()
 							End If
 						End Sub
 					FadeOutTimer.Interval = _owner.FadeOutRate
 					FadeOutTimer.Start()
 				Else
-					Me.Hide()
+					Trace.WriteLine($"[ToolTipPopup] HideTooltip immediate, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
+					'Immediate hide
+					Me.Opacity = 0
+					If Me.IsHandleCreated Then Me.Hide()
 				End If
 			End Sub
-
 			Private Function GetImageBounds(img As Image, alignment As ImageAlignments, containerWidth As Integer, y As Integer) As Rectangle
 				Dim x As Integer
 				Select Case alignment
@@ -851,7 +885,7 @@ Namespace UI
 		''' Specifies whether the image is aligned to the left or right.
 		''' </summary>
 		''' <returns></returns>
-		<Category("Appearance"), Description("Specifies whether the image is aligned to the left or right."), DefaultValue(ImageAlignmentType.Left), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		<Category("Appearance"), Description("Specifies whether the image Is aligned to the left Or right."), DefaultValue(ImageAlignmentType.Left), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
 		Public Property ImageAlignment As ImageAlignmentType
 			Get
 				Return _imageAlignment
