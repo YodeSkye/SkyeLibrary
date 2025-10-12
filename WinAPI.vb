@@ -10,6 +10,7 @@ Public Class WinAPI
     'Declarations
     Public Const HWND_BROADCAST As Integer = 65535
     Public Const WM_SYSCOMMAND As Integer = 274 '&H112
+    Public Const SC_MINIMIZE As Integer = &HF020
     Public Const SC_MAXIMIZE As UShort = 61488 '&HF030
     Public Const SC_MAXIMIZE_TBAR As UShort = 61490 '&HF032 'NOT A WINDOWS CONSTANT 'This value is passed to WndProc when DoubleClicking on the Title Bar to Maximize a window.
     Public Const SC_RESTORE As UShort = 61728 '&HF120
@@ -30,6 +31,8 @@ Public Class WinAPI
     Public Const WM_GET_CUSTOM_DATA As UInteger = &H8001
     Public Const WM_THEMECHANGED As Integer = &H31A
     Public Const WM_SYSCOLORCHANGE As Integer = &H15
+    Public Const WM_CANCELMODE As Integer = &H1F
+    Public Const WM_CLOSE As Integer = &H10
     Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As String, ByVal nMaxCount As Integer) As Integer
     Public Declare Auto Function SendMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As IntPtr
     Public Declare Auto Function PostMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Boolean
