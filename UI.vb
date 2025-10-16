@@ -1,4 +1,4 @@
-
+ï»¿
 Imports System.ComponentModel
 Imports System.Text
 
@@ -563,7 +563,6 @@ Namespace UI
 				'Reapply any visual/theme settings that depend on the handle
 				Initialize()
 			End Sub
-
 			Protected Overrides Sub Dispose(disposing As Boolean)
 				If disposing Then
 					_owner = Nothing
@@ -637,6 +636,7 @@ Namespace UI
 			Private Sub Form_Click(sender As Object, e As EventArgs) Handles MyBase.Click
 				HideTooltip()
 			End Sub
+
 			'Form Functions
 			Protected Shadows Function ShowWithoutActivation() As Boolean
 				Return True
@@ -650,33 +650,42 @@ Namespace UI
 				Me.TransparencyKey = Me.BackColor
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
-				Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
+
+				'Log with opacity for visibility debugging
+				Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}, Opacity={Me.Opacity}")
+
+				'Cancel any fade-out in progress
+				FadeOutTimer?.Stop()
+				FadeOutTimer?.Dispose()
+				FadeOutTimer = Nothing
 
 				'If already visible, reset state
 				If Me.Visible Then
 					FadeInTimer?.Stop()
-					FadeOutTimer?.Stop()
 					Me.Hide()
 				End If
 
 				'Ensure handle exists
-				If Not Me.IsHandleCreated Then Me.CreateHandle()
+				If Not Me.IsHandleCreated Then
+					Me.CreateHandle()
+					Me.Opacity = 1
+				End If
+
+				'Reset opacity before showing
+				Me.Opacity = 1
 
 				'Position the popup
 				Me.Location = New Point(x, y)
 
 				If Me.Visible Then
-					'Already visible ? just move it
+					' Already visible â†’ just move it
 					WinAPI.SetWindowPos(Me.Handle, IntPtr.Zero, x, y, 0, 0, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_NOSIZE Or WinAPI.SWP_NOZORDER)
+					Trace.WriteLine($"[ToolTipPopup] SetWindowPos applied, TopMost={Me.TopMost.ToString}")
 				Else
-					'Force show + topmost
-					'Me.Show()                ' <— add this
-					'Me.BringToFront()        ' <— add this
-					'optional: only call Activate if you still see disappearing issues
-					'Me.Activate()
-
+					' Show without stealing focus
 					WinAPI.ShowWindow(Me.Handle, WinAPI.SW_SHOWNOACTIVATE)
 					WinAPI.SetWindowPos(Me.Handle, WinAPI.HWND_TOPMOST, x, y, Me.Width, Me.Height, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW Or WinAPI.SWP_NOZORDER)
+					Trace.WriteLine($"[ToolTipPopup] SetWindowPos applied, TopMost={Me.TopMost.ToString}")
 				End If
 
 				'Fade-in effect
@@ -688,10 +697,15 @@ Namespace UI
 					AddHandler FadeInTimer.Tick,
 						Sub()
 							Me.Opacity += 0.1
-							If Me.Opacity >= 1 Then FadeInTimer.Stop()
+							If Me.Opacity >= 1 Then
+								Me.Opacity = 1
+								FadeInTimer.Stop()
+							End If
 						End Sub
 					FadeInTimer.Interval = _owner.FadeInRate
 					FadeInTimer.Start()
+				Else
+					Me.Opacity = 1
 				End If
 
 			End Sub
@@ -732,6 +746,7 @@ Namespace UI
 					Me.Opacity = 0
 					If Me.IsHandleCreated Then Me.Hide()
 				End If
+
 			End Sub
 			Private Function GetImageBounds(img As Image, alignment As ImageAlignments, containerWidth As Integer, y As Integer) As Rectangle
 				Dim x As Integer
