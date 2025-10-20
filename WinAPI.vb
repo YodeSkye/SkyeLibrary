@@ -24,6 +24,7 @@ Public Class WinAPI
     Public Const WM_LBUTTONUP As Integer = &H202
     Public Const WM_RBUTTONUP As Integer = &H205
     Public Const WM_RBUTTONDOWN As Integer = &H204
+    Public Const WM_CONTEXTMENU As Integer = &H7B
     Public Const WM_MOUSEACTIVATE As Integer = &H21
     Public Const MA_NOACTIVATE As Integer = 3
     Public Const WM_NCACTIVATE As Integer = &H86
