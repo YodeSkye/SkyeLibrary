@@ -1,6 +1,7 @@
 ﻿
 Imports System.Drawing
 Imports System.Runtime.InteropServices
+Imports System.Text
 
 ''' <summary>
 ''' Declarations for Windows API functions, structures, and constants, along with some helper functions.
@@ -32,9 +33,11 @@ Public Class WinAPI
     Public Const WM_GET_CUSTOM_DATA As UInteger = &H8001
     Public Const WM_THEMECHANGED As Integer = &H31A
     Public Const WM_SYSCOLORCHANGE As Integer = &H15
+    Public Const WM_PARENTNOTIFY As Integer = &H210
     Public Const WM_CANCELMODE As Integer = &H1F
     Public Const WM_CLOSE As Integer = &H10
     Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As String, ByVal nMaxCount As Integer) As Integer
+    Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As StringBuilder, ByVal nMaxCount As Integer) As Integer
     Public Declare Auto Function SendMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As IntPtr
     Public Declare Auto Function PostMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Boolean
     Public Declare Auto Function LockWorkStation Lib "user32.dll" () As Boolean
@@ -82,6 +85,7 @@ Public Class WinAPI
     Public Declare Auto Function GetForegroundWindow Lib "user32.dll" () As IntPtr
     Public Declare Auto Function SetForegroundWindow Lib "user32.dll" (ByVal hWnd As IntPtr) As Boolean
     Public Declare Auto Function FindWindow Lib "user32.dll" (lpClassName As String, lpWindowName As String) As IntPtr
+    Public Declare Auto Function FindWindowEx Lib "user32.dll" (parent As IntPtr, childAfter As IntPtr, lpszClass As String, lpszWindow As String) As IntPtr
     Public Declare Auto Function GetWindowThreadProcessId Lib "user32.dll" (hWnd As IntPtr, ByRef lpdwProcessId As UInteger) As UInteger
     Public Declare Auto Function GetWindowText Lib "user32.dll" (hWnd As IntPtr, lpString As String, nMaxCount As Integer) As Integer
     Public Declare Auto Function GetWindowRect Lib "user32.dll" (hWnd As IntPtr, ByRef lpRect As RECT) As Boolean

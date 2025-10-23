@@ -522,6 +522,11 @@ Namespace UI
 			Public TooltipImage As Image = Nothing
 			Private FadeInTimer As Timer
 			Private FadeOutTimer As Timer
+			Private WithEvents OpacityMonitor As Timer
+			Private LastOpacity As Double = -1
+			Private Shared AllTooltips As New List(Of ToolTipPopup)
+			Private Shared TooltipHeartbeat As New Timer()
+			Private Shared HeartbeatStarted As Boolean = False
 
 			'Events
 			Protected Overrides Sub WndProc(ByRef m As Message)
@@ -536,18 +541,20 @@ Namespace UI
 							Catch ex As Exception 'Ignore clipboard errors
 							End Try
 						End If
-                        HideTooltip()
+						HideTooltip()
 					Case WinAPI.WM_THEMECHANGED Or WinAPI.WM_SYSCOLORCHANGE
-						'Force Reinitialization
-						If Not Me.IsDisposed Then
-							Me.RecreateHandle()
-						End If
+						''Force Reinitialization
+						'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — calling RecreateHandle at {DateTime.Now:HH:mm:ss.fff}")
+						'If Not Me.IsDisposed Then Me.RecreateHandle()
+						Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — refreshing visuals")
+						Me.Invalidate() 'forces repaint with new theme colors
 				End Select
 				MyBase.WndProc(m)
 			End Sub
 			Public Sub New(owner As ToolTipEX)
 				_owner = owner
 				Initialize()
+				AllTooltips.Add(Me)
 			End Sub
 			Protected Overrides ReadOnly Property CreateParams As CreateParams
 				Get
@@ -570,6 +577,9 @@ Namespace UI
 					FadeInTimer = Nothing
 					FadeOutTimer?.Dispose()
 					FadeOutTimer = Nothing
+					OpacityMonitor?.Stop()
+					OpacityMonitor?.Dispose()
+					OpacityMonitor = Nothing
 				End If
 				MyBase.Dispose(disposing)
 			End Sub
@@ -648,6 +658,8 @@ Namespace UI
 				Me.ShowInTaskbar = False
 				Me.StartPosition = FormStartPosition.Manual
 				Me.TransparencyKey = Me.BackColor
+				Me.Opacity = 1
+				StartOpacityMonitor()
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
 
@@ -689,6 +701,7 @@ Namespace UI
 				End If
 
 				'Fade-in effect
+				Trace.WriteLine($"[ToolTipPopup] FadeInRate={_owner.FadeInRate}, FadeInTimer Is Nothing={FadeInTimer Is Nothing}")
 				If _owner.FadeInRate > 0 Then
 					FadeInTimer?.Stop()
 					FadeInTimer?.Dispose()
@@ -697,6 +710,7 @@ Namespace UI
 					AddHandler FadeInTimer.Tick,
 						Sub()
 							Me.Opacity += 0.1
+							Trace.WriteLine($"[ToolTipPopup] FadeIn tick, Opacity={Me.Opacity}")
 							If Me.Opacity >= 1 Then
 								Me.Opacity = 1
 								FadeInTimer.Stop()
@@ -707,6 +721,11 @@ Namespace UI
 				Else
 					Me.Opacity = 1
 				End If
+
+				'If Me.Opacity <= 0 Then
+				'	Me.Opacity = 1
+				'	Trace.WriteLine("[ToolTipPopup] Opacity was zero — forced reset to 1")
+				'End If
 
 			End Sub
 			Public Sub HideTooltip()
@@ -758,6 +777,34 @@ Namespace UI
 				End Select
 				Return New Rectangle(x, y, img.Width, img.Height)
 			End Function
+			Private Sub StartOpacityMonitor()
+				If OpacityMonitor IsNot Nothing Then Exit Sub 'Already running
+				OpacityMonitor = New Timer()
+				OpacityMonitor.Interval = 100
+				AddHandler OpacityMonitor.Tick, Sub()
+													If Math.Abs(Me.Opacity - LastOpacity) > 0.001 Then
+														Trace.WriteLine($"[ToolTipPopup] Opacity changed to {Me.Opacity}")
+														LastOpacity = Me.Opacity
+													End If
+												End Sub
+				OpacityMonitor.Start()
+			End Sub
+			Shared Sub New()
+				If Not HeartbeatStarted Then
+					StartHeartbeat()
+					HeartbeatStarted = True
+					Trace.WriteLine("[ToolTipPopup] Shared constructor fired — heartbeat started")
+				End If
+			End Sub
+			Private Shared Sub StartHeartbeat()
+				TooltipHeartbeat.Interval = 5000
+				AddHandler TooltipHeartbeat.Tick, Sub()
+													  For Each tip In AllTooltips
+														  Trace.WriteLine($"[Heartbeat] Tooltip visible={tip.Visible}, Opacity={tip.Opacity}, HandleCreated={tip.IsHandleCreated}")
+													  Next
+												  End Sub
+				TooltipHeartbeat.Start()
+			End Sub
 
 		End Class
 
