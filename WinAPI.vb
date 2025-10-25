@@ -82,12 +82,16 @@ Public Class WinAPI
         Dim Right As Integer
         Dim Bottom As Integer
     End Structure
+    Public Declare Auto Function EnumWindows Lib "user32.dll" (lpEnumFunc As EnumWindowsProc, lParam As IntPtr) As Boolean
+    Public Delegate Function EnumWindowsProc(hWnd As IntPtr, lParam As IntPtr) As Boolean
     Public Declare Auto Function GetForegroundWindow Lib "user32.dll" () As IntPtr
     Public Declare Auto Function SetForegroundWindow Lib "user32.dll" (ByVal hWnd As IntPtr) As Boolean
     Public Declare Auto Function FindWindow Lib "user32.dll" (lpClassName As String, lpWindowName As String) As IntPtr
     Public Declare Auto Function FindWindowEx Lib "user32.dll" (parent As IntPtr, childAfter As IntPtr, lpszClass As String, lpszWindow As String) As IntPtr
     Public Declare Auto Function GetWindowThreadProcessId Lib "user32.dll" (hWnd As IntPtr, ByRef lpdwProcessId As UInteger) As UInteger
+    Public Declare Auto Function GetWindowThreadProcessId Lib "user32.dll" (hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
     Public Declare Auto Function GetWindowText Lib "user32.dll" (hWnd As IntPtr, lpString As String, nMaxCount As Integer) As Integer
+    Public Declare Auto Function GetWindowText Lib "user32.dll" (hWnd As IntPtr, lpString As StringBuilder, nMaxCount As Integer) As Integer
     Public Declare Auto Function GetWindowRect Lib "user32.dll" (hWnd As IntPtr, ByRef lpRect As RECT) As Boolean
     Public Declare Auto Function GetWindowLong Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal nIndex As Integer) As Integer
     Public Declare Auto Function SetWindowLong Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal nIndex As Integer, ByVal dwNewLong As Integer) As Integer
@@ -270,6 +274,36 @@ Public Class WinAPI
         'GetLastInputInfo(lastInput)
         'GetIdleTime = (CUInt(Environment.TickCount) - lastInput.dwTime)
         'lastInput = Nothing
+    End Function
+
+    ''' <summary>
+    ''' Gets all window handles for a given process ID.
+    ''' </summary>
+    ''' <param name="pid">The process ID.</param>
+    ''' <returns>A list of window handles.</returns>
+    Public Function GetWindowsForProcess(pid As Integer) As List(Of IntPtr)
+        Dim results As New List(Of IntPtr)
+        EnumWindows(Function(hWnd, lParam)
+                        Dim windowPid As Integer
+                        GetWindowThreadProcessId(hWnd, windowPid)
+                        If windowPid = pid Then
+                            results.Add(hWnd)
+                        End If
+                        Return True
+                    End Function,
+                    IntPtr.Zero)
+        Return results
+    End Function
+
+    ''' <summary>
+    ''' Gets the caption text of a window given its handle.
+    ''' </summary>
+    ''' <param name="hWnd">The handle of the window.</param>
+    ''' <returns>The caption text of the window.</returns>
+    Public Function GetCaption(hWnd As IntPtr) As String
+        Dim sb As New StringBuilder(512)
+        GetWindowText(hWnd, sb, sb.Capacity)
+        Return sb.ToString()
     End Function
 
     ''' <summary>
