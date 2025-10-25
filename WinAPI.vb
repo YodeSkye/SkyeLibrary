@@ -281,7 +281,7 @@ Public Class WinAPI
     ''' </summary>
     ''' <param name="pid">The process ID.</param>
     ''' <returns>A list of window handles.</returns>
-    Public Function GetWindowsForProcess(pid As Integer) As List(Of IntPtr)
+    Public Shared Function GetWindowsForProcess(pid As Integer) As List(Of IntPtr)
         Dim results As New List(Of IntPtr)
         EnumWindows(Function(hWnd, lParam)
                         Dim windowPid As Integer
@@ -300,7 +300,7 @@ Public Class WinAPI
     ''' </summary>
     ''' <param name="hWnd">The handle of the window.</param>
     ''' <returns>The caption text of the window.</returns>
-    Public Function GetCaption(hWnd As IntPtr) As String
+    Public Shared Function GetCaption(hWnd As IntPtr) As String
         Dim sb As New StringBuilder(512)
         GetWindowText(hWnd, sb, sb.Capacity)
         Return sb.ToString()
