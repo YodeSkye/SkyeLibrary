@@ -1694,6 +1694,27 @@ Namespace UI
 	End Class
 
 	''' <summary>
+	''' Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
+	''' </summary>
+	<ToolboxItem(True)>
+	<DesignerCategory("Code")>
+	Public Class RichTextBox
+		Inherits System.Windows.Forms.RichTextBox
+
+		Protected Overrides Sub WndProc(ByRef m As Message)
+			Const WM_SETCURSOR As Integer = &H20
+
+			If m.Msg = WM_SETCURSOR Then
+				Cursor.Current = Cursors.Default
+				m.Result = IntPtr.Zero
+				Return
+			End If
+
+			MyBase.WndProc(m)
+		End Sub
+	End Class
+
+	''' <summary>
 	''' Extended Listview control with Insertion Line for drag/drop operations.
 	''' </summary>
 	<ToolboxItem(True)>
