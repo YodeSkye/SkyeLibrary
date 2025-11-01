@@ -1941,8 +1941,8 @@ Namespace UI
 	''' Contains everything needed for basic Cut &amp; Paste functionality from ContextMenu &amp; Keyboard.
 	''' 1.	Must create New Instance of RichTextBoxContextMenu either in Designer or Programmatically.
 	''' 2.	Set the ContextMenu Property of the RichTextBox to the Instance of RichTextBoxContextMenu.
-	''' 3.	Handle PreviewKeyDownEvent on RichTextBox &amp; call ShortcutKeys Function.
-	''' 4.	Set ShortcutsEnabled property to False.
+	''' 3.	Handle PreviewKeyDownEvent on RichTextBox &amp; call ShortcutKeys Function. If Using Skye.UI.RichTextBox, you can still call the ShortcutKeys function, just perform a CType on the sender to System.Windows.Forms.RichTextBox. This is because Skye.UI.RichTextBox inherits from System.Windows.Forms.RichTextBox and the ShortcutKeys function is designed to work with that type.
+	''' 4.	Set ShortcutsEnabled property of the RichTextBox to False.
 	''' </summary>
 	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
@@ -1987,7 +1987,7 @@ Namespace UI
 			miSelectAll.Enabled = rtb.Text.Length > 0 AndAlso rtb.SelectedText.Length < rtb.Text.Length
 			If rtb.SelectedText.Length > 0 Then rtb.Focus()
 		End Sub
-		Public Sub ShortcutKeys(ByRef sender As RichTextBox, e As PreviewKeyDownEventArgs)
+		Public Sub ShortcutKeys(ByRef sender As System.Windows.Forms.RichTextBox, e As PreviewKeyDownEventArgs)
 			If e.Control Then
 				Select Case e.KeyCode
 					Case Keys.A : SelectAll(sender)
@@ -2019,28 +2019,28 @@ Namespace UI
 		End Sub
 
 		'Procedures
-		Private Sub Undo(rtb As RichTextBox)
+		Private Sub Undo(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Undo()
 			If rtb.FindForm IsNot Nothing Then rtb.FindForm.Validate()
 		End Sub
-		Private Sub Cut(rtb As RichTextBox)
+		Private Sub Cut(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Cut()
 			If rtb.FindForm IsNot Nothing Then rtb.FindForm.Validate()
 		End Sub
-		Private Sub Copy(rtb As RichTextBox)
+		Private Sub Copy(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Copy()
 		End Sub
-		Private Sub Paste(rtb As RichTextBox)
+		Private Sub Paste(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Paste()
 			If rtb.FindForm IsNot Nothing Then rtb.FindForm.Validate()
 		End Sub
-		Private Sub Delete(rtb As RichTextBox)
+		Private Sub Delete(rtb As System.Windows.Forms.RichTextBox)
 			If Not rtb.ReadOnly Then
 				rtb.SelectedText = String.Empty
 				rtb.FindForm()?.Validate()
 			End If
 		End Sub
-		Private Sub SelectAll(rtb As RichTextBox)
+		Private Sub SelectAll(rtb As System.Windows.Forms.RichTextBox)
 			rtb.SelectAll()
 			rtb.Focus()
 		End Sub
