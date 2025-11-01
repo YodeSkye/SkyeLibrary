@@ -1694,7 +1694,8 @@ Namespace UI
 	End Class
 
 	''' <summary>
-	''' Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
+	''' Improved And Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
+	''' Also includes a SetAlignment method to easily set text alignment.
 	''' </summary>
 	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
@@ -1712,6 +1713,13 @@ Namespace UI
 
 			MyBase.WndProc(m)
 		End Sub
+
+		Public Sub SetAlignment(align As HorizontalAlignment)
+			Me.SelectAll()
+			Me.SelectionAlignment = align
+			Me.DeselectAll()
+		End Sub
+
 	End Class
 
 	''' <summary>
