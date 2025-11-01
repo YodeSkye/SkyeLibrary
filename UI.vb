@@ -236,7 +236,7 @@ Namespace UI
 			StartHideDelayTimer(True)
 		End Sub
 		Private Sub ShowTooltip(request As TooltipRequest)
-			Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{If(request.Text, "(null text)")}' " & $"on {If(request.TargetControl?.Name, "(no control)")}")
+			'Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{If(request.Text, "(null text)")}' " & $"on {If(request.TargetControl?.Name, "(no control)")}")
 
 			HideDelayTimer?.Stop()
 			HideTooltip()
@@ -272,7 +272,7 @@ Namespace UI
 		''' Hides the tooltip if it is currently visible.
 		''' </summary>
 		Public Sub HideTooltip()
-			Trace.WriteLine($"[ToolTipEX] HideTooltip called, IsVisible={IsVisible}")
+			'Trace.WriteLine($"[ToolTipEX] HideTooltip called, IsVisible={IsVisible}")
 			If IsVisible Then popup.HideTooltip()
 		End Sub
 		Private Sub StartHideDelayTimer(Optional PlusFadeInRate As Boolean = False)
@@ -546,7 +546,7 @@ Namespace UI
 						''Force Reinitialization
 						'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — calling RecreateHandle at {DateTime.Now:HH:mm:ss.fff}")
 						'If Not Me.IsDisposed Then Me.RecreateHandle()
-						Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — refreshing visuals")
+						'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — refreshing visuals")
 						Me.Invalidate() 'forces repaint with new theme colors
 				End Select
 				MyBase.WndProc(m)
@@ -566,7 +566,7 @@ Namespace UI
 			End Property
 			Protected Overrides Sub OnHandleCreated(e As EventArgs)
 				MyBase.OnHandleCreated(e)
-				Trace.WriteLine($"[ToolTipPopup] Handle created")
+				'Trace.WriteLine($"[ToolTipPopup] Handle created")
 				'Reapply any visual/theme settings that depend on the handle
 				Initialize()
 			End Sub
@@ -656,7 +656,7 @@ Namespace UI
 			' Class-level handlers
 			Private Sub FadeInHandler(sender As Object, e As EventArgs)
 				Me.Opacity = Math.Min(1, Me.Opacity + 0.1)
-				Trace.WriteLine($"[ToolTipPopup] FadeIn tick, Opacity={Me.Opacity}")
+				'Trace.WriteLine($"[ToolTipPopup] FadeIn tick, Opacity={Me.Opacity}")
 				If Me.Opacity >= 1 Then
 					FadeInTimer.Stop()
 				End If
@@ -686,10 +686,10 @@ Namespace UI
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
 
-				Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}, Opacity={Me.Opacity}")
+				'Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}, Opacity={Me.Opacity}")
 
 				'Stop any existing animations
-				StopAnimations()
+				StopTimers()
 
 				'Reset if already visible
 				If Me.Visible Then Me.Hide()
@@ -708,7 +708,7 @@ Namespace UI
 					WinAPI.ShowWindow(Me.Handle, WinAPI.SW_SHOWNOACTIVATE)
 					WinAPI.SetWindowPos(Me.Handle, WinAPI.HWND_TOPMOST, x, y, Me.Width, Me.Height, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW Or WinAPI.SWP_NOZORDER)
 				End If
-				Trace.WriteLine($"[ToolTipPopup] SetWindowPos applied, TopMost={Me.TopMost}")
+				'Trace.WriteLine($"[ToolTipPopup] SetWindowPos applied, TopMost={Me.TopMost}")
 
 				'Fade-in effect
 				If _owner.FadeInRate > 0 Then
@@ -727,10 +727,10 @@ Namespace UI
 				If Not Me.Visible AndAlso Me.Opacity <= 0 Then Return
 
 				'Stop any animation in progress
-				StopAnimations()
+				StopTimers()
 
 				If _owner.FadeOutRate > 0 AndAlso Me.Visible Then
-					Trace.WriteLine($"[ToolTipPopup] HideTooltip starting fade-out, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
+					'Trace.WriteLine($"[ToolTipPopup] HideTooltip starting fade-out, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}")
 					FadeOutTimer = New Timer() With {.Interval = _owner.FadeOutRate}
 					AddHandler FadeOutTimer.Tick, AddressOf FadeOutHandler
 					FadeOutTimer.Start()
@@ -740,7 +740,7 @@ Namespace UI
 				End If
 
 			End Sub
-			Private Sub StopAnimations()
+			Private Sub StopTimers()
 				If FadeInTimer IsNot Nothing Then
 					RemoveHandler FadeInTimer.Tick, AddressOf FadeInHandler
 					FadeInTimer.Stop()
@@ -754,73 +754,6 @@ Namespace UI
 					FadeOutTimer = Nothing
 				End If
 			End Sub
-			'Public Sub ShowTooltip(x As Integer, y As Integer)
-
-			'	'Log with opacity for visibility debugging
-			'	Trace.WriteLine($"[ToolTipPopup] ShowTooltip at {x},{y}, Visible={Me.Visible}, HandleCreated={Me.IsHandleCreated}, Opacity={Me.Opacity}")
-
-			'	'Cancel any fade-out in progress
-			'	FadeOutTimer?.Stop()
-			'	FadeOutTimer?.Dispose()
-			'	FadeOutTimer = Nothing
-
-			'	'If already visible, reset state
-			'	If Me.Visible Then
-			'		FadeInTimer?.Stop()
-			'		Me.Hide()
-			'	End If
-
-			'	'Ensure handle exists
-			'	If Not Me.IsHandleCreated Then
-			'		Me.CreateHandle()
-			'		Me.Opacity = 1
-			'	End If
-
-			'	'Reset opacity before showing
-			'	Me.Opacity = 1
-
-			'	'Position the popup
-			'	Me.Location = New Point(x, y)
-
-			'	If Me.Visible Then
-			'		' Already visible → just move it
-			'		WinAPI.SetWindowPos(Me.Handle, IntPtr.Zero, x, y, 0, 0, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_NOSIZE Or WinAPI.SWP_NOZORDER)
-			'		Trace.WriteLine($"[ToolTipPopup] SetWindowPos applied, TopMost={Me.TopMost.ToString}")
-			'	Else
-			'		' Show without stealing focus
-			'		WinAPI.ShowWindow(Me.Handle, WinAPI.SW_SHOWNOACTIVATE)
-			'		WinAPI.SetWindowPos(Me.Handle, WinAPI.HWND_TOPMOST, x, y, Me.Width, Me.Height, WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW Or WinAPI.SWP_NOZORDER)
-			'		Trace.WriteLine($"[ToolTipPopup] SetWindowPos applied, TopMost={Me.TopMost.ToString}")
-			'	End If
-
-			'	'Fade-in effect
-			'	Trace.WriteLine($"[ToolTipPopup] FadeInRate={_owner.FadeInRate}, FadeInTimer Is Nothing={FadeInTimer Is Nothing}")
-			'	If _owner.FadeInRate > 0 Then
-			'		FadeInTimer?.Stop()
-			'		FadeInTimer?.Dispose()
-			'		Me.Opacity = 0
-			'		FadeInTimer = New Timer()
-			'		AddHandler FadeInTimer.Tick,
-			'			Sub()
-			'				Me.Opacity += 0.1
-			'				Trace.WriteLine($"[ToolTipPopup] FadeIn tick, Opacity={Me.Opacity}")
-			'				If Me.Opacity >= 1 Then
-			'					Me.Opacity = 1
-			'					FadeInTimer.Stop()
-			'				End If
-			'			End Sub
-			'		FadeInTimer.Interval = _owner.FadeInRate
-			'		FadeInTimer.Start()
-			'	Else
-			'		Me.Opacity = 1
-			'	End If
-
-			'	If Me.Opacity <= 0 Then
-			'		Me.Opacity = 1
-			'		Trace.WriteLine("[ToolTipPopup] Opacity was zero — forced reset to 1")
-			'	End If
-
-			'End Sub
 			Private Function GetImageBounds(img As Image, alignment As ImageAlignments, containerWidth As Integer, y As Integer) As Rectangle
 				Dim x As Integer
 				Select Case alignment
@@ -837,7 +770,7 @@ Namespace UI
 				OpacityMonitor.Interval = 100
 				AddHandler OpacityMonitor.Tick, Sub()
 													If Math.Abs(Me.Opacity - LastOpacity) > 0.001 Then
-														Trace.WriteLine($"[ToolTipPopup] Opacity changed to {Me.Opacity}")
+														'Trace.WriteLine($"[ToolTipPopup] Opacity changed to {Me.Opacity}")
 														LastOpacity = Me.Opacity
 													End If
 												End Sub
@@ -847,14 +780,14 @@ Namespace UI
 				If Not HeartbeatStarted Then
 					StartHeartbeat()
 					HeartbeatStarted = True
-					Trace.WriteLine("[ToolTipPopup] Shared constructor fired — heartbeat started")
+					'Trace.WriteLine("[ToolTipPopup] Shared constructor fired — heartbeat started")
 				End If
 			End Sub
 			Private Shared Sub StartHeartbeat()
 				TooltipHeartbeat.Interval = 5000
 				AddHandler TooltipHeartbeat.Tick, Sub()
 													  For Each tip In AllTooltips
-														  Trace.WriteLine($"[Heartbeat] Tooltip visible={tip.Visible}, Opacity={tip.Opacity}, HandleCreated={tip.IsHandleCreated}")
+														  'Trace.WriteLine($"[Heartbeat] Tooltip visible={tip.Visible}, Opacity={tip.Opacity}, HandleCreated={tip.IsHandleCreated}")
 													  Next
 												  End Sub
 				TooltipHeartbeat.Start()
