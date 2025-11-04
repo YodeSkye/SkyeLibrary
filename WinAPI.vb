@@ -33,6 +33,7 @@ Public Class WinAPI
     Public Const WM_GET_CUSTOM_DATA As UInteger = &H8001
     Public Const WM_THEMECHANGED As Integer = &H31A
     Public Const WM_SYSCOLORCHANGE As Integer = &H15
+    Public Const WM_DPICHANGED As Integer = &H2E0
     Public Const WM_PARENTNOTIFY As Integer = &H210
     Public Const WM_CANCELMODE As Integer = &H1F
     Public Const WM_CLOSE As Integer = &H10

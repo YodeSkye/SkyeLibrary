@@ -96,77 +96,115 @@ Namespace UI
 			MyBase.Dispose(disposing)
 		End Sub
 		Private Sub OnMouseEnter(sender As Object, e As EventArgs)
-
-			If Not _manualTooltipActive Then
-				HideTooltip()
-			End If
-
-			'If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
-
-			'Dim ctrl As Control = CType(sender, Control)
-
-			''Cancel any pending hide
-			'HideDelayTimer.Stop()
-
-			''If we're already showing for this control, do nothing
-			'If _hoveredcontrol Is ctrl AndAlso IsVisible Then Exit Sub
-
-			''Update hovered control
-			'_hoveredcontrol = ctrl
-
-			''Check if tooltip content exists
-			'If tooltips.ContainsKey(ctrl) AndAlso Not String.IsNullOrWhiteSpace(tooltips(ctrl)) Then
-			'	' Reset and start show delay
-			'	If ShowDelayTimer Is Nothing Then
-			'		ShowDelayTimer = New Timer()
-			'		AddHandler ShowDelayTimer.Tick, AddressOf ShowTooltipDelayed
-			'	Else
-			'		ShowDelayTimer.Stop()
-			'	End If
-			'	If ShowDelay < 1 Then
-			'		ShowDelayTimer.Interval = 1
-			'	Else
-			'		ShowDelayTimer.Interval = ShowDelay
-			'	End If
-			'	ShowDelayTimer.Start()
-			'End If
-
-		End Sub
-        Private Sub OnMouseHover(sender As Object, e As EventArgs)
-			If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
+			If _manualTooltipActive Then Exit Sub
 
 			Dim ctrl As Control = CType(sender, Control)
 
-			'If we're already showing for this control, do nothing
-			If _hoveredcontrol Is ctrl AndAlso IsVisible Then Exit Sub
+			'Moving to a different control → hide current immediately
+			If _hoveredcontrol IsNot Nothing AndAlso _hoveredcontrol IsNot ctrl AndAlso IsVisible Then
+				HideDelayTimer.Stop()
+				HideTooltip()
+			End If
 
-			'Cancel any pending hide
-			HideDelayTimer.Stop()
-
-			'Update hovered control
 			_hoveredcontrol = ctrl
 
-			'Check if tooltip content exists
-			If tooltips.ContainsKey(ctrl) AndAlso Not String.IsNullOrWhiteSpace(tooltips(ctrl)) Then
-				' Reset and start show delay
-				If ShowDelayTimer Is Nothing Then
-					ShowDelayTimer = New Timer()
-					AddHandler ShowDelayTimer.Tick, AddressOf ShowTooltipDelayed
-				Else
-					ShowDelayTimer.Stop()
-				End If
-				If ShowDelay < 1 Then
-					ShowDelayTimer.Interval = 1
-				Else
-					ShowDelayTimer.Interval = ShowDelay
-				End If
-				ShowDelayTimer.Start()
+			'Start (or restart) the show delay
+			If ShowDelayTimer Is Nothing Then
+				ShowDelayTimer = New Timer()
+				AddHandler ShowDelayTimer.Tick, AddressOf ShowTooltipDelayed
+			Else
+				ShowDelayTimer.Stop()
 			End If
+
+			ShowDelayTimer.Interval = If(ShowDelay < 1, 1, ShowDelay)
+			ShowDelayTimer.Start()
 		End Sub
 		Private Sub OnMouseLeave(sender As Object, e As EventArgs)
+			If _manualTooltipActive Then Exit Sub
+
+			'Cancel a pending show for the control we’re leaving
 			ShowDelayTimer?.Stop()
-			If _hoveredcontrol Is CType(sender, Control) Then StartHideDelayTimer()
+
+			'If we’re leaving the control that owns the current tooltip, start hide delay
+			If _hoveredcontrol Is CType(sender, Control) Then
+				StartHideDelayTimer()
+			End If
 		End Sub
+		Private Sub OnMouseHover(sender As Object, e As EventArgs) 'Optional: keep this lightweight so it doesn’t control show timing anymore
+			'Intentionally do nothing — enter drives show timing now
+		End Sub
+		'Private Sub OnMouseEnter(sender As Object, e As EventArgs)
+
+		'	If Not _manualTooltipActive Then
+		'		HideTooltip()
+		'	End If
+
+		'	'If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
+
+		'	'Dim ctrl As Control = CType(sender, Control)
+
+		'	''Cancel any pending hide
+		'	'HideDelayTimer.Stop()
+
+		'	''If we're already showing for this control, do nothing
+		'	'If _hoveredcontrol Is ctrl AndAlso IsVisible Then Exit Sub
+
+		'	''Update hovered control
+		'	'_hoveredcontrol = ctrl
+
+		'	''Check if tooltip content exists
+		'	'If tooltips.ContainsKey(ctrl) AndAlso Not String.IsNullOrWhiteSpace(tooltips(ctrl)) Then
+		'	'	' Reset and start show delay
+		'	'	If ShowDelayTimer Is Nothing Then
+		'	'		ShowDelayTimer = New Timer()
+		'	'		AddHandler ShowDelayTimer.Tick, AddressOf ShowTooltipDelayed
+		'	'	Else
+		'	'		ShowDelayTimer.Stop()
+		'	'	End If
+		'	'	If ShowDelay < 1 Then
+		'	'		ShowDelayTimer.Interval = 1
+		'	'	Else
+		'	'		ShowDelayTimer.Interval = ShowDelay
+		'	'	End If
+		'	'	ShowDelayTimer.Start()
+		'	'End If
+
+		'End Sub
+		'      Private Sub OnMouseHover(sender As Object, e As EventArgs)
+		'	If _manualTooltipActive Then Exit Sub 'Ignore if we're showing/hiding a tooltip programmatically
+
+		'	Dim ctrl As Control = CType(sender, Control)
+
+		'	'If we're already showing for this control, do nothing
+		'	If _hoveredcontrol Is ctrl AndAlso IsVisible Then Exit Sub
+
+		'	'Cancel any pending hide
+		'	HideDelayTimer.Stop()
+
+		'	'Update hovered control
+		'	_hoveredcontrol = ctrl
+
+		'	'Check if tooltip content exists
+		'	If tooltips.ContainsKey(ctrl) AndAlso Not String.IsNullOrWhiteSpace(tooltips(ctrl)) Then
+		'		' Reset and start show delay
+		'		If ShowDelayTimer Is Nothing Then
+		'			ShowDelayTimer = New Timer()
+		'			AddHandler ShowDelayTimer.Tick, AddressOf ShowTooltipDelayed
+		'		Else
+		'			ShowDelayTimer.Stop()
+		'		End If
+		'		If ShowDelay < 1 Then
+		'			ShowDelayTimer.Interval = 1
+		'		Else
+		'			ShowDelayTimer.Interval = ShowDelay
+		'		End If
+		'		ShowDelayTimer.Start()
+		'	End If
+		'End Sub
+		'Private Sub OnMouseLeave(sender As Object, e As EventArgs)
+		'	ShowDelayTimer?.Stop()
+		'	If _hoveredcontrol Is CType(sender, Control) Then StartHideDelayTimer()
+		'End Sub
 		Private Sub HideDelayTimer_Tick(sender As Object, e As EventArgs) Handles HideDelayTimer.Tick
 			HideDelayTimer.Stop()
 			HideTooltip()
@@ -237,6 +275,12 @@ Namespace UI
 		End Sub
 		Private Sub ShowTooltip(request As TooltipRequest)
 			'Trace.WriteLine($"[ToolTipEX] ShowTooltip request for '{If(request.Text, "(null text)")}' " & $"on {If(request.TargetControl?.Name, "(no control)")}")
+
+			'Ensure popup is valid
+			If popup Is Nothing OrElse popup.IsDisposed OrElse Not popup.IsHandleCreated Then
+				popup = New ToolTipPopup(Me)
+				popupHandle = popup.Handle 'force handle creation
+			End If
 
 			HideDelayTimer?.Stop()
 			HideTooltip()
@@ -522,11 +566,6 @@ Namespace UI
 			Public TooltipImage As Image = Nothing
 			Private FadeInTimer As Timer
 			Private FadeOutTimer As Timer
-			Private WithEvents OpacityMonitor As Timer
-			Private LastOpacity As Double = -1
-			Private Shared AllTooltips As New List(Of ToolTipPopup)
-			Private Shared TooltipHeartbeat As New Timer()
-			Private Shared HeartbeatStarted As Boolean = False
 
 			'Events
 			Protected Overrides Sub WndProc(ByRef m As Message)
@@ -542,19 +581,25 @@ Namespace UI
 							End Try
 						End If
 						HideTooltip()
-					Case WinAPI.WM_THEMECHANGED Or WinAPI.WM_SYSCOLORCHANGE
-						''Force Reinitialization
-						'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — calling RecreateHandle at {DateTime.Now:HH:mm:ss.fff}")
-						'If Not Me.IsDisposed Then Me.RecreateHandle()
-						'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — refreshing visuals")
-						Me.Invalidate() 'forces repaint with new theme colors
+						'Case WinAPI.WM_THEMECHANGED Or WinAPI.WM_SYSCOLORCHANGE
+						'	''Force Reinitialization
+						'	'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — calling RecreateHandle at {DateTime.Now:HH:mm:ss.fff}")
+						'	'If Not Me.IsDisposed Then Me.RecreateHandle()
+						'	'Trace.WriteLine($"[ToolTipPopup] {m.Msg} received — refreshing visuals")
+						'	Me.Invalidate() 'forces repaint with new theme colors
+					Case WinAPI.WM_THEMECHANGED, WinAPI.WM_SYSCOLORCHANGE, WinAPI.WM_DPICHANGED
+						'Force handle recreation if still alive
+						If Not Me.IsDisposed Then
+							Me.RecreateHandle()
+						End If
+						'Optional: also refresh visuals
+						Me.Invalidate()
 				End Select
 				MyBase.WndProc(m)
 			End Sub
 			Public Sub New(owner As ToolTipEX)
 				_owner = owner
 				Initialize()
-				AllTooltips.Add(Me)
 			End Sub
 			Protected Overrides ReadOnly Property CreateParams As CreateParams
 				Get
@@ -577,9 +622,6 @@ Namespace UI
 					FadeInTimer = Nothing
 					FadeOutTimer?.Dispose()
 					FadeOutTimer = Nothing
-					OpacityMonitor?.Stop()
-					OpacityMonitor?.Dispose()
-					OpacityMonitor = Nothing
 				End If
 				MyBase.Dispose(disposing)
 			End Sub
@@ -682,7 +724,6 @@ Namespace UI
 				Me.StartPosition = FormStartPosition.Manual
 				Me.TransparencyKey = Me.BackColor
 				Me.Opacity = 1
-				StartOpacityMonitor()
 			End Sub
 			Public Sub ShowTooltip(x As Integer, y As Integer)
 
@@ -764,34 +805,6 @@ Namespace UI
 				End Select
 				Return New Rectangle(x, y, img.Width, img.Height)
 			End Function
-			Private Sub StartOpacityMonitor()
-				If OpacityMonitor IsNot Nothing Then Exit Sub 'Already running
-				OpacityMonitor = New Timer()
-				OpacityMonitor.Interval = 100
-				AddHandler OpacityMonitor.Tick, Sub()
-													If Math.Abs(Me.Opacity - LastOpacity) > 0.001 Then
-														'Trace.WriteLine($"[ToolTipPopup] Opacity changed to {Me.Opacity}")
-														LastOpacity = Me.Opacity
-													End If
-												End Sub
-				OpacityMonitor.Start()
-			End Sub
-			Shared Sub New()
-				If Not HeartbeatStarted Then
-					StartHeartbeat()
-					HeartbeatStarted = True
-					'Trace.WriteLine("[ToolTipPopup] Shared constructor fired — heartbeat started")
-				End If
-			End Sub
-			Private Shared Sub StartHeartbeat()
-				TooltipHeartbeat.Interval = 5000
-				AddHandler TooltipHeartbeat.Tick, Sub()
-													  For Each tip In AllTooltips
-														  'Trace.WriteLine($"[Heartbeat] Tooltip visible={tip.Visible}, Opacity={tip.Opacity}, HandleCreated={tip.IsHandleCreated}")
-													  Next
-												  End Sub
-				TooltipHeartbeat.Start()
-			End Sub
 
 		End Class
 
