@@ -126,9 +126,7 @@ Namespace UI
 			ShowDelayTimer?.Stop()
 
 			'If we’re leaving the control that owns the current tooltip, start hide delay
-			If _hoveredcontrol Is CType(sender, Control) Then
-				StartHideDelayTimer()
-			End If
+			If _hoveredcontrol Is CType(sender, Control) Then StartHideDelayTimer()
 		End Sub
 		Private Sub OnMouseHover(sender As Object, e As EventArgs) 'Optional: keep this lightweight so it doesn’t control show timing anymore
 			'Intentionally do nothing — enter drives show timing now
@@ -219,7 +217,16 @@ Namespace UI
 		End Sub
 		Private Sub ShowTooltipDelayed(sender As Object, e As EventArgs)
 			ShowDelayTimer?.Stop()
-			Dim request As TooltipRequest = New TooltipRequest(_hoveredcontrol, tooltips(_hoveredcontrol), If(tooltipImages.ContainsKey(_hoveredcontrol), tooltipImages(_hoveredcontrol), Nothing), Nothing, False)
+			If _hoveredcontrol Is Nothing Then Exit Sub
+			If Not tooltips.ContainsKey(_hoveredcontrol) Then Exit Sub
+
+			Dim text As String = tooltips(_hoveredcontrol)
+			Dim image As Image = Nothing
+			If tooltipImages.ContainsKey(_hoveredcontrol) Then
+				image = tooltipImages(_hoveredcontrol)
+			End If
+
+			Dim request As New TooltipRequest(_hoveredcontrol, text, image, Nothing, False)
 			ShowTooltip(request)
 		End Sub
 		''' <summary>
