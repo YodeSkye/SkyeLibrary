@@ -1121,7 +1121,12 @@ Namespace UI
 			'Declarations
 			Dim g As Graphics = e.Graphics
 			Static image As Image
+			Static borderadjustment As Integer
 			Static verticaltextadjustment As Integer
+			Select Case Font.Size
+				Case Is < 11 : borderadjustment = 0
+				Case Else : borderadjustment = 1
+			End Select
 			Select Case Font.Size
 				Case Is < 10 : verticaltextadjustment = 0
 				Case 10 To 16 : verticaltextadjustment = 1
@@ -1139,7 +1144,7 @@ Namespace UI
 
 			'Draw Border
 			Using p As New Pen(BorderColor, CInt(Font.Size / 4)) 'Scale border thickness with font
-				g.DrawRectangle(p, 0, 0, e.Bounds.Width - 1, e.Bounds.Height - 1)
+				g.DrawRectangle(p, 0, 0, e.Bounds.Width - borderadjustment, e.Bounds.Height - borderadjustment)
 			End Using
 
 			'Draw Icon
@@ -1439,10 +1444,24 @@ Namespace UI
 		''' Clean up any resources being used.
 		''' </summary>
 		Protected Overrides Sub Dispose(disposing As Boolean)
-			_Brush.Dispose()
-			writingBrush.Dispose() 'Release Percentage writer brush
-			writingFont.Dispose() 'Release Percentage font
-			_Drawer.Dispose()
+			If disposing Then
+				If _Brush IsNot Nothing Then
+					_Brush.Dispose()
+					_Brush = Nothing
+				End If
+				If writingBrush IsNot Nothing Then
+					writingBrush.Dispose()
+					writingBrush = Nothing
+				End If
+				If writingFont IsNot Nothing Then
+					writingFont.Dispose()
+					writingFont = Nothing
+				End If
+				If _Drawer IsNot Nothing Then
+					_Drawer.Dispose()
+					_Drawer = Nothing
+				End If
+			End If
 			MyBase.Dispose(disposing)
 		End Sub
 		Protected Overrides Sub OnPaint(e As PaintEventArgs)
