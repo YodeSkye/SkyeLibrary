@@ -1645,16 +1645,16 @@ Namespace UI
 	Public Class Label
 		Inherits System.Windows.Forms.Label
 
-		'Properties
+		' Properties
 		<DefaultValue(False)>
 		Public Property CopyOnDoubleClick As Boolean
 
-		'Events
+		' Events
 		Protected Overrides Sub DefWndProc(ByRef m As System.Windows.Forms.Message)
 			If LicenseManager.UsageMode = LicenseUsageMode.Runtime Then
 				Select Case m.Msg
 					Case WinAPI.WM_LBUTTONDBLCLK
-						'Suppress default double-click behavior unless explicitly allowed
+						' Suppress default double-click behavior unless explicitly allowed
 						If CopyOnDoubleClick Then
 							MyBase.DefWndProc(m)
 						Else
