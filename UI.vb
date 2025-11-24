@@ -1638,16 +1638,53 @@ Namespace UI
 	End Class
 
 	''' <summary>
-	''' Changes basic .NET label to OPTIONALLY copy on double-click
+	''' Changes basic .NET label to OPTIONALLY copy on double-click.
+	''' Also adds text orientation options: Horizontal (normal), Vertical (rotated), and Vertical Stacked (characters top-to-bottom).
 	''' </summary>
 	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
 	Public Class Label
-		Inherits System.Windows.Forms.Label
+        Inherits System.Windows.Forms.Label
+
+		' Declarations
+		Public Enum TextOrientation
+			Horizontal
+			Vertical
+			Stacked
+		End Enum
+		Private _orientation As TextOrientation = TextOrientation.Horizontal
 
 		' Properties
 		<DefaultValue(False)>
 		Public Property CopyOnDoubleClick As Boolean
+		<DefaultValue(False)>
+		Public Shadows Property AutoSize As Boolean
+			Get
+				Return MyBase.AutoSize
+			End Get
+			Set(value As Boolean)
+				MyBase.AutoSize = value
+				If value Then
+					AdjustSizeForOrientation()
+				End If
+			End Set
+		End Property
+		<Category("Layout")>
+		<Description("Controls how text is rendered: Horizontal (Normal), Vertical (Rotated), or Vertical Stacked (Characters Top-to-Bottom).")>
+		<DefaultValue(TextOrientation.Horizontal)>
+		Public Property Orientation As TextOrientation
+			Get
+				Return _orientation
+			End Get
+			Set(value As TextOrientation)
+				If _orientation <> value Then
+					_orientation = value
+					AdjustSizeForOrientation()
+					Invalidate()   ' force redraw
+					Update()       ' optional: immediate refresh
+				End If
+			End Set
+		End Property
 
 		' Events
 		Protected Overrides Sub DefWndProc(ByRef m As System.Windows.Forms.Message)
@@ -1665,6 +1702,114 @@ Namespace UI
 				End Select
 			End If
 		End Sub
+        Protected Overrides Sub OnPaint(e As PaintEventArgs)
+            MyBase.OnPaintBackground(e)
+
+			Dim g As Graphics = e.Graphics
+			Dim sf As StringFormat = GetStringFormatFromContentAlignment(TextAlign)
+
+			Select Case Orientation
+				Case TextOrientation.Horizontal
+					g.DrawString(Text, Font, New SolidBrush(Me.ForeColor), ClientRectangle, sf)
+				Case TextOrientation.Vertical
+					g.TranslateTransform(CSng(Width / 2), CSng(Height / 2))
+					g.RotateTransform(-90)
+					g.DrawString(Text, Font, New SolidBrush(Me.ForeColor), 0, 0, sf)
+					g.ResetTransform()
+				Case TextOrientation.Stacked
+					Dim chars() As Char = Me.Text.ToCharArray()
+					Dim lineHeight As Single = TextRenderer.MeasureText("X", Me.Font).Height
+					Dim y As Single = ((Height - (chars.Length * lineHeight)) / 2) + lineHeight / 2
+					For Each c As Char In chars
+						g.DrawString(c.ToString(), Font, New SolidBrush(ForeColor), New PointF(CSng(Width / 2), y), sf)
+						y += lineHeight
+					Next
+			End Select
+
+		End Sub
+		Protected Overrides Sub OnTextChanged(e As EventArgs)
+			MyBase.OnTextChanged(e)
+			If Me.AutoSize Then AdjustSizeForOrientation()
+		End Sub
+		Protected Overrides Sub OnFontChanged(e As EventArgs)
+			MyBase.OnFontChanged(e)
+			If Me.AutoSize Then AdjustSizeForOrientation()
+		End Sub
+
+		' Methods
+		Public Overrides Function GetPreferredSize(proposedSize As Size) As Size
+			If AutoSize Then
+				Using g As Graphics = Me.CreateGraphics()
+					Select Case _orientation
+						Case TextOrientation.Horizontal
+							Return TextRenderer.MeasureText(Me.Text, Me.Font)
+						Case TextOrientation.Stacked
+							Dim lineHeight As Integer = TextRenderer.MeasureText("X", Me.Font).Height
+							Return New Size(Me.Width, lineHeight * Me.Text.Length)
+						Case TextOrientation.Vertical
+							Dim sf As New StringFormat(StringFormat.GenericTypographic)
+							Dim size As SizeF = g.MeasureString(Me.Text, Me.Font, Integer.MaxValue, sf)
+							Return New Size(CInt(size.Height), CInt(size.Width))
+					End Select
+				End Using
+			End If
+			Return MyBase.GetPreferredSize(proposedSize)
+		End Function
+		Private Sub AdjustSizeForOrientation()
+			Using g As Graphics = Me.CreateGraphics()
+				Select Case _orientation
+					Case TextOrientation.Horizontal
+						Dim size As SizeF = TextRenderer.MeasureText(Text, Font)
+						Width = CInt(size.Width)
+						Height = CInt(size.Height)
+					Case TextOrientation.Stacked
+						Dim lineHeight As Single = TextRenderer.MeasureText("X", Font).Height
+						Dim neededHeight As Integer = CInt(lineHeight * Text.Length)
+						Height = neededHeight
+					Case TextOrientation.Vertical
+						Dim size As SizeF = TextRenderer.MeasureText(Text, Font)
+						Width = CInt(size.Height) ' Rotated text swaps width/height
+						Height = CInt(size.Width)
+					Case Else
+						' Normal orientation: let the designer/user control size
+				End Select
+			End Using
+		End Sub
+		Private Shared Function GetStringFormatFromContentAlignment(align As ContentAlignment) As StringFormat
+			Dim sf As New StringFormat()
+
+			Select Case align
+				Case ContentAlignment.TopLeft
+					sf.Alignment = StringAlignment.Far
+					sf.LineAlignment = StringAlignment.Far
+				Case ContentAlignment.TopCenter
+					sf.Alignment = StringAlignment.Center
+					sf.LineAlignment = StringAlignment.Far
+				Case ContentAlignment.TopRight
+					sf.Alignment = StringAlignment.Near
+					sf.LineAlignment = StringAlignment.Far
+				Case ContentAlignment.MiddleLeft
+					sf.Alignment = StringAlignment.Far
+					sf.LineAlignment = StringAlignment.Center
+				Case ContentAlignment.MiddleCenter
+					sf.Alignment = StringAlignment.Center
+					sf.LineAlignment = StringAlignment.Center
+				Case ContentAlignment.MiddleRight
+					sf.Alignment = StringAlignment.Near
+					sf.LineAlignment = StringAlignment.Center
+				Case ContentAlignment.BottomLeft
+					sf.Alignment = StringAlignment.Far
+					sf.LineAlignment = StringAlignment.Near
+				Case ContentAlignment.BottomCenter
+					sf.Alignment = StringAlignment.Center
+					sf.LineAlignment = StringAlignment.Near
+				Case ContentAlignment.BottomRight
+					sf.Alignment = StringAlignment.Near
+					sf.LineAlignment = StringAlignment.Near
+			End Select
+
+			Return sf
+		End Function
 
 	End Class
 
