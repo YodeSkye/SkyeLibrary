@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>Skye</RootNamespace>
-    <TargetFramework>net10.0-windows7.0</TargetFramework>
+	<TargetFrameworks>net8.0-windows;net9.0-windows;net10.0-windows7.0</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>Skye</AssemblyName>
     <OptionStrict>On</OptionStrict>
