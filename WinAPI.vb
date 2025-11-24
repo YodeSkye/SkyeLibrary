@@ -7,6 +7,7 @@ Imports System.Text
 ''' Declarations for Windows API functions, structures, and constants, along with some helper functions.
 ''' </summary>
 Public Class WinAPI
+#Disable Warning CA1401
 
     'Declarations
     Public Const HWND_BROADCAST As Integer = 65535
@@ -37,12 +38,27 @@ Public Class WinAPI
     Public Const WM_PARENTNOTIFY As Integer = &H210
     Public Const WM_CANCELMODE As Integer = &H1F
     Public Const WM_CLOSE As Integer = &H10
-    Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As String, ByVal nMaxCount As Integer) As Integer
-    Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As StringBuilder, ByVal nMaxCount As Integer) As Integer
-    Public Declare Auto Function SendMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As IntPtr
-    Public Declare Auto Function PostMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Boolean
-    Public Declare Auto Function LockWorkStation Lib "user32.dll" () As Boolean
-    Public Declare Auto Function IsWow64Process Lib "kernel32.dll" (ByVal hProcess As IntPtr, ByRef Wow64Process As Boolean) As Boolean
+    'Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, ByVal lpClassName As String, ByVal nMaxCount As Integer) As Integer
+    'Public Declare Auto Function GetClassName Lib "user32.dll" (ByVal hwnd As IntPtr, <Out> ByVal lpClassName As StringBuilder, ByVal nMaxCount As Integer) As Integer
+    'Public Declare Auto Function SendMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As IntPtr
+    'Public Declare Auto Function PostMessage Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal Msg As UInteger, ByVal wParam As IntPtr, ByVal lParam As IntPtr) As Boolean
+    'Public Declare Auto Function LockWorkStation Lib "user32.dll" () As Boolean
+    'Public Declare Auto Function IsWow64Process Lib "kernel32.dll" (ByVal hProcess As IntPtr, ByRef Wow64Process As Boolean) As Boolean
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function GetClassName(hwnd As IntPtr, lpClassName As System.Text.StringBuilder, nMaxCount As Integer) As Integer
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function SendMessage(hWnd As IntPtr, Msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function PostMessage(hWnd As IntPtr, Msg As UInteger, wParam As IntPtr, lParam As IntPtr) As Boolean
+    End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function LockWorkStation() As Boolean
+    End Function
+    <DllImport("kernel32.dll", SetLastError:=True)>
+    Public Shared Function IsWow64Process(hProcess As IntPtr, <Out> ByRef Wow64Process As Boolean) As Boolean
+    End Function
 
     'ClipBoard
     Public Const WM_CHANGECBCHAIN As Integer = 781 '&H30D
@@ -76,7 +92,7 @@ Public Class WinAPI
     Public Const SWP_NOMOVE As UInteger = &H2
     Public Const SWP_NOSIZE As UInteger = &H1
     Public Const SWP_FRAMECHANGED As UInteger = &H20
-    Public Shared ReadOnly HWND_TOPMOST As IntPtr = New IntPtr(-1)
+    Public Shared ReadOnly HWND_TOPMOST As New IntPtr(-1)
     Public Structure RECT
         Dim Left As Integer
         Dim Top As Integer
@@ -87,12 +103,17 @@ Public Class WinAPI
     Public Delegate Function EnumWindowsProc(hWnd As IntPtr, lParam As IntPtr) As Boolean
     Public Declare Auto Function GetForegroundWindow Lib "user32.dll" () As IntPtr
     Public Declare Auto Function SetForegroundWindow Lib "user32.dll" (ByVal hWnd As IntPtr) As Boolean
-    Public Declare Auto Function FindWindow Lib "user32.dll" (lpClassName As String, lpWindowName As String) As IntPtr
-    Public Declare Auto Function FindWindowEx Lib "user32.dll" (parent As IntPtr, childAfter As IntPtr, lpszClass As String, lpszWindow As String) As IntPtr
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function FindWindow(lpClassName As String, lpWindowName As String) As IntPtr
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function FindWindowEx(parent As IntPtr, childAfter As IntPtr, lpszClass As String, lpszWindow As String) As IntPtr
+    End Function
     Public Declare Auto Function GetWindowThreadProcessId Lib "user32.dll" (hWnd As IntPtr, ByRef lpdwProcessId As UInteger) As UInteger
     Public Declare Auto Function GetWindowThreadProcessId Lib "user32.dll" (hWnd As IntPtr, ByRef lpdwProcessId As Integer) As Integer
-    Public Declare Auto Function GetWindowText Lib "user32.dll" (hWnd As IntPtr, lpString As String, nMaxCount As Integer) As Integer
-    Public Declare Auto Function GetWindowText Lib "user32.dll" (hWnd As IntPtr, lpString As StringBuilder, nMaxCount As Integer) As Integer
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function GetWindowText(hWnd As IntPtr, lpString As StringBuilder, nMaxCount As Integer) As Integer
+    End Function
     Public Declare Auto Function GetWindowRect Lib "user32.dll" (hWnd As IntPtr, ByRef lpRect As RECT) As Boolean
     Public Declare Auto Function GetWindowLong Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal nIndex As Integer) As Integer
     Public Declare Auto Function SetWindowLong Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal nIndex As Integer, ByVal dwNewLong As Integer) As Integer
@@ -102,7 +123,9 @@ Public Class WinAPI
     Public Declare Auto Function RedrawWindow Lib "user32.dll" (hWnd As IntPtr, lprcUpdate As IntPtr, hrgnUpdate As IntPtr, flags As UInteger) As Boolean
 
     'Causes a window or control to use a different set of visual style information than its class normally uses.
-    Public Declare Auto Function SetWindowTheme Lib "uxtheMe.dll" (hwnd As IntPtr, appname As String, idlist As String) As Integer
+    <DllImport("uxtheme.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function SetWindowTheme(hwnd As IntPtr, appname As String, idlist As String) As Integer
+    End Function
 
     'This function retrieves the current color of the specified display element.
     Public Const COLOR_WINDOW As Integer = 5
@@ -178,11 +201,13 @@ Public Class WinAPI
     Public Structure SHFILEINFO
         Dim hIcon As IntPtr
         Dim iIcon As Integer
-        Dim dwAttributes As Integer
+        Dim dwAttributes As UInteger
         <Runtime.InteropServices.MarshalAs(Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst:=MAX_PATH)> Dim szDisplayName As String
         <Runtime.InteropServices.MarshalAs(Runtime.InteropServices.UnmanagedType.ByValTStr, SizeConst:=80)> Dim szTypeName As String
     End Structure
-    Public Declare Ansi Function SHGetFileInfo Lib "shell32.dll" (ByVal pszPath As String, ByVal dwFileAttributes As Integer, ByRef psfi As SHFILEINFO, ByVal cbFileInfo As Integer, ByVal uFlags As Integer) As IntPtr
+    <DllImport("shell32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function SHGetFileInfo(pszPath As String, dwFileAttributes As Integer, ByRef psfi As SHFILEINFO, cbFileInfo As Integer, uFlags As Integer) As IntPtr
+    End Function
     Public Declare Ansi Function DestroyIcon Lib "user32.dll" (ByVal hIcon As IntPtr) As Boolean
 
     'IdleTime, by getting the tick count of the last time the user provided input to the session.
@@ -286,7 +311,7 @@ Public Class WinAPI
         Dim results As New List(Of IntPtr)
         EnumWindows(Function(hWnd, lParam)
                         Dim windowPid As Integer
-                        GetWindowThreadProcessId(hWnd, windowPid)
+                        Dim threadId As Integer = GetWindowThreadProcessId(hWnd, windowPid)
                         If windowPid = pid Then
                             results.Add(hWnd)
                         End If
@@ -303,8 +328,12 @@ Public Class WinAPI
     ''' <returns>The caption text of the window.</returns>
     Public Shared Function GetCaption(hWnd As IntPtr) As String
         Dim sb As New StringBuilder(512)
-        GetWindowText(hWnd, sb, sb.Capacity)
-        Return sb.ToString()
+        Dim length As Integer = GetWindowText(hWnd, sb, sb.Capacity)
+        If length > 0 Then
+            Return sb.ToString()
+        Else
+            Return String.Empty
+        End If
     End Function
 
     ''' <summary>
@@ -332,4 +361,5 @@ Public Class WinAPI
         Return System.Drawing.Color.FromArgb(255, GetRValue(colorvalue), GetGValue(colorvalue), GetBValue(colorvalue))
     End Function
 
+#Enable Warning CA1401
 End Class

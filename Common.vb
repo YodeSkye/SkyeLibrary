@@ -111,7 +111,7 @@ Public Class Common
     Public Shared Function GetRandom(ByVal min As Integer, ByVal max As Integer, Optional current As Integer? = Nothing) As Integer
 
         'Declarations
-        Static Generator As System.Random = New System.Random() 'by making Generator static, we preserve the same instance between calls (i.e., do not create new instances with the same seed over and over)
+        Static Generator As New System.Random() 'by making Generator static, we preserve the same instance between calls (i.e., do not create new instances with the same seed over and over)
         Dim result As Integer
 
         'Error Checking

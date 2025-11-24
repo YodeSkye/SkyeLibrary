@@ -47,8 +47,8 @@ Namespace UI
 		End Class
 		Private popup As ToolTipPopup 'The actual popup form
 		Private popupHandle As IntPtr 'Handle of the popup form, used to force handle creation
-		Private tooltips As New Dictionary(Of Control, String) 'Map of controls to tooltip text
-		Private tooltipImages As New Dictionary(Of Control, Image) 'Map of controls to tooltip images
+		Private ReadOnly tooltips As New Dictionary(Of Control, String) 'Map of controls to tooltip text
+		Private ReadOnly tooltipImages As New Dictionary(Of Control, Image) 'Map of controls to tooltip images
 		Private ShowDelayTimer As Timer 'Timer used to delay showing the tooltip
 		Private WithEvents HideDelayTimer As New Timer 'Timer used to delay hiding the tooltip
 		Private _hoveredcontrol As Control 'The control currently being hovered over
@@ -222,9 +222,10 @@ Namespace UI
 
 			Dim text As String = tooltips(_hoveredcontrol)
 			Dim image As Image = Nothing
-			If tooltipImages.ContainsKey(_hoveredcontrol) Then
-				image = tooltipImages(_hoveredcontrol)
-			End If
+			tooltipImages.TryGetValue(_hoveredcontrol, image)
+			'If tooltipImages.ContainsKey(_hoveredcontrol) Then
+			'	image = tooltipImages(_hoveredcontrol)
+			'End If
 
 			Dim request As New TooltipRequest(_hoveredcontrol, text, image, Nothing, False)
 			ShowTooltip(request)
@@ -236,7 +237,9 @@ Namespace UI
 		Public Sub ShowTooltip(targetControl As Control)
 			If targetControl Is Nothing OrElse Not tooltips.ContainsKey(targetControl) Then Exit Sub
 			ShowDelayTimer?.Stop()
-			Dim request As TooltipRequest = New TooltipRequest(targetControl, tooltips(targetControl), If(tooltipImages.ContainsKey(targetControl), tooltipImages(targetControl), Nothing), Nothing, True)
+			Dim img As Image = Nothing
+			tooltipImages.TryGetValue(targetControl, img)
+			Dim request As New TooltipRequest(targetControl, tooltips(targetControl), img, Nothing, True)
 			ShowTooltip(request)
 			_manualTooltipActive = True
 			StartHideDelayTimer()
@@ -250,7 +253,7 @@ Namespace UI
 		Public Sub ShowTooltip(targetControl As Control, text As String, Optional image As Image = Nothing)
 			If targetControl Is Nothing Then Exit Sub
 			ShowDelayTimer?.Stop()
-			Dim request As TooltipRequest = New TooltipRequest(targetControl, text, image, Nothing, True)
+			Dim request As New TooltipRequest(targetControl, text, image, Nothing, True)
 			ShowTooltip(request)
 			_manualTooltipActive = True
 			StartHideDelayTimer()
@@ -263,7 +266,7 @@ Namespace UI
 		''' <param name="image">Optionally, the image to show.</param>
 		Public Sub ShowTooltipAt(position As Point, text As String, Optional image As Image = Nothing)
 			ShowDelayTimer?.Stop()
-			Dim request As TooltipRequest = New TooltipRequest(Nothing, text, image, position, False)
+			Dim request As New TooltipRequest(Nothing, text, image, position, False)
 			ShowTooltip(request)
 			_manualTooltipActive = True
 			StartHideDelayTimer()
@@ -275,7 +278,7 @@ Namespace UI
 		''' <param name="image">Optionally, the image to show.</param>
 		Public Sub ShowTooltipAtCursor(text As String, Optional image As Image = Nothing)
 			ShowDelayTimer?.Stop()
-			Dim request As TooltipRequest = New TooltipRequest(Nothing, text, image, Nothing, False)
+			Dim request As New TooltipRequest(Nothing, text, image, Nothing, False)
 			ShowTooltip(request)
 			_manualTooltipActive = True
 			StartHideDelayTimer(True)
@@ -294,7 +297,7 @@ Namespace UI
 
 			'Measure Text Size
 			Dim textSize As Size = TextRenderer.MeasureText(request.Text, Me.Font, New Size(0, 0), TextFormatFlags.NoPrefix)
-			Dim totalSize As Size = New Size(textSize.Width + TextPadding * 2, textSize.Height + TextPadding * 2)
+			Dim totalSize As New Size(textSize.Width + TextPadding * 2, textSize.Height + TextPadding * 2)
 			request.Image = ResizeImage(request.Image, textSize.Height)
 			If request.Image IsNot Nothing Then totalSize.Width += request.Image.Width + TextPadding
 
@@ -333,7 +336,7 @@ Namespace UI
 				HideDelayTimer.Start()
 			End If
 		End Sub
-		Private Function ResizeImage(original As Image, maxHeight As Integer) As Image
+		Private Shared Function ResizeImage(original As Image, maxHeight As Integer) As Image
 			If original Is Nothing Then Return Nothing
 
 			'Minimum size
@@ -358,7 +361,7 @@ Namespace UI
 
 			Return resized
 		End Function
-		Private Function GetCursorPositionWithOffset() As Point
+		Private Shared Function GetCursorPositionWithOffset() As Point
 			Dim pos As Point
 			pos = Cursor.Position
 			pos = New Point(pos.X + 16, pos.Y + 32) 'Offset for cursor size
@@ -517,27 +520,26 @@ Namespace UI
 		<Editor(GetType(System.ComponentModel.Design.MultilineStringEditor), GetType(System.Drawing.Design.UITypeEditor))>
 		<Category("ToolTipEX"), Description("Specifies the Text to display in the ToolTip for this control."), Browsable(True), DefaultValue("")>
 		Public Function GetText(ctrl As Control) As String
-			If tooltips.ContainsKey(ctrl) Then
-				Return tooltips(ctrl)
-			End If
-			Return ""
+			Dim result As String = String.Empty
+			tooltips.TryGetValue(ctrl, result)
+			Return result
 		End Function
+
 		''' <summary>
 		''' Sets the Text to display in the ToolTip for the specified control.
 		''' </summary>
 		''' <param name="ctrl">A reference to a control.</param>
 		''' <param name="value">A String representing the text to be displayed in the tooltip for this control.</param>
 		Public Sub SetText(ctrl As Control, value As String)
-			'SetToolTip(ctrl, value)
-			If Not tooltips.ContainsKey(ctrl) Then
-                tooltips.Add(ctrl, value)
-                AddHandler ctrl.MouseEnter, AddressOf OnMouseEnter
-                AddHandler ctrl.MouseHover, AddressOf OnMouseHover
+			Dim isNew As Boolean = Not tooltips.ContainsKey(ctrl)
+			tooltips(ctrl) = value
+			If isNew AndAlso Not String.IsNullOrWhiteSpace(value) Then
+				AddHandler ctrl.MouseEnter, AddressOf OnMouseEnter
+				AddHandler ctrl.MouseHover, AddressOf OnMouseHover
 				AddHandler ctrl.MouseLeave, AddressOf OnMouseLeave
-			Else
-				tooltips(ctrl) = value
 			End If
 		End Sub
+
 		''' <summary>
 		''' Gets the Image to display in the ToolTip for the specified control.
 		''' </summary>
@@ -545,12 +547,11 @@ Namespace UI
 		''' <returns>The Image that will be displayed in the tooltip for this control.</returns>
 		<Category("ToolTipEX"), Description("Specifies the Image to display in the ToolTip for this Control."), Browsable(True)>
 		Public Function GetImage(ctrl As Control) As Image
-			If tooltipImages.ContainsKey(ctrl) Then
-				Return tooltipImages(ctrl)
-			Else
-				Return Nothing
-			End If
+			Dim result As Image = Nothing
+			tooltipImages.TryGetValue(ctrl, result)
+			Return result
 		End Function
+
 		''' <summary>
 		''' Sets the Image to display in the ToolTip for the specified control.
 		''' </summary>
@@ -646,7 +647,7 @@ Namespace UI
 				End If
 
 				'Draw Background
-				Dim rect As Rectangle = New Rectangle(0, 0, Me.Width - _owner.ShadowThickness, Me.Height - _owner.ShadowThickness)
+				Dim rect As New Rectangle(0, 0, Me.Width - _owner.ShadowThickness, Me.Height - _owner.ShadowThickness)
 				If _owner.GradientBackColor AndAlso _owner.GradientStartColor <> Nothing AndAlso _owner.GradientEndColor <> Nothing Then
 					Using bgBrush As New Drawing2D.LinearGradientBrush(rect, _owner.GradientStartColor, _owner.GradientEndColor, Drawing2D.LinearGradientMode.Horizontal)
 						g.FillRectangle(bgBrush, rect)
@@ -697,6 +698,9 @@ Namespace UI
 			End Sub
 
 			'Form Functions
+			<System.Diagnostics.CodeAnalysis.SuppressMessage("Performance",
+				 "CA1822:Mark members as static",
+				 Justification:="Kept as instance for override/API consistency")>
 			Protected Shadows Function ShowWithoutActivation() As Boolean
 				Return True
 			End Function
@@ -831,7 +835,7 @@ Namespace UI
 			Left
 			Right
 		End Enum
-		Private _font As Font = New Font("Segoe UI", 10, FontStyle.Regular)
+		Private _font As New Font("Segoe UI", 10, FontStyle.Regular)
 		Private _foreColor As Color = Color.Black
 		Private _backColor As Color = Color.WhiteSmoke
 		Private _borderColor As Color = Color.White
@@ -842,8 +846,8 @@ Namespace UI
 		Private _autoPopDelay As Integer = 5000
 		Private _initialDelay As Integer = 1000
 		Private _reShowDelay As Integer = 1000
-		Private _imageMap As New Dictionary(Of Control, Image)
-		Private padding As Integer = 7
+		Private ReadOnly _imageMap As New Dictionary(Of Control, Image)
+		Private ReadOnly padding As Integer = 7
 
 		'Properties
 		''' <summary>
@@ -1012,12 +1016,11 @@ Namespace UI
 		''' <returns>An Image for the specified control.</returns>
 		<Category("Misc"), Description("Specifies the Image to display in the ToolTip for this Control.")>
 		Public Function GetToolTipImage(ctrl As Control) As Image
-			If _imageMap.ContainsKey(ctrl) Then
-				Return _imageMap(ctrl)
-			Else
-				Return Nothing
-			End If
+			Dim result As Image = Nothing
+			_imageMap.TryGetValue(ctrl, result)
+			Return result
 		End Function
+
 		''' <summary>
 		''' Associates an Image with the specified Control.
 		''' </summary>
@@ -1108,7 +1111,7 @@ Namespace UI
 			Static s As Size
 			Static image As Image
 			s = TextRenderer.MeasureText(GetToolTip(e.AssociatedControl), Font)
-			If _imageMap.ContainsKey(e.AssociatedControl) Then image = _imageMap(e.AssociatedControl)
+			_imageMap.TryGetValue(e.AssociatedControl, image)
 			image = ResizeImage(image, s.Height)
 			s.Width += padding * 2
 			s.Height += padding * 2
@@ -1148,7 +1151,7 @@ Namespace UI
 			End Using
 
 			'Draw Icon
-			If _imageMap.ContainsKey(e.AssociatedControl) Then image = _imageMap(e.AssociatedControl)
+			_imageMap.TryGetValue(e.AssociatedControl, image)
 			image = ResizeImage(image, e.Bounds.Height - padding * 2)
 			If image IsNot Nothing Then
 				Dim bounds As Rectangle = GetImageBounds(image, ImageAlignment, e.Bounds.Width, CInt(e.Bounds.Height / 2 - image.Height / 2))
@@ -1180,7 +1183,7 @@ Namespace UI
 		''' <param name="original">The original Image</param>
 		''' <param name="maxHeight">The maximum height the Image can be.</param>
 		''' <returns>An Image, either the original unmodified, or a new Image scaled appropriately.</returns>
-		Private Function ResizeImage(original As Image, maxHeight As Integer) As Image
+		Private Shared Function ResizeImage(original As Image, maxHeight As Integer) As Image
 			If original Is Nothing Then Return Nothing
 
 			'Minimum size
@@ -1239,12 +1242,12 @@ Namespace UI
 		''' <summary>
 		''' Specifies how the percentage value should be drawn
 		''' </summary>
-		Public Enum percentageDrawModes As Integer
+		Public Enum PercentageDrawModes As Integer
 			None = 0 'No Percentage shown
 			Center 'Percentage alwayes centered
 			Movable 'Percentage moved with the progress activities
 		End Enum
-		Public Enum colorDrawModes As Integer
+		Public Enum ColorDrawModes As Integer
 			Gradient = 0
 			Smooth
 		End Enum
@@ -1253,11 +1256,11 @@ Namespace UI
 		Private _value As Single 'Value property value
 		Private stepValue As Integer 'Step value
 		Private percentageValue As Single 'Percent value
-		Private drawingWidth As Integer 'Drawing width according to the logical Value property
+		'Private drawingWidth As Integer 'Drawing width according to the logical Value property
 		Private m_drawingColor As Color 'Color used for drawing activities
-		Private gradientBlender As Drawing2D.ColorBlend 'Color mixer object
-		Private percentageDrawMode As percentageDrawModes 'Percent Drawing type
-		Private colorDrawMode As colorDrawModes
+		Private ReadOnly gradientBlender As Drawing2D.ColorBlend 'Color mixer object
+		Private percentageDrawMode As PercentageDrawModes 'Percent Drawing type
+		Private colorDrawMode As ColorDrawModes
 		Private _Brush As SolidBrush
 		Private writingBrush As SolidBrush 'Percent writing brush
 		Private writingFont As Font 'Font to write Percent with
@@ -1267,8 +1270,8 @@ Namespace UI
 		''' <summary>
 		''' Gets or Sets a value determine how to display Percentage value
 		''' </summary>
-		<Category("Behavior"), Description("Specify how to display the Percentage value"), DefaultValue(percentageDrawModes.Center)>
-		Public Property PercentageMode As percentageDrawModes
+		<Category("Behavior"), Description("Specify how to display the Percentage value"), DefaultValue(PercentageDrawModes.Center)>
+		Public Property PercentageMode As PercentageDrawModes
 			Get
 				Return percentageDrawMode
 			End Get
@@ -1280,8 +1283,8 @@ Namespace UI
 		''' <summary>
 		''' Gets or Sets a value to determine use of a color gradient
 		''' </summary>
-		<Category("Appearance"), Description("Specify how to display the Drawing Color"), DefaultValue(colorDrawModes.Gradient)>
-		Public Property DrawingColorMode As colorDrawModes
+		<Category("Appearance"), Description("Specify how to display the Drawing Color"), DefaultValue(ColorDrawModes.Gradient)>
+		Public Property DrawingColorMode As ColorDrawModes
 			Get
 				Return colorDrawMode
 			End Get
@@ -1428,8 +1431,8 @@ Namespace UI
 			maxValue = 100
 			minValue = 0
 			stepValue = 5
-			percentageDrawMode = percentageDrawModes.Center
-			colorDrawMode = colorDrawModes.Gradient
+			percentageDrawMode = PercentageDrawModes.Center
+			colorDrawMode = ColorDrawModes.Gradient
 
 			'ProgressEx Stuff
 			m_drawingColor = Color.Red
@@ -1470,18 +1473,18 @@ Namespace UI
 				percentageValue = (_value - minValue) / (maxValue - minValue) * 100
 				Dim w = CInt((Me.Width - 1) * (_value - minValue) / (maxValue - minValue))
 				Select Case colorDrawMode
-					Case colorDrawModes.Gradient
+					Case ColorDrawModes.Gradient
 						_Drawer.InterpolationColors = gradientBlender
 						e.Graphics.FillRectangle(_Drawer, 0, 0, w, Me.Height)
 					Case Else
 						e.Graphics.FillRectangle(_Brush, 0, 0, w, Me.Height)
 				End Select
 
-				If percentageDrawMode <> percentageDrawModes.None Then
+				If percentageDrawMode <> PercentageDrawModes.None Then
 					Dim txt = CInt(Math.Truncate(percentageValue)).ToString() & "%"
 					Dim sz = e.Graphics.MeasureString(txt, writingFont)
 					Debug.Print(percentageDrawMode.ToString)
-					Dim x = If(percentageDrawMode = percentageDrawModes.Movable, w, (Me.Width - sz.Width) / 2)
+					Dim x = If(percentageDrawMode = PercentageDrawModes.Movable, w, (Me.Width - sz.Width) / 2)
 					Dim y = (Me.Height - sz.Height) / 2
 					e.Graphics.DrawString(txt, writingFont, writingBrush, x, y)
 				End If
@@ -1618,7 +1621,7 @@ Namespace UI
 				Next
 			End If
 		End Sub
-		Private Sub DrawColor(e As DrawItemEventArgs, color As Color, ByRef nextX As Integer)
+		Private Shared Sub DrawColor(e As DrawItemEventArgs, color As Color, ByRef nextX As Integer)
 			Dim width As Integer = e.Bounds.Height * 2 - 8
 			Dim rectangle As New Rectangle(e.Bounds.X + 3, e.Bounds.Y + 3, width, e.Bounds.Height - 6)
 			Dim brush As New SolidBrush(color)
@@ -1626,7 +1629,7 @@ Namespace UI
 			nextX = width + 8
 			brush.Dispose()
 		End Sub
-		Private Sub DrawText(e As DrawItemEventArgs, color As Color, nextX As Integer)
+		Private Shared Sub DrawText(e As DrawItemEventArgs, color As Color, nextX As Integer)
 			Dim brush As New SolidBrush(e.ForeColor)
 			e.Graphics.DrawString(color.Name, e.Font, brush, New PointF(nextX, e.Bounds.Y + (e.Bounds.Height - e.Font.Height) \ 2))
 			brush.Dispose()
@@ -1787,14 +1790,14 @@ Namespace UI
 		Inherits System.Windows.Forms.ContextMenuStrip
 
 		'Declarations
-		Private WithEvents miUndo As ToolStripMenuItem
-		Private WithEvents miCut As ToolStripMenuItem
-		Private WithEvents miCopy As ToolStripMenuItem
-		Private WithEvents miPaste As ToolStripMenuItem
-		Private WithEvents miDelete As ToolStripMenuItem
-		Private miSeparatorProperCase As New ToolStripSeparator
-		Private WithEvents miProperCase As ToolStripMenuItem
-		Private WithEvents miSelectAll As ToolStripMenuItem
+		Private WithEvents MIUndo As ToolStripMenuItem
+		Private WithEvents MICut As ToolStripMenuItem
+		Private WithEvents MICopy As ToolStripMenuItem
+		Private WithEvents MIPaste As ToolStripMenuItem
+		Private WithEvents MIDelete As ToolStripMenuItem
+		Private ReadOnly MISeparatorProperCase As New ToolStripSeparator
+		Private WithEvents MIProperCase As ToolStripMenuItem
+		Private WithEvents MISelectAll As ToolStripMenuItem
 
 		'Properties
 		<DefaultValue(False)>
@@ -1803,23 +1806,23 @@ Namespace UI
 		'Events
 		Public Sub New()
 			MyBase.New
-			miUndo = New ToolStripMenuItem("Undo", Resources.ImageEditUndo16, AddressOf UndoClick)
-			Me.Items.Add(miUndo)
+			MIUndo = New ToolStripMenuItem("Undo", Resources.ImageEditUndo16, AddressOf UndoClick)
+			Me.Items.Add(MIUndo)
 			Me.Items.Add(New ToolStripSeparator())
-			miCut = New ToolStripMenuItem("Cut", Resources.ImageEditCut16, AddressOf CutClick)
-			Me.Items.Add(miCut)
-			miCopy = New ToolStripMenuItem("Copy", Resources.ImageEditCopy16, AddressOf CopyClick)
-			Me.Items.Add(miCopy)
-			miPaste = New ToolStripMenuItem("Paste", Resources.ImageEditPaste16, AddressOf PasteClick)
-			Me.Items.Add(miPaste)
-			miDelete = New ToolStripMenuItem("Delete", Resources.ImageEditDelete16, AddressOf DeleteClick)
-			Me.Items.Add(miDelete)
-			Me.Items.Add(miSeparatorProperCase)
-			miProperCase = New ToolStripMenuItem("Proper Case", Resources.ImageEditProperCase16, AddressOf ProperCaseClick)
-			Me.Items.Add(miProperCase)
+			MICut = New ToolStripMenuItem("Cut", Resources.ImageEditCut16, AddressOf CutClick)
+			Me.Items.Add(MICut)
+			MICopy = New ToolStripMenuItem("Copy", Resources.ImageEditCopy16, AddressOf CopyClick)
+			Me.Items.Add(MICopy)
+			MIPaste = New ToolStripMenuItem("Paste", Resources.ImageEditPaste16, AddressOf PasteClick)
+			Me.Items.Add(MIPaste)
+			MIDelete = New ToolStripMenuItem("Delete", Resources.ImageEditDelete16, AddressOf DeleteClick)
+			Me.Items.Add(MIDelete)
+			Me.Items.Add(MISeparatorProperCase)
+			MIProperCase = New ToolStripMenuItem("Proper Case", Resources.ImageEditProperCase16, AddressOf ProperCaseClick)
+			Me.Items.Add(MIProperCase)
 			Me.Items.Add(New ToolStripSeparator())
-			miSelectAll = New ToolStripMenuItem("Select All", Resources.ImageEditSelectAll16, AddressOf SelectAllClick)
-			Me.Items.Add(miSelectAll)
+			MISelectAll = New ToolStripMenuItem("Select All", Resources.ImageEditSelectAll16, AddressOf SelectAllClick)
+			Me.Items.Add(MISelectAll)
 		End Sub
 		Protected Overrides Sub OnHandleCreated(e As EventArgs)
 			MyBase.OnHandleCreated(e)
@@ -1836,18 +1839,20 @@ Namespace UI
 
 			Dim txbx As TextBox = TryCast(SourceControl, TextBox)
 			If txbx Is Nothing Then Return
-			miUndo.Enabled = txbx.CanUndo AndAlso Not txbx.ReadOnly
-			miCut.Enabled = txbx.SelectedText.Length > 0 AndAlso Not txbx.ReadOnly
-			miCopy.Enabled = txbx.SelectedText.Length > 0
-			miPaste.Enabled = Clipboard.ContainsText() AndAlso Not txbx.ReadOnly
-			miDelete.Enabled = txbx.SelectedText.Length > 0 AndAlso Not txbx.ReadOnly
-			miSeparatorProperCase.Visible = ShowExtendedTools
-			miProperCase.Visible = ShowExtendedTools
-			miSelectAll.Enabled = txbx.Text.Length > 0 AndAlso txbx.SelectedText.Length < txbx.Text.Length
+			MIUndo.Enabled = txbx.CanUndo AndAlso Not txbx.ReadOnly
+			MICut.Enabled = txbx.SelectedText.Length > 0 AndAlso Not txbx.ReadOnly
+			MICopy.Enabled = txbx.SelectedText.Length > 0
+			MIPaste.Enabled = Clipboard.ContainsText() AndAlso Not txbx.ReadOnly
+			MIDelete.Enabled = txbx.SelectedText.Length > 0 AndAlso Not txbx.ReadOnly
+			MISeparatorProperCase.Visible = ShowExtendedTools
+			MIProperCase.Visible = ShowExtendedTools
+			MISelectAll.Enabled = txbx.Text.Length > 0 AndAlso txbx.SelectedText.Length < txbx.Text.Length
 
 			If txbx.SelectedText.Length > 0 Then txbx.Focus()
 
 		End Sub
+		<System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+										Justification:="Kept as instance for API consistency")>
 		Public Sub ShortcutKeys(ByRef sender As TextBox, e As PreviewKeyDownEventArgs)
 			If e.Control Then
 				Select Case e.KeyCode
@@ -1883,33 +1888,33 @@ Namespace UI
 		End Sub
 
 		'Procedures
-		Private Sub Undo(txbx As TextBox)
+		Private Shared Sub Undo(txbx As TextBox)
 			txbx.Undo()
 			If txbx.FindForm IsNot Nothing Then txbx.FindForm.Validate()
 		End Sub
-		Private Sub Cut(txbx As TextBox)
+		Private Shared Sub Cut(txbx As TextBox)
 			txbx.Cut()
 			If txbx.FindForm IsNot Nothing Then txbx.FindForm.Validate()
 		End Sub
-		Private Sub Copy(txbx As TextBox)
+		Private Shared Sub Copy(txbx As TextBox)
 			txbx.Copy()
 		End Sub
-		Private Sub Paste(txbx As TextBox)
+		Private Shared Sub Paste(txbx As TextBox)
 			txbx.Paste()
 			If txbx.FindForm IsNot Nothing Then txbx.FindForm.Validate()
 		End Sub
-		Private Sub Delete(txbx As TextBox)
+		Private Shared Sub Delete(txbx As TextBox)
 			If Not txbx.ReadOnly Then
 				txbx.SelectedText = String.Empty
 				txbx.FindForm()?.Validate()
 			End If
 		End Sub
-		Private Sub ProperCase(txbx As TextBox)
+		Private Shared Sub ProperCase(txbx As TextBox)
 			txbx.Focus()
 			txbx.Text = StrConv(txbx.Text, VbStrConv.ProperCase)
 			If txbx.FindForm IsNot Nothing Then txbx.FindForm.Validate()
 		End Sub
-		Private Sub SelectAll(txbx As TextBox)
+		Private Shared Sub SelectAll(txbx As TextBox)
 			txbx.SelectAll()
 			txbx.Focus()
 		End Sub
@@ -1930,43 +1935,45 @@ Namespace UI
 		Inherits System.Windows.Forms.ContextMenuStrip
 
 		'Declarations
-		Private WithEvents miUndo As ToolStripMenuItem
-		Private WithEvents miCut As ToolStripMenuItem
-		Private WithEvents miCopy As ToolStripMenuItem
-		Private WithEvents miPaste As ToolStripMenuItem
-		Private WithEvents miDelete As ToolStripMenuItem
-		Private WithEvents miSelectAll As ToolStripMenuItem
+		Private WithEvents MIUndo As ToolStripMenuItem
+		Private WithEvents MICut As ToolStripMenuItem
+		Private WithEvents MICopy As ToolStripMenuItem
+		Private WithEvents MIPaste As ToolStripMenuItem
+		Private WithEvents MIDelete As ToolStripMenuItem
+		Private WithEvents MISelectAll As ToolStripMenuItem
 
 		'Events
 		Public Sub New()
 			MyBase.New
-			miUndo = New ToolStripMenuItem("Undo", Resources.ImageEditUndo16, AddressOf UndoClick)
-			Me.Items.Add(miUndo)
+			MIUndo = New ToolStripMenuItem("Undo", Resources.ImageEditUndo16, AddressOf UndoClick)
+			Me.Items.Add(MIUndo)
 			Me.Items.Add(New ToolStripSeparator())
-			miCut = New ToolStripMenuItem("Cut", Resources.ImageEditCut16, AddressOf CutClick)
-			Me.Items.Add(miCut)
-			miCopy = New ToolStripMenuItem("Copy", Resources.ImageEditCopy16, AddressOf CopyClick)
-			Me.Items.Add(miCopy)
-			miPaste = New ToolStripMenuItem("Paste", Resources.ImageEditPaste16, AddressOf PasteClick)
-			Me.Items.Add(miPaste)
-			miDelete = New ToolStripMenuItem("Delete", Resources.ImageEditDelete16, AddressOf DeleteClick)
-			Me.Items.Add(miDelete)
+			MICut = New ToolStripMenuItem("Cut", Resources.ImageEditCut16, AddressOf CutClick)
+			Me.Items.Add(MICut)
+			MICopy = New ToolStripMenuItem("Copy", Resources.ImageEditCopy16, AddressOf CopyClick)
+			Me.Items.Add(MICopy)
+			MIPaste = New ToolStripMenuItem("Paste", Resources.ImageEditPaste16, AddressOf PasteClick)
+			Me.Items.Add(MIPaste)
+			MIDelete = New ToolStripMenuItem("Delete", Resources.ImageEditDelete16, AddressOf DeleteClick)
+			Me.Items.Add(MIDelete)
 			Me.Items.Add(New ToolStripSeparator())
-			miSelectAll = New ToolStripMenuItem("Select All", Resources.ImageEditSelectAll16, AddressOf SelectAllClick)
-			Me.Items.Add(miSelectAll)
+			MISelectAll = New ToolStripMenuItem("Select All", Resources.ImageEditSelectAll16, AddressOf SelectAllClick)
+			Me.Items.Add(MISelectAll)
 		End Sub
 		Protected Overrides Sub OnOpening(e As CancelEventArgs)
 			MyBase.OnOpening(e)
 			Dim rtb As RichTextBox = TryCast(SourceControl, RichTextBox)
 			If rtb Is Nothing Then Return
-			miUndo.Enabled = rtb.CanUndo AndAlso Not rtb.ReadOnly
-			miCut.Enabled = rtb.SelectedText.Length > 0 AndAlso Not rtb.ReadOnly
-			miCopy.Enabled = rtb.SelectedText.Length > 0
-			miPaste.Enabled = Clipboard.ContainsText() AndAlso Not rtb.ReadOnly
-			miDelete.Enabled = rtb.SelectedText.Length > 0 AndAlso Not rtb.ReadOnly
-			miSelectAll.Enabled = rtb.Text.Length > 0 AndAlso rtb.SelectedText.Length < rtb.Text.Length
+			MIUndo.Enabled = rtb.CanUndo AndAlso Not rtb.ReadOnly
+			MICut.Enabled = rtb.SelectedText.Length > 0 AndAlso Not rtb.ReadOnly
+			MICopy.Enabled = rtb.SelectedText.Length > 0
+			MIPaste.Enabled = Clipboard.ContainsText() AndAlso Not rtb.ReadOnly
+			MIDelete.Enabled = rtb.SelectedText.Length > 0 AndAlso Not rtb.ReadOnly
+			MISelectAll.Enabled = rtb.Text.Length > 0 AndAlso rtb.SelectedText.Length < rtb.Text.Length
 			If rtb.SelectedText.Length > 0 Then rtb.Focus()
 		End Sub
+		<System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+										Justification:="Kept as instance for API consistency")>
 		Public Sub ShortcutKeys(ByRef sender As System.Windows.Forms.RichTextBox, e As PreviewKeyDownEventArgs)
 			If e.Control Then
 				Select Case e.KeyCode
@@ -1999,28 +2006,28 @@ Namespace UI
 		End Sub
 
 		'Procedures
-		Private Sub Undo(rtb As System.Windows.Forms.RichTextBox)
+		Private Shared Sub Undo(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Undo()
 			If rtb.FindForm IsNot Nothing Then rtb.FindForm.Validate()
 		End Sub
-		Private Sub Cut(rtb As System.Windows.Forms.RichTextBox)
+		Private Shared Sub Cut(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Cut()
 			If rtb.FindForm IsNot Nothing Then rtb.FindForm.Validate()
 		End Sub
-		Private Sub Copy(rtb As System.Windows.Forms.RichTextBox)
+		Private Shared Sub Copy(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Copy()
 		End Sub
-		Private Sub Paste(rtb As System.Windows.Forms.RichTextBox)
+		Private Shared Sub Paste(rtb As System.Windows.Forms.RichTextBox)
 			rtb.Paste()
 			If rtb.FindForm IsNot Nothing Then rtb.FindForm.Validate()
 		End Sub
-		Private Sub Delete(rtb As System.Windows.Forms.RichTextBox)
+		Private Shared Sub Delete(rtb As System.Windows.Forms.RichTextBox)
 			If Not rtb.ReadOnly Then
 				rtb.SelectedText = String.Empty
 				rtb.FindForm()?.Validate()
 			End If
 		End Sub
-		Private Sub SelectAll(rtb As System.Windows.Forms.RichTextBox)
+		Private Shared Sub SelectAll(rtb As System.Windows.Forms.RichTextBox)
 			rtb.SelectAll()
 			rtb.Focus()
 		End Sub
