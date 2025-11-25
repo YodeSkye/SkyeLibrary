@@ -1653,6 +1653,7 @@ Namespace UI
 			Stacked
 		End Enum
 		Private _orientation As TextOrientation = TextOrientation.Horizontal
+		Public Event CustomDraw As PaintEventHandler
 
 		' Properties
 		<DefaultValue(False)>
@@ -1670,7 +1671,7 @@ Namespace UI
 			End Set
 		End Property
 		<Category("Layout")>
-		<Description("Controls how text is rendered: Horizontal (Normal), Vertical (Rotated), or Vertical Stacked (Characters Top-to-Bottom).")>
+		<Description("Controls how text is rendered: Horizontal (Normal), Vertical (Rotated), or Vertical Stacked (Characters Top-to-Bottom). NOTE: Paint Event only fires when Orientation is set to Horizontal.")>
 		<DefaultValue(TextOrientation.Horizontal)>
 		Public Property Orientation As TextOrientation
 			Get
@@ -1702,30 +1703,35 @@ Namespace UI
 				End Select
 			End If
 		End Sub
-        Protected Overrides Sub OnPaint(e As PaintEventArgs)
-            MyBase.OnPaintBackground(e)
+		Protected Overrides Sub OnPaint(e As PaintEventArgs)
+			If Orientation = TextOrientation.Horizontal Then
+				MyBase.OnPaint(e) ' normal label behavior
+			Else
+				' your custom vertical/stacked drawing
+				MyBase.OnPaintBackground(e)
 
-			Dim g As Graphics = e.Graphics
-			Dim sf As StringFormat = GetStringFormatFromContentAlignment(TextAlign)
+				Dim g As Graphics = e.Graphics
+				Dim sf As StringFormat = GetStringFormatFromContentAlignment(TextAlign)
 
-			Select Case Orientation
-				Case TextOrientation.Horizontal
-					g.DrawString(Text, Font, New SolidBrush(Me.ForeColor), ClientRectangle, sf)
-				Case TextOrientation.Vertical
-					g.TranslateTransform(CSng(Width / 2), CSng(Height / 2))
-					g.RotateTransform(-90)
-					g.DrawString(Text, Font, New SolidBrush(Me.ForeColor), 0, 0, sf)
-					g.ResetTransform()
-				Case TextOrientation.Stacked
-					Dim chars() As Char = Me.Text.ToCharArray()
-					Dim lineHeight As Single = TextRenderer.MeasureText("X", Me.Font).Height
-					Dim y As Single = ((Height - (chars.Length * lineHeight)) / 2) + lineHeight / 2
-					For Each c As Char In chars
-						g.DrawString(c.ToString(), Font, New SolidBrush(ForeColor), New PointF(CSng(Width / 2), y), sf)
-						y += lineHeight
-					Next
-			End Select
+				Select Case Orientation
+					Case TextOrientation.Horizontal
+						g.DrawString(Text, Font, New SolidBrush(Me.ForeColor), ClientRectangle, sf)
+					Case TextOrientation.Vertical
+						g.TranslateTransform(CSng(Width / 2), CSng(Height / 2))
+						g.RotateTransform(-90)
+						g.DrawString(Text, Font, New SolidBrush(Me.ForeColor), 0, 0, sf)
+						g.ResetTransform()
+					Case TextOrientation.Stacked
+						Dim chars() As Char = Me.Text.ToCharArray()
+						Dim lineHeight As Single = TextRenderer.MeasureText("X", Me.Font).Height
+						Dim y As Single = ((Height - (chars.Length * lineHeight)) / 2) + lineHeight / 2
+						For Each c As Char In chars
+							g.DrawString(c.ToString(), Font, New SolidBrush(ForeColor), New PointF(CSng(Width / 2), y), sf)
+							y += lineHeight
+						Next
+				End Select
 
+			End If
 		End Sub
 		Protected Overrides Sub OnTextChanged(e As EventArgs)
 			MyBase.OnTextChanged(e)
