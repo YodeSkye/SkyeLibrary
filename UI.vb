@@ -2138,22 +2138,22 @@ Namespace UI
 			End If
 		End Sub
 		Private Sub UndoClick(ByVal sender As Object, ByVal e As EventArgs)
-			Undo(TryCast(SourceControl, RichTextBox))
+			Undo(TryCast(SourceControl, System.Windows.Forms.RichTextBox))
 		End Sub
 		Private Sub CutClick(ByVal sender As Object, ByVal e As EventArgs)
-			Cut(TryCast(SourceControl, RichTextBox))
+			Cut(TryCast(SourceControl, System.Windows.Forms.RichTextBox))
 		End Sub
 		Private Sub CopyClick(ByVal sender As Object, ByVal e As EventArgs)
-			Copy(TryCast(SourceControl, RichTextBox))
+			Copy(TryCast(SourceControl, System.Windows.Forms.RichTextBox))
 		End Sub
 		Private Sub PasteClick(ByVal sender As Object, ByVal e As EventArgs)
-			Paste(TryCast(SourceControl, RichTextBox))
+			Paste(TryCast(SourceControl, System.Windows.Forms.RichTextBox))
 		End Sub
 		Private Sub DeleteClick(ByVal sender As Object, ByVal e As EventArgs)
-			Delete(TryCast(SourceControl, RichTextBox))
+			Delete(TryCast(SourceControl, System.Windows.Forms.RichTextBox))
 		End Sub
 		Private Sub SelectAllClick(ByVal sender As Object, ByVal e As EventArgs)
-			SelectAll(TryCast(SourceControl, RichTextBox))
+			SelectAll(TryCast(SourceControl, System.Windows.Forms.RichTextBox))
 		End Sub
 
 		'Procedures
