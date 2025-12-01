@@ -57,6 +57,10 @@ Public Class WinAPI
     ' ClipBoard
     Public Const WM_CHANGECBCHAIN As Integer = 781 '&H30D
     Public Const WM_DRAWCLIPBOARD As Integer = 776 '&H308
+    Public Const WM_CLIPBOARDUPDATE As Integer = &H31D
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function AddClipboardFormatListener(hwnd As IntPtr) As Boolean
+    End Function
     <DllImport("user32.dll", SetLastError:=True)>
     Public Shared Function SetClipboardViewer(hWndNewViewer As IntPtr) As IntPtr 'adds the specified window to the chain of clipboard viewers
     End Function
@@ -288,11 +292,10 @@ Public Class WinAPI
     ''' <param name="getLargeIcon">True to retrieve the large icon; False for small.</param>
     ''' <returns>The extracted icon, or Nothing if retrieval fails.</returns>
     Public Shared Function GetApplicationIcon(filepath As String, Optional getlargeicon As Boolean = False) As Icon
-
         filepath = filepath.Substring(0, Math.Min(filepath.Length, MAX_PATH))
-
         Dim shinfo As New SHFILEINFO()
         Dim flags As Integer = SHGFI_ICON Or If(getlargeicon, SHGFI_LARGEICON, SHGFI_SMALLICON)
+
         Dim status As IntPtr = SHGetFileInfo(filepath, 0, shinfo, Marshal.SizeOf(shinfo), flags)
 
         If status = IntPtr.Zero OrElse shinfo.hIcon = IntPtr.Zero Then Return Nothing
@@ -305,26 +308,6 @@ Public Class WinAPI
             DestroyIcon(shinfo.hIcon)
         End Try
 
-        'filepath = Microsoft.VisualBasic.Left(filepath, MAX_PATH)
-        'Dim windowsfileinfo As New SHFILEINFO
-        'Dim status As IntPtr = IntPtr.Zero
-        'Dim nIcon As Icon
-        'Try
-        '    If getlargeicon Then : status = SHGetFileInfo(filepath, 0, windowsfileinfo, Runtime.InteropServices.Marshal.SizeOf(windowsfileinfo), SHGFI_ICON Or SHGFI_LARGEICON)
-        '    Else : status = SHGetFileInfo(filepath, 0, windowsfileinfo, Runtime.InteropServices.Marshal.SizeOf(windowsfileinfo), SHGFI_ICON Or SHGFI_SMALLICON)
-        '    End If
-        '    If status = IntPtr.Zero Then : Throw New Exception
-        '    Else
-        '        nIcon = Icon.FromHandle(windowsfileinfo.hIcon)
-        '        GetApplicationIcon = DirectCast(nIcon.Clone, Icon)
-        '        nIcon.Dispose()
-        '        If Not DestroyIcon(windowsfileinfo.hIcon) Then Throw New Exception
-        '    End If
-        'Catch : GetApplicationIcon = Nothing
-        'Finally
-        '    nIcon = Nothing
-        '    windowsfileinfo = Nothing
-        'End Try
     End Function
 
     ''' <summary>
