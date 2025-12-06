@@ -179,7 +179,9 @@ Public Class WinAPI
     Public Const COLOR_3DFACE As Integer = 15
     Public Const COLOR_GRAYTEXT As Integer = 17
     Public Const COLOR_HOTLIGHT As Integer = 26
-    Public Declare Auto Function GetSysColor Lib "user32.dll" (nIndex As Integer) As Integer
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function GetSysColor(nIndex As Integer) As Integer
+    End Function
 
     ' Keyboard Functions 'Synthesize a keystroke
     Public Const VK_CAPITAL As Integer = &H14
@@ -191,7 +193,9 @@ Public Class WinAPI
     Public Const VK_MEDIA_PLAY_PAUSE As Integer = 179 '&B3
     Public Const KEYEVENTF_EXTENDEDKEY As Integer = &H1
     Public Const KEYEVENTF_KEYUP As Integer = &H2
-    Public Declare Auto Sub keybd_event Lib "user32" (ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Integer, ByVal dwExtraInfo As Integer)
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Sub keybd_event(ByVal bVk As Byte, ByVal bScan As Byte, ByVal dwFlags As Integer, ByVal dwExtraInfo As IntPtr)
+    End Sub
 
     ' HotKeys
     Public Const WM_HOTKEY As Integer = 786 '&H312
@@ -199,20 +203,31 @@ Public Class WinAPI
     Public Const MOD_CONTROL As Integer = 2 '&H2
     Public Const MOD_ALT As Integer = 1 '&H1
     Public Const MOD_WIN As Integer = 8 '&H8
-    Public Declare Auto Function RegisterHotKey Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal id As Integer, ByVal fsModifiers As UInteger, ByVal vk As UInteger) As Boolean
-    Public Declare Auto Function UnregisterHotKey Lib "user32.dll" (ByVal hWnd As IntPtr, ByVal id As Integer) As Boolean
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function RegisterHotKey(ByVal hWnd As IntPtr, ByVal id As Integer, ByVal fsModifiers As UInteger, ByVal vk As UInteger) As Boolean
+    End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function UnregisterHotKey(ByVal hWnd As IntPtr, ByVal id As Integer) As Boolean
+    End Function
 
     ' ScreenSaver
     Public Enum EXECUTION_STATE As UInteger
-        ES_AWAYMODE_REQUIRED = 64 '&H40
-        ES_CONTINUOUS = 2147483648 '&H80000000
-        ES_DISPLAY_REQUIRED = 2 '&H2
-        ES_SYSTEM_REQUIRED = 1 '&H1
+        ES_AWAYMODE_REQUIRED = &H40 '64
+        ES_CONTINUOUS = &H80000000UI '2147483648
+        ES_DISPLAY_REQUIRED = &H2 '2
+        ES_SYSTEM_REQUIRED = &H1 '1
     End Enum
     Public Const SPI_GETSCREENSAVERRUNNING As Integer = 114
     Public Const SC_SCREENSAVE As UShort = 61760 '&HF140
-    Public Declare Auto Function SystemParametersInfo Lib "user32.dll" (ByVal uiAction As UInteger, ByVal uiParam As UInteger, ByRef pvParam As Boolean, ByVal fWinIni As UInteger) As Boolean
-    Public Declare Auto Function SetThreadExecutionState Lib "kernel32.dll" (ByVal esFlags As EXECUTION_STATE) As EXECUTION_STATE
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function SystemParametersInfo(ByVal uiAction As UInteger, ByVal uiParam As UInteger, ByRef pvParam As Boolean, ByVal fWinIni As UInteger) As Boolean
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function SystemParametersInfo(uiAction As UInteger, uiParam As UInteger, pvParam As String, fWinIni As UInteger) As Boolean
+    End Function
+    <DllImport("kernel32.dll", SetLastError:=True)>
+    Public Shared Function SetThreadExecutionState(ByVal esFlags As EXECUTION_STATE) As EXECUTION_STATE
+    End Function
 
     ' AppCommand, For Catching Media Keys
     Public Const WM_APPCOMMAND As Integer = &H319
