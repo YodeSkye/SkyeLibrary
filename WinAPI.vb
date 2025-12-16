@@ -9,7 +9,7 @@ Imports System.Text
 Public Class WinAPI
 #Disable Warning CA1401
 
-    ' General Declarations
+    ' Declarations
     Public Const HWND_BROADCAST As Integer = 65535
     Public Const WM_SYSCOMMAND As Integer = 274 '&H112
     Public Const SC_MINIMIZE As Integer = &HF020
@@ -268,14 +268,19 @@ Public Class WinAPI
     <DllImport("shell32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
     Public Shared Function SHGetFileInfo(pszPath As String, dwFileAttributes As Integer, ByRef psfi As SHFILEINFO, cbFileInfo As Integer, uFlags As Integer) As IntPtr
     End Function
-    Public Declare Ansi Function DestroyIcon Lib "user32.dll" (ByVal hIcon As IntPtr) As Boolean
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function DestroyIcon(ByVal hIcon As IntPtr) As Boolean
+    End Function
 
     ' IdleTime, by getting the tick count of the last time the user provided input to the session.
+    <StructLayout(LayoutKind.Sequential)>
     Public Structure LASTINPUTINFO
         Dim cbSize As UInteger
         Dim dwTime As UInteger
     End Structure
-    Public Declare Auto Function GetLastInputInfo Lib "user32.dll" (ByRef plii As LASTINPUTINFO) As Boolean
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function GetLastInputInfo(ByRef plii As LASTINPUTINFO) As Boolean
+    End Function
 
     ' Methods
 
@@ -292,12 +297,6 @@ Public Class WinAPI
         Catch
             Return False
         End Try
-        'Try
-        '    If SetWindowLong(handle, GWL_EXSTYLE, (GetWindowLong(handle, GWL_EXSTYLE) Or WS_EX_TOOLWINDOW)) = 0 Then : Return False
-        '    Else : Return True
-        '    End If
-        'Catch : Return False
-        'End Try
     End Function
 
     ''' <summary>
