@@ -217,6 +217,21 @@ Public Class WinAPI
     Public Shared Function RedrawWindow(hWnd As IntPtr, lprcUpdate As IntPtr, hrgnUpdate As IntPtr, flags As UInteger) As Boolean
     End Function
 
+    ' Win32 Class Styles
+    Public Const CS_VREDRAW As Integer = &H1
+    Public Const CS_HREDRAW As Integer = &H2
+    Public Const CS_DBLCLKS As Integer = &H8
+    Public Const CS_OWNDC As Integer = &H20
+    Public Const CS_CLASSDC As Integer = &H40
+    Public Const CS_PARENTDC As Integer = &H80
+    Public Const CS_NOCLOSE As Integer = &H200
+    Public Const CS_SAVEBITS As Integer = &H800
+    Public Const CS_BYTEALIGNCLIENT As Integer = &H1000
+    Public Const CS_BYTEALIGNWINDOW As Integer = &H2000
+    Public Const CS_GLOBALCLASS As Integer = &H4000
+    Public Const CS_IME As Integer = &H10000
+    Public Const CS_DROPSHADOW As Integer = &H20000
+
     ' Causes a window or control to use a different set of visual style information than its class normally uses.
     <DllImport("uxtheme.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
     Public Shared Function SetWindowTheme(hwnd As IntPtr, appname As String, idlist As String) As Integer

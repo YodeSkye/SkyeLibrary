@@ -2185,4 +2185,227 @@ Namespace UI
 
 	End Class
 
+#Region "Toast System"
+
+	' ================================
+	'  Public API (overloads)
+	' ================================
+	Public Module Toast
+
+		' Basic toast
+		Public Sub ShowToast(title As String, message As String)
+			ToastManager.Show(title, message, Nothing, False)
+		End Sub
+
+		' Toast with icon
+		Public Sub ShowToast(title As String, message As String, icon As Icon)
+			ToastManager.Show(title, message, icon, False)
+		End Sub
+
+		' Toast with icon + sound option
+		Public Sub ShowToast(title As String, message As String, icon As Icon, playSound As Boolean)
+			ToastManager.Show(title, message, icon, playSound)
+		End Sub
+
+		' Toast without icon but with sound option
+		Public Sub ShowToast(title As String, message As String, playSound As Boolean)
+			ToastManager.Show(title, message, Nothing, playSound)
+		End Sub
+
+	End Module
+
+	' ================================
+	'  Toast Manager (stacking, lifetime)
+	' ================================
+	Friend Class ToastManager
+
+		Private Shared ReadOnly ActiveToasts As New List(Of ToastForm)
+		Private Shared ReadOnly ToastWidth As Integer = 300
+		Private Shared ReadOnly ToastHeight As Integer = 80
+		Private Shared ReadOnly Margin As Integer = 10
+
+		Public Shared Sub Show(title As String, message As String, icon As Icon, playSound As Boolean)
+
+			If playSound Then System.Media.SystemSounds.Hand.Play()
+
+			Dim toast As New ToastForm(title, message, ToastWidth, ToastHeight, icon)
+
+			' Position bottom-right, stacking upward
+			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
+			Dim y = area.Bottom - ToastHeight - Margin
+
+			For Each t In ActiveToasts
+				y -= (ToastHeight + Margin)
+			Next
+
+			toast.Location = New Point(area.Right - ToastWidth - Margin, y)
+
+			ActiveToasts.Add(toast)
+
+			AddHandler toast.ToastClosed, Sub()
+											  ActiveToasts.Remove(toast)
+											  RearrangeToasts()
+										  End Sub
+
+			toast.Show()
+		End Sub
+
+		Private Shared Sub RearrangeToasts()
+			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
+			Dim y = area.Bottom - ToastHeight - Margin
+
+			For Each toast In ActiveToasts
+				toast.MoveTo(New Point(area.Right - ToastWidth - Margin, y))
+				y -= (ToastHeight + Margin)
+			Next
+		End Sub
+
+	End Class
+
+
+	' ================================
+	'  Toast Form (UI popup)
+	' ================================
+	Friend Class ToastForm
+		Inherits Form
+
+		Public Event ToastClosed()
+
+		Private ReadOnly _title As String
+		Private ReadOnly _message As String
+		Private ReadOnly _icon As Icon
+
+		Private ReadOnly FadeTimer As Timer
+		Private ReadOnly LifeTimer As Timer
+
+		Protected Overrides ReadOnly Property CreateParams As CreateParams
+			Get
+				Dim cp = MyBase.CreateParams
+				cp.ClassStyle = cp.ClassStyle Or WinAPI.CS_DROPSHADOW Or WinAPI.CS_SAVEBITS
+				Return cp
+			End Get
+		End Property
+
+		Public Sub New(title As String, message As String, width As Integer, height As Integer, icon As Icon)
+			_title = title
+			_message = message
+			_icon = icon
+
+			Me.FormBorderStyle = FormBorderStyle.None
+			Me.StartPosition = FormStartPosition.Manual
+			Me.TopMost = True
+			Me.ShowInTaskbar = False
+			Me.DoubleBuffered = True
+			Me.Size = New Size(width, height)
+			Me.Opacity = 0
+
+			Dim radius As Integer = 10
+			Dim path As New Drawing2D.GraphicsPath()
+			path.AddArc(0, 0, radius, radius, 180, 90)
+			path.AddArc(Me.Width - radius, 0, radius, radius, 270, 90)
+			path.AddArc(Me.Width - radius, Me.Height - radius, radius, radius, 0, 90)
+			path.AddArc(0, Me.Height - radius, radius, radius, 90, 90)
+			path.CloseFigure()
+			Me.Region = New Region(path)
+
+			FadeTimer = New Timer() With {.Interval = 15}
+			AddHandler FadeTimer.Tick, AddressOf FadeInTick
+
+			LifeTimer = New Timer() With {.Interval = 3000}
+			AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
+		End Sub
+
+		Protected Overrides Sub OnShown(e As EventArgs)
+			MyBase.OnShown(e)
+			FadeTimer.Start()
+			LifeTimer.Start()
+		End Sub
+
+		Private Sub FadeInTick(sender As Object, e As EventArgs)
+			If Me.Opacity < 1 Then
+				Me.Opacity += 0.05
+			Else
+				FadeTimer.Stop()
+			End If
+		End Sub
+
+		Private Sub BeginFadeOut(sender As Object, e As EventArgs)
+			LifeTimer.Stop()
+			RemoveHandler FadeTimer.Tick, AddressOf FadeInTick
+			AddHandler FadeTimer.Tick, AddressOf FadeOutTick
+			FadeTimer.Start()
+		End Sub
+
+		Private Sub FadeOutTick(sender As Object, e As EventArgs)
+			If Me.Opacity > 0 Then
+				Me.Opacity -= 0.05
+			Else
+				FadeTimer.Stop()
+				RaiseEvent ToastClosed()
+				Me.Close()
+			End If
+		End Sub
+
+		Public Sub MoveTo(p As Point)
+			Me.Location = p
+		End Sub
+
+		Protected Overrides Sub OnPaint(e As PaintEventArgs)
+			e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+
+			' Background
+			Using bg As New SolidBrush(Color.FromArgb(40, 40, 40))
+				e.Graphics.FillRectangle(bg, Me.ClientRectangle)
+			End Using
+
+			Dim textX As Integer = 10
+
+			' Draw icon if present
+			If _icon IsNot Nothing Then
+				Dim maxSize As Integer = Me.ClientRectangle.Height - 20
+
+				Dim bestIcon As Icon = _icon
+				Try
+					bestIcon = New Icon(_icon, New Size(maxSize, maxSize))
+				Catch
+				End Try
+
+				e.Graphics.DrawIcon(bestIcon, New Rectangle(10, 10, maxSize, maxSize))
+
+				textX = 20 + maxSize
+			End If
+
+			' Title (single line, ellipsis)
+			Using f1 As New Font("Segoe UI", 12, FontStyle.Bold)
+				Dim titleRect As New RectangleF(textX, 10, Me.ClientSize.Width - textX - 10, 20)
+				Dim fmt As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter}
+				e.Graphics.DrawString(_title, f1, Brushes.White, titleRect, fmt)
+			End Using
+
+			' Message (word-wrapped)
+			Using f2 As New Font("Segoe UI", 9)
+
+				Dim messageRect As New RectangleF(
+					textX,
+					35,
+					Me.ClientSize.Width - textX - 10,
+					Me.ClientSize.Height - 45
+				)
+
+				Dim fmt As New StringFormat()
+				fmt.Trimming = StringTrimming.EllipsisWord
+				fmt.FormatFlags = StringFormatFlags.LineLimit   ' <-- allows multiple lines
+				fmt.Alignment = StringAlignment.Near
+				fmt.LineAlignment = StringAlignment.Near
+
+				e.Graphics.DrawString(_message, f2, Brushes.White, messageRect, fmt)
+
+			End Using
+
+		End Sub
+
+	End Class
+
+#End Region
+
 End Namespace
