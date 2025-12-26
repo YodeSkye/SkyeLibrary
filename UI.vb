@@ -2188,34 +2188,37 @@ Namespace UI
 #Region "Toast System"
 
 	' ================================
-	'  Public API (overloads)
+	'  Public API
 	' ================================
 	Public Module Toast
 
-		' Basic toast
-		Public Sub ShowToast(title As String, message As String)
-			ToastManager.Show(title, message, Nothing, False)
-		End Sub
-
-		' Toast with icon
-		Public Sub ShowToast(title As String, message As String, icon As Icon)
-			ToastManager.Show(title, message, icon, False)
-		End Sub
-
-		' Toast with icon + sound option
-		Public Sub ShowToast(title As String, message As String, icon As Icon, playSound As Boolean)
-			ToastManager.Show(title, message, icon, playSound)
-		End Sub
-
-		' Toast without icon but with sound option
-		Public Sub ShowToast(title As String, message As String, playSound As Boolean)
-			ToastManager.Show(title, message, Nothing, playSound)
+		Public Sub ShowToast(options As ToastOptions)
+			ToastManager.Show(options)
 		End Sub
 
 	End Module
 
 	' ================================
-	'  Toast Manager (stacking, lifetime)
+	'  Public Options Class
+	' ================================
+	Public Class ToastOptions
+		Public Property Title As String
+		Public Property Message As String
+
+		Public Property Icon As Icon = Nothing
+		Public Property PlaySound As Boolean = False
+		Public Property Duration As Integer = 3000
+
+		Public Property TitleFont As Font = New Font("Segoe UI", 12, FontStyle.Bold)
+		Public Property MessageFont As Font = New Font("Segoe UI", 10, FontStyle.Regular)
+        Public Property BackColor As Color = Color.FromArgb(40, 40, 40)
+		Public Property BorderColor As Color = Color.White
+		Public Property ForeColor As Color = Color.White
+		Public Property CornerRadius As Integer = 16
+	End Class
+
+	' ================================
+	'  Toast Manager
 	' ================================
 	Friend Class ToastManager
 
@@ -2224,11 +2227,15 @@ Namespace UI
 		Private Shared ReadOnly ToastHeight As Integer = 80
 		Private Shared ReadOnly Margin As Integer = 10
 
-		Public Shared Sub Show(title As String, message As String, icon As Icon, playSound As Boolean)
+		Public Shared Sub Show(opts As ToastOptions)
 
-			If playSound Then System.Media.SystemSounds.Hand.Play()
+			' Play sound if requested
+			If opts.PlaySound Then
+				System.Media.SystemSounds.Hand.Play()
+			End If
 
-			Dim toast As New ToastForm(title, message, ToastWidth, ToastHeight, icon)
+			' Create toast form using options
+			Dim toast As New ToastForm(opts, ToastWidth, ToastHeight)
 
 			' Position bottom-right, stacking upward
 			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
@@ -2242,10 +2249,11 @@ Namespace UI
 
 			ActiveToasts.Add(toast)
 
-			AddHandler toast.ToastClosed, Sub()
-											  ActiveToasts.Remove(toast)
-											  RearrangeToasts()
-										  End Sub
+			AddHandler toast.ToastClosed,
+			Sub()
+				ActiveToasts.Remove(toast)
+				RearrangeToasts()
+			End Sub
 
 			toast.Show()
 		End Sub
@@ -2262,21 +2270,19 @@ Namespace UI
 
 	End Class
 
-
 	' ================================
-	'  Toast Form (UI popup)
+	'  Toast Form
 	' ================================
 	Friend Class ToastForm
 		Inherits Form
 
 		Public Event ToastClosed()
 
-		Private ReadOnly _title As String
-		Private ReadOnly _message As String
-		Private ReadOnly _icon As Icon
+		Private ReadOnly _opts As ToastOptions
 
 		Private ReadOnly FadeTimer As Timer
 		Private ReadOnly LifeTimer As Timer
+		Private isFadingOut As Boolean = False
 
 		Protected Overrides ReadOnly Property CreateParams As CreateParams
 			Get
@@ -2286,10 +2292,8 @@ Namespace UI
 			End Get
 		End Property
 
-		Public Sub New(title As String, message As String, width As Integer, height As Integer, icon As Icon)
-			_title = title
-			_message = message
-			_icon = icon
+		Public Sub New(opts As ToastOptions, width As Integer, height As Integer)
+			_opts = opts
 
 			Me.FormBorderStyle = FormBorderStyle.None
 			Me.StartPosition = FormStartPosition.Manual
@@ -2299,7 +2303,8 @@ Namespace UI
 			Me.Size = New Size(width, height)
 			Me.Opacity = 0
 
-			Dim radius As Integer = 10
+			' Rounded region
+			Dim radius As Integer = _opts.CornerRadius
 			Dim path As New Drawing2D.GraphicsPath()
 			path.AddArc(0, 0, radius, radius, 180, 90)
 			path.AddArc(Me.Width - radius, 0, radius, radius, 270, 90)
@@ -2311,7 +2316,7 @@ Namespace UI
 			FadeTimer = New Timer() With {.Interval = 15}
 			AddHandler FadeTimer.Tick, AddressOf FadeInTick
 
-			LifeTimer = New Timer() With {.Interval = 3000}
+			LifeTimer = New Timer() With {.Interval = _opts.Duration}
 			AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
 		End Sub
 
@@ -2331,6 +2336,7 @@ Namespace UI
 
 		Private Sub BeginFadeOut(sender As Object, e As EventArgs)
 			LifeTimer.Stop()
+			isFadingOut = True
 			RemoveHandler FadeTimer.Tick, AddressOf FadeInTick
 			AddHandler FadeTimer.Tick, AddressOf FadeOutTick
 			FadeTimer.Start()
@@ -2354,54 +2360,70 @@ Namespace UI
 			e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
 
 			' Background
-			Using bg As New SolidBrush(Color.FromArgb(40, 40, 40))
+			Using bg As New SolidBrush(_opts.BackColor)
 				e.Graphics.FillRectangle(bg, Me.ClientRectangle)
+			End Using
+
+			' Border
+			Dim radius As Integer = _opts.CornerRadius
+			Using pen As New Pen(_opts.BorderColor, 1)
+				Dim rect As New Rectangle(0, 0, Me.Width - 1, Me.Height - 1)
+				Using path As New Drawing2D.GraphicsPath()
+					path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
+					path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
+					path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90)
+					path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90)
+					path.CloseFigure()
+					e.Graphics.DrawPath(pen, path)
+				End Using
 			End Using
 
 			Dim textX As Integer = 10
 
-			' Draw icon if present
-			If _icon IsNot Nothing Then
+			' Icon
+			If _opts.Icon IsNot Nothing Then
 				Dim maxSize As Integer = Me.ClientRectangle.Height - 20
+				Dim bestIcon As Icon = _opts.Icon
 
-				Dim bestIcon As Icon = _icon
 				Try
-					bestIcon = New Icon(_icon, New Size(maxSize, maxSize))
+					bestIcon = New Icon(_opts.Icon, New Size(maxSize, maxSize))
 				Catch
 				End Try
 
 				e.Graphics.DrawIcon(bestIcon, New Rectangle(10, 10, maxSize, maxSize))
-
 				textX = 20 + maxSize
 			End If
 
-			' Title (single line, ellipsis)
-			Using f1 As New Font("Segoe UI", 12, FontStyle.Bold)
-				Dim titleRect As New RectangleF(textX, 10, Me.ClientSize.Width - textX - 10, 20)
-				Dim fmt As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter}
-				e.Graphics.DrawString(_title, f1, Brushes.White, titleRect, fmt)
+			' Title
+			Using brush As New SolidBrush(_opts.ForeColor)
+				Dim w As Single = Me.ClientSize.Width - textX - 10
+				If w > 0 AndAlso Not String.IsNullOrEmpty(_opts.Title) Then
+					Dim titleRect As New RectangleF(textX, 10, w, 20)
+					Dim fmt As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter}
+					e.Graphics.DrawString(_opts.Title, _opts.TitleFont, brush, titleRect, fmt)
+				End If
 			End Using
 
-			' Message (word-wrapped)
-			Using f2 As New Font("Segoe UI", 9)
 
+			' Message
+			Using brush As New SolidBrush(_opts.ForeColor)
 				Dim messageRect As New RectangleF(
-					textX,
-					35,
-					Me.ClientSize.Width - textX - 10,
-					Me.ClientSize.Height - 45
-				)
+						textX,
+						35,
+						Me.ClientSize.Width - textX - 10,
+						Me.ClientSize.Height - 45
+					)
 
 				Dim fmt As New StringFormat()
 				fmt.Trimming = StringTrimming.EllipsisWord
-				fmt.FormatFlags = StringFormatFlags.LineLimit   ' <-- allows multiple lines
+				fmt.FormatFlags = StringFormatFlags.LineLimit
 				fmt.Alignment = StringAlignment.Near
 				fmt.LineAlignment = StringAlignment.Near
 
-				e.Graphics.DrawString(_message, f2, Brushes.White, messageRect, fmt)
-
+				If Not String.IsNullOrEmpty(_opts.Message) Then
+					e.Graphics.DrawString(_opts.Message, _opts.MessageFont, brush, messageRect, fmt)
+				End If
 			End Using
-
 		End Sub
 
 	End Class
