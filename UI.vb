@@ -2187,9 +2187,7 @@ Namespace UI
 
 #Region "Toast System"
 
-	' ================================
-	'  Public API
-	' ================================
+	' Public API
 	Public Module Toast
 
 		Public Sub ShowToast(options As ToastOptions)
@@ -2198,28 +2196,29 @@ Namespace UI
 
 	End Module
 
-	' ================================
-	'  Public Options Class
-	' ================================
-	Public Class ToastOptions
-		Public Property Title As String
-		Public Property Message As String
+    ' Public Options Class
+    Public Class ToastOptions
 
-		Public Property Icon As Icon = Nothing
+        ' Basic Properties
+        Public Property Title As String
+        Public Property Message As String
+
+		' Optional Properties
 		Public Property PlaySound As Boolean = False
 		Public Property Duration As Integer = 3000
 
-		Public Property TitleFont As Font = New Font("Segoe UI", 12, FontStyle.Bold)
-		Public Property MessageFont As Font = New Font("Segoe UI", 10, FontStyle.Regular)
-        Public Property BackColor As Color = Color.FromArgb(40, 40, 40)
+		' Display Properties
+		Public Property Icon As Icon = Nothing
+		Public Property TitleFont As Font = New Font("Segoe UI", 11, FontStyle.Bold)
+		Public Property MessageFont As Font = New Font("Segoe UI", 9, FontStyle.Regular)
+		Public Property BackColor As Color = Color.FromArgb(40, 40, 40)
 		Public Property BorderColor As Color = Color.White
 		Public Property ForeColor As Color = Color.White
 		Public Property CornerRadius As Integer = 16
+
 	End Class
 
-	' ================================
-	'  Toast Manager
-	' ================================
+	' Toast Manager
 	Friend Class ToastManager
 
 		Private Shared ReadOnly ActiveToasts As New List(Of ToastForm)
@@ -2227,6 +2226,7 @@ Namespace UI
 		Private Shared ReadOnly ToastHeight As Integer = 80
 		Private Shared ReadOnly Margin As Integer = 10
 
+		' Events
 		Public Shared Sub Show(opts As ToastOptions)
 
 			' Play sound if requested
@@ -2240,28 +2240,25 @@ Namespace UI
 			' Position bottom-right, stacking upward
 			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
 			Dim y = area.Bottom - ToastHeight - Margin
-
 			For Each t In ActiveToasts
 				y -= (ToastHeight + Margin)
 			Next
-
 			toast.Location = New Point(area.Right - ToastWidth - Margin, y)
 
 			ActiveToasts.Add(toast)
-
 			AddHandler toast.ToastClosed,
-			Sub()
-				ActiveToasts.Remove(toast)
-				RearrangeToasts()
-			End Sub
-
+				Sub()
+					ActiveToasts.Remove(toast)
+					RearrangeToasts()
+				End Sub
 			toast.Show()
+
 		End Sub
 
+		' Methods
 		Private Shared Sub RearrangeToasts()
 			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
 			Dim y = area.Bottom - ToastHeight - Margin
-
 			For Each toast In ActiveToasts
 				toast.MoveTo(New Point(area.Right - ToastWidth - Margin, y))
 				y -= (ToastHeight + Margin)
@@ -2270,38 +2267,40 @@ Namespace UI
 
 	End Class
 
-	' ================================
-	'  Toast Form
-	' ================================
+	' Toast Form
 	Friend Class ToastForm
 		Inherits Form
 
+		' Declarations
 		Public Event ToastClosed()
-
 		Private ReadOnly _opts As ToastOptions
-
 		Private ReadOnly FadeTimer As Timer
 		Private ReadOnly LifeTimer As Timer
-		Private isFadingOut As Boolean = False
-
 		Protected Overrides ReadOnly Property CreateParams As CreateParams
 			Get
 				Dim cp = MyBase.CreateParams
 				cp.ClassStyle = cp.ClassStyle Or WinAPI.CS_DROPSHADOW Or WinAPI.CS_SAVEBITS
+				cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOOLWINDOW Or WinAPI.WS_EX_NOACTIVATE 'Hides form from Alt-Tab & Prevents focus stealing
 				Return cp
 			End Get
 		End Property
+		Protected Overrides ReadOnly Property ShowWithoutActivation As Boolean
+			Get
+				Return True
+			End Get
+		End Property
 
+		' Form Events
 		Public Sub New(opts As ToastOptions, width As Integer, height As Integer)
 			_opts = opts
 
-			Me.FormBorderStyle = FormBorderStyle.None
-			Me.StartPosition = FormStartPosition.Manual
-			Me.TopMost = True
-			Me.ShowInTaskbar = False
-			Me.DoubleBuffered = True
-			Me.Size = New Size(width, height)
-			Me.Opacity = 0
+			FormBorderStyle = FormBorderStyle.None
+			StartPosition = FormStartPosition.Manual
+			TopMost = True
+			ShowInTaskbar = False
+			DoubleBuffered = True
+			Size = New Size(width, height)
+			Opacity = 0
 
 			' Rounded region
 			Dim radius As Integer = _opts.CornerRadius
@@ -2315,47 +2314,14 @@ Namespace UI
 
 			FadeTimer = New Timer() With {.Interval = 15}
 			AddHandler FadeTimer.Tick, AddressOf FadeInTick
-
 			LifeTimer = New Timer() With {.Interval = _opts.Duration}
 			AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
 		End Sub
-
 		Protected Overrides Sub OnShown(e As EventArgs)
 			MyBase.OnShown(e)
 			FadeTimer.Start()
 			LifeTimer.Start()
 		End Sub
-
-		Private Sub FadeInTick(sender As Object, e As EventArgs)
-			If Me.Opacity < 1 Then
-				Me.Opacity += 0.05
-			Else
-				FadeTimer.Stop()
-			End If
-		End Sub
-
-		Private Sub BeginFadeOut(sender As Object, e As EventArgs)
-			LifeTimer.Stop()
-			isFadingOut = True
-			RemoveHandler FadeTimer.Tick, AddressOf FadeInTick
-			AddHandler FadeTimer.Tick, AddressOf FadeOutTick
-			FadeTimer.Start()
-		End Sub
-
-		Private Sub FadeOutTick(sender As Object, e As EventArgs)
-			If Me.Opacity > 0 Then
-				Me.Opacity -= 0.05
-			Else
-				FadeTimer.Stop()
-				RaiseEvent ToastClosed()
-				Me.Close()
-			End If
-		End Sub
-
-		Public Sub MoveTo(p As Point)
-			Me.Location = p
-		End Sub
-
 		Protected Overrides Sub OnPaint(e As PaintEventArgs)
 			e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
 
@@ -2414,16 +2380,46 @@ Namespace UI
 						Me.ClientSize.Height - 45
 					)
 
-				Dim fmt As New StringFormat()
-				fmt.Trimming = StringTrimming.EllipsisWord
-				fmt.FormatFlags = StringFormatFlags.LineLimit
-				fmt.Alignment = StringAlignment.Near
-				fmt.LineAlignment = StringAlignment.Near
+				Dim fmt As New StringFormat With {
+					.Trimming = StringTrimming.EllipsisWord,
+					.FormatFlags = StringFormatFlags.LineLimit,
+					.Alignment = StringAlignment.Near,
+					.LineAlignment = StringAlignment.Near}
 
 				If Not String.IsNullOrEmpty(_opts.Message) Then
 					e.Graphics.DrawString(_opts.Message, _opts.MessageFont, brush, messageRect, fmt)
 				End If
 			End Using
+
+		End Sub
+
+		' Handlers
+		Private Sub FadeInTick(sender As Object, e As EventArgs)
+			If Me.Opacity < 1 Then
+				Me.Opacity += 0.05
+			Else
+				FadeTimer.Stop()
+			End If
+		End Sub
+		Private Sub BeginFadeOut(sender As Object, e As EventArgs)
+			LifeTimer.Stop()
+			RemoveHandler FadeTimer.Tick, AddressOf FadeInTick
+			AddHandler FadeTimer.Tick, AddressOf FadeOutTick
+			FadeTimer.Start()
+		End Sub
+		Private Sub FadeOutTick(sender As Object, e As EventArgs)
+			If Me.Opacity > 0 Then
+				Me.Opacity -= 0.05
+			Else
+				FadeTimer.Stop()
+				RaiseEvent ToastClosed()
+				Me.Close()
+			End If
+		End Sub
+
+		' Methods
+		Public Sub MoveTo(p As Point)
+			Location = p
 		End Sub
 
 	End Class

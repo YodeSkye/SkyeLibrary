@@ -132,6 +132,7 @@ Public Class WinAPI
     Public Const GWLP_ID As Integer = -12
     Public Const WS_EX_TOOLWINDOW As Integer = 128 '&H80
     Public Const WS_EX_TOPMOST As Integer = &H8
+    Public Const WS_EX_APPWINDOW As Integer = &H40000
     Public Const WS_POPUP As Integer = &H80000000
     Public Const WS_EX_NOACTIVATE As Integer = &H8000000
     Public Const WS_EX_TRANSPARENT As Integer = &H20
