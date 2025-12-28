@@ -11,13 +11,17 @@ Public Class WinAPI
 
     ' Declarations
     Public Const HWND_BROADCAST As Integer = 65535
-    Public Const WM_SYSCOMMAND As Integer = 274 '&H112
+    Public Const HTCLIENT As Integer = 1
+    Public Const ULW_ALPHA As Integer = &H2
+    Public Const AC_SRC_OVER As Byte = &H0
+    Public Const AC_SRC_ALPHA As Byte = &H1
     Public Const SC_MINIMIZE As Integer = &HF020
     Public Const SC_MAXIMIZE As UShort = 61488 '&HF030
     Public Const SC_MAXIMIZE_TBAR As UShort = 61490 '&HF032 'NOT A WINDOWS CONSTANT 'This value is passed to WndProc when DoubleClicking on the Title Bar to Maximize a window.
     Public Const SC_RESTORE As UShort = 61728 '&HF120
     Public Const SC_RESTORE_TBAR As UShort = 61730 '&HF122 'NOT A WINDOWS CONSTANT 'This value is passed to WndProc when DoubleClicking on the Title Bar to Restore a window.
     Public Const SC_CLOSE As UShort = 61536 '&HF060
+    Public Const WM_SYSCOMMAND As Integer = 274 '&H112
     Public Const WM_ACTIVATE As UShort = &H6
     Public Const WM_PAINT As Integer = &HF
     Public Const WM_RIGHTCLICKTASKBAR As Integer = 787 '&H313 'UnDocumented Message passed when a user RightClicks on the app taskbar entry before the SystemMenu is displayed. Unless this message is fowarded, the SystemMenu won't display. Useful for replacing with custom menus or for when FormBorderStyle is set to None and the SystemMenu never displays. Just intercept and show your own custom menu. XP & earlier; after XP, ShiftRightClick is required.
@@ -37,7 +41,44 @@ Public Class WinAPI
     Public Const WM_DPICHANGED As Integer = &H2E0
     Public Const WM_PARENTNOTIFY As Integer = &H210
     Public Const WM_CANCELMODE As Integer = &H1F
+    Public Const WM_NCHITTEST As Integer = &H84
     Public Const WM_CLOSE As Integer = &H10
+    Public Const WM_DESTROY As Integer = &H2
+    <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)>
+    Public Structure WNDCLASSEX
+        Public cbSize As UInteger
+        Public style As UInteger
+        Public lpfnWndProc As IntPtr
+        Public cbClsExtra As Integer
+        Public cbWndExtra As Integer
+        Public hInstance As IntPtr
+        Public hIcon As IntPtr
+        Public hCursor As IntPtr
+        Public hbrBackground As IntPtr
+        Public lpszMenuName As String
+        Public lpszClassName As String
+        Public hIconSm As IntPtr
+    End Structure
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function RegisterClassEx(ByRef wc As WinAPI.WNDCLASSEX) As UShort
+    End Function
+    <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+    Public Shared Function CreateWindowEx(dwExStyle As Integer,
+                                           lpClassName As String,
+                                           lpWindowName As String,
+                                           dwStyle As Integer,
+                                           X As Integer,
+                                           Y As Integer,
+                                           nWidth As Integer,
+                                           nHeight As Integer,
+                                           hWndParent As IntPtr,
+                                           hMenu As IntPtr,
+                                           hInstance As IntPtr,
+                                           lpParam As IntPtr) As IntPtr
+    End Function
+    <DllImport("user32.dll")>
+    Public Shared Function DefWindowProc(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
+    End Function
     <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
     Public Shared Function GetClassName(hwnd As IntPtr, lpClassName As System.Text.StringBuilder, nMaxCount As Integer) As Integer
     End Function
@@ -53,6 +94,25 @@ Public Class WinAPI
     <DllImport("kernel32.dll", SetLastError:=True)>
     Public Shared Function IsWow64Process(hProcess As IntPtr, <Out> ByRef Wow64Process As Boolean) As Boolean
     End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function GetDC(hWnd As IntPtr) As IntPtr
+    End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function ReleaseDC(hWnd As IntPtr, hDC As IntPtr) As Integer
+    End Function
+    <DllImport("gdi32.dll", SetLastError:=True)>
+    Public Shared Function CreateCompatibleDC(hdc As IntPtr) As IntPtr
+    End Function
+    <DllImport("gdi32.dll", SetLastError:=True)>
+    Public Shared Function DeleteDC(hdc As IntPtr) As Boolean
+    End Function
+    <DllImport("gdi32.dll", SetLastError:=True)>
+    Public Shared Function SelectObject(hdc As IntPtr, h As IntPtr) As IntPtr
+    End Function
+    <DllImport("gdi32.dll", SetLastError:=True)>
+    Public Shared Function DeleteObject(hObject As IntPtr) As Boolean
+    End Function
+    Public Delegate Function WndProcDelegate(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
 
     ' ClipBoard
     Public Const WM_CHANGECBCHAIN As Integer = 781 '&H30D
@@ -130,14 +190,16 @@ Public Class WinAPI
     Public Const GWLP_WNDPROC As Integer = -4
     Public Const GWLP_HINSTANCE As Integer = -6
     Public Const GWLP_ID As Integer = -12
+    Public Const WS_VISIBLE As Integer = &H10000000
+    Public Const WS_POPUP As Integer = &H80000000
+    Public Const WS_MINIMIZEBOX As Integer = 131072 '&H20000 'Turn on the WS_MINIMIZEBOX style flag for borderless windows so you can minimize/restore from the taskbar.
+    Public Const WS_MAXIMIZE As Integer = 16777216 '&H1000000
     Public Const WS_EX_TOOLWINDOW As Integer = 128 '&H80
     Public Const WS_EX_TOPMOST As Integer = &H8
     Public Const WS_EX_APPWINDOW As Integer = &H40000
-    Public Const WS_POPUP As Integer = &H80000000
     Public Const WS_EX_NOACTIVATE As Integer = &H8000000
     Public Const WS_EX_TRANSPARENT As Integer = &H20
-    Public Const WS_MINIMIZEBOX As Integer = 131072 '&H20000 'Turn on the WS_MINIMIZEBOX style flag for borderless windows so you can minimize/restore from the taskbar.
-    Public Const WS_MAXIMIZE As Integer = 16777216 '&H1000000
+    Public Const WS_EX_LAYERED As Integer = &H80000
     Public Const RDW_INVALIDATE As UInteger = &H1
     Public Const RDW_ERASE As UInteger = &H4
     Public Const RDW_ALLCHILDREN As UInteger = &H80
@@ -165,6 +227,23 @@ Public Class WinAPI
         Public Top As Integer
         Public Right As Integer
         Public Bottom As Integer
+    End Structure
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure POINT
+        Public X As Integer
+        Public Y As Integer
+    End Structure
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure SIZE
+        Public cx As Integer
+        Public cy As Integer
+    End Structure
+    <StructLayout(LayoutKind.Sequential, Pack:=1)>
+    Public Structure BLENDFUNCTION
+        Public BlendOp As Byte
+        Public BlendFlags As Byte
+        Public SourceConstantAlpha As Byte
+        Public AlphaFormat As Byte
     End Structure
     Public Delegate Function EnumWindowsProc(hWnd As IntPtr, lParam As IntPtr) As Boolean
     <DllImport("user32.dll", SetLastError:=True)>
@@ -216,6 +295,20 @@ Public Class WinAPI
     End Function
     <DllImport("user32.dll", SetLastError:=True)>
     Public Shared Function RedrawWindow(hWnd As IntPtr, lprcUpdate As IntPtr, hrgnUpdate As IntPtr, flags As UInteger) As Boolean
+    End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function DestroyWindow(hWnd As IntPtr) As Boolean
+    End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function UpdateLayeredWindow(hWnd As IntPtr,
+                                                hdcDst As IntPtr,
+                                                ByRef pptDst As WinAPI.POINT,
+                                                ByRef psize As WinAPI.SIZE,
+                                                hdcSrc As IntPtr,
+                                                ByRef pprSrc As WinAPI.POINT,
+                                                crKey As Integer,
+                                                ByRef pblend As WinAPI.BLENDFUNCTION,
+                                                dwFlags As Integer) As Boolean
     End Function
 
     ' Win32 Class Styles

@@ -1,13 +1,17 @@
 ﻿
 Imports System.ComponentModel
+Imports System.Drawing
+Imports System.Drawing.Drawing2D
+Imports System.Runtime.InteropServices
 Imports System.Text
+Imports System.Windows.Forms
 
 Namespace UI
 
-    ''' <summary>
-    ''' Extended ToolTip control with custom colors, fonts and image support, and many more features. Does not inherit from the standard ToolTip control.
-    ''' </summary>
-    <ToolboxItem(True)>
+	''' <summary>
+	''' Extended ToolTip control with custom colors, fonts and image support, and many more features. Does not inherit from the standard ToolTip control.
+	''' </summary>
+	<ToolboxItem(True)>
 	<ProvideProperty("Text", GetType(Control))>
 	<ProvideProperty("Image", GetType(Control))>
 	Public Class ToolTipEX
@@ -1644,7 +1648,7 @@ Namespace UI
 	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
 	Public Class Label
-        Inherits System.Windows.Forms.Label
+		Inherits System.Windows.Forms.Label
 
 		' Declarations
 		Public Enum TextOrientation
@@ -2196,18 +2200,22 @@ Namespace UI
 
 	End Module
 
-    ' Public Options Class
-    Public Class ToastOptions
+	' Public Options Class
+	Public Class ToastOptions
 
-        ' Basic Properties
-        Public Property Title As String
-        Public Property Message As String
+		' Basic Properties
+		Public Property Title As String
+		Public Property Message As String
+
 
 		' Optional Properties
 		Public Property PlaySound As Boolean = False
 		Public Property Duration As Integer = 3000
 
+
 		' Display Properties
+		Public Property Width As Integer = 300
+		Public Property Height As Integer = 80
 		Public Property Icon As Icon = Nothing
 		Public Property TitleFont As Font = New Font("Segoe UI", 11, FontStyle.Bold)
 		Public Property MessageFont As Font = New Font("Segoe UI", 9, FontStyle.Regular)
@@ -2218,129 +2226,298 @@ Namespace UI
 
 	End Class
 
-	' Toast Manager
+	' Manager
 	Friend Class ToastManager
 
-		Private Shared ReadOnly ActiveToasts As New List(Of ToastForm)
-		Private Shared ReadOnly ToastWidth As Integer = 300
-		Private Shared ReadOnly ToastHeight As Integer = 80
-		Private Shared ReadOnly Margin As Integer = 10
+        ' Declarations
+        Private Shared ReadOnly ActiveToasts As New List(Of ToastWindow)
+		Private Shared ReadOnly ToastWidth As Integer = 300 'REMOVE THESE
+        Private Shared ReadOnly ToastHeight As Integer = 80
+        Private Shared ReadOnly Margin As Integer = 10
+        Private Shared toast As ToastWindow
 
 		' Events
 		Public Shared Sub Show(opts As ToastOptions)
 
-			' Play sound if requested
-			If opts.PlaySound Then
-				System.Media.SystemSounds.Hand.Play()
-			End If
+            ' Play sound if requested
+            If opts.PlaySound Then
+                System.Media.SystemSounds.Hand.Play()
+            End If
 
-			' Create toast form using options
-			Dim toast As New ToastForm(opts, ToastWidth, ToastHeight)
+            ' Create toast window
+            toast = New ToastWindow(opts)
 
-			' Position bottom-right, stacking upward
-			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
-			Dim y = area.Bottom - ToastHeight - Margin
-			For Each t In ActiveToasts
-				y -= (ToastHeight + Margin)
-			Next
-			toast.Location = New Point(area.Right - ToastWidth - Margin, y)
+            ' Track active toasts BEFORE positioning
+            ActiveToasts.Add(toast)
 
-			ActiveToasts.Add(toast)
+            ' Position bottom-right, stacking upward
+            RearrangeToasts()
+
+            ' Show toast at its assigned position
+            toast.ShowToastAt(toast.TargetPosition)
+
 			AddHandler toast.ToastClosed,
-				Sub()
-					ActiveToasts.Remove(toast)
-					RearrangeToasts()
+                Sub()
+                    ActiveToasts.Remove(toast)
 				End Sub
-			toast.Show()
 
 		End Sub
 
 		' Methods
-		Private Shared Sub RearrangeToasts()
-			Dim area = System.Windows.Forms.Screen.PrimaryScreen.WorkingArea
-			Dim y = area.Bottom - ToastHeight - Margin
-			For Each toast In ActiveToasts
-				toast.MoveTo(New Point(area.Right - ToastWidth - Margin, y))
-				y -= (ToastHeight + Margin)
-			Next
-		End Sub
+		Public Shared Sub RearrangeToasts()
+            If ActiveToasts.Count = 0 Then Exit Sub
 
-	End Class
+            Dim first = ActiveToasts(0)
+            Dim area = Screen.FromPoint(first.TargetPosition).WorkingArea
 
-	' Toast Form
-	Friend Class ToastForm
-		Inherits Form
+            ' Start at the TOP of the stack
+            Dim y = area.Bottom - ((ToastHeight + Margin) * ActiveToasts.Count)
 
-		' Declarations
-		Public Event ToastClosed()
+            For Each toast In ActiveToasts
+                toast.TargetPosition = New Point(area.Right - ToastWidth - Margin, y)
+                toast.MoveTo(toast.TargetPosition)
+                y += (ToastHeight + Margin) ' stack downward
+            Next
+        End Sub
+
+    End Class
+
+	' Win32 Layered Window
+	Public Class LayeredToastWindow
+		Implements IDisposable
+
+		Private _hwnd As IntPtr
+		Private ReadOnly _className As String
+		Private ReadOnly _wndProc As WinAPI.WndProcDelegate
 		Private ReadOnly _opts As ToastOptions
-		Private ReadOnly FadeTimer As Timer
-		Private ReadOnly LifeTimer As Timer
-		Protected Overrides ReadOnly Property CreateParams As CreateParams
-			Get
-				Dim cp = MyBase.CreateParams
-				cp.ClassStyle = cp.ClassStyle Or WinAPI.CS_DROPSHADOW Or WinAPI.CS_SAVEBITS
-				cp.ExStyle = cp.ExStyle Or WinAPI.WS_EX_TOOLWINDOW Or WinAPI.WS_EX_NOACTIVATE 'Hides form from Alt-Tab & Prevents focus stealing
-				Return cp
-			End Get
-		End Property
-		Protected Overrides ReadOnly Property ShowWithoutActivation As Boolean
-			Get
-				Return True
-			End Get
-		End Property
 
-		' Form Events
-		Public Sub New(opts As ToastOptions, width As Integer, height As Integer)
+		Private ReadOnly _width As Integer
+		Private ReadOnly _height As Integer
+		Private _opacity As Byte = 0
+
+		Private _lastPos As System.Drawing.Point
+		Private _hasInitialPosition As Boolean = False
+
+		Public Event ToastClosed()
+
+		' ------------- WndProc ---------------------------
+		Private Function WindowProc(hWnd As IntPtr,
+								msg As UInteger,
+								wParam As IntPtr,
+								lParam As IntPtr) As IntPtr
+
+			Select Case CInt(msg)
+				Case WinAPI.WM_MOUSEACTIVATE
+					Return New IntPtr(WinAPI.MA_NOACTIVATE)
+
+				Case WinAPI.WM_NCHITTEST
+					Return New IntPtr(WinAPI.HTCLIENT)
+
+				Case WinAPI.WM_DESTROY
+					' no special cleanup needed here
+			End Select
+
+			Return WinAPI.DefWindowProc(hWnd, msg, wParam, lParam)
+		End Function
+
+		' ------------- Constructor -------------------------------
+		Public Sub New(opts As ToastOptions)
 			_opts = opts
+			_width = opts.Width
+			_height = opts.Height
 
-			FormBorderStyle = FormBorderStyle.None
-			StartPosition = FormStartPosition.Manual
-			TopMost = True
-			ShowInTaskbar = False
-			DoubleBuffered = True
-			Size = New Size(width, height)
-			Opacity = 0
+			_className = "LayeredToast_" & Guid.NewGuid().ToString("N")
+			_wndProc = AddressOf Me.WindowProc
 
-			' Rounded region
-			Dim radius As Integer = _opts.CornerRadius
-			Dim path As New Drawing2D.GraphicsPath()
-			path.AddArc(0, 0, radius, radius, 180, 90)
-			path.AddArc(Me.Width - radius, 0, radius, radius, 270, 90)
-			path.AddArc(Me.Width - radius, Me.Height - radius, radius, radius, 0, 90)
-			path.AddArc(0, Me.Height - radius, radius, radius, 90, 90)
-			path.CloseFigure()
-			Me.Region = New Region(path)
+			RegisterWindowClass()
+			CreateLayeredWindow()
 
-			FadeTimer = New Timer() With {.Interval = 15}
-			AddHandler FadeTimer.Tick, AddressOf FadeInTick
-			LifeTimer = New Timer() With {.Interval = _opts.Duration}
-			AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
 		End Sub
-		Protected Overrides Sub OnShown(e As EventArgs)
-			MyBase.OnShown(e)
-			FadeTimer.Start()
-			LifeTimer.Start()
-		End Sub
-		Protected Overrides Sub OnPaint(e As PaintEventArgs)
-			e.Graphics.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+		Private Sub RegisterWindowClass()
+			Dim wc As New WinAPI.WNDCLASSEX()
+			wc.cbSize = CUInt(Marshal.SizeOf(wc))
+			wc.style = 0UI
+			wc.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProc)
+			wc.hInstance = Marshal.GetHINSTANCE(GetType(LayeredToastWindow).Module)
+			wc.lpszClassName = _className
 
-			' Background
-			Using bg As New SolidBrush(_opts.BackColor)
-				e.Graphics.FillRectangle(bg, Me.ClientRectangle)
+			If WinAPI.RegisterClassEx(wc) = 0US Then
+				Throw New System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error())
+			End If
+		End Sub
+		Private Sub CreateLayeredWindow()
+			Dim exStyle = WinAPI.WS_EX_TOPMOST Or WinAPI.WS_EX_TOOLWINDOW Or WinAPI.WS_EX_NOACTIVATE Or WinAPI.WS_EX_LAYERED
+			Dim style = WinAPI.WS_POPUP
+
+			_hwnd = WinAPI.CreateWindowEx(exStyle,
+							   _className,
+							   "",
+							   style,
+							   0, 0, _width, _height,
+							   IntPtr.Zero, IntPtr.Zero,
+							   Marshal.GetHINSTANCE(GetType(LayeredToastWindow).Module),
+							   IntPtr.Zero)
+
+			If _hwnd = IntPtr.Zero Then
+				Throw New System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error())
+			End If
+
+			' Ensure WS_EX_LAYERED remains set
+			Dim currentEx As IntPtr = WinAPI.GetWindowLongPtr(_hwnd, WinAPI.GWL_EXSTYLE)
+			Dim newEx As Long = currentEx.ToInt64() Or WinAPI.WS_EX_LAYERED
+			WinAPI.SetWindowLongPtr(_hwnd, WinAPI.GWL_EXSTYLE, New IntPtr(newEx))
+		End Sub
+
+		' ------------- IDisposable -----------------------
+		Public Sub Dispose() Implements IDisposable.Dispose
+			If _hwnd <> IntPtr.Zero Then
+				WinAPI.DestroyWindow(_hwnd)
+				_hwnd = IntPtr.Zero
+			End If
+		End Sub
+
+		' ------------- Public API -------------------------
+		Public Sub ShowAt(screenPos As System.Drawing.Point)
+			_opacity = 0
+
+			' 1. Move the window FIRST (no rendering yet)
+			MoveTo(screenPos)
+
+			' 2. Now safe to render at the correct position
+			RefreshLayer()
+
+		End Sub
+		Public Sub MoveTo(screenPos As System.Drawing.Point)
+			' Store the new position
+			_lastPos = screenPos
+			_hasInitialPosition = True
+
+			' Move the window WITHOUT redrawing the bitmap
+			WinAPI.SetWindowPos(_hwnd, WinAPI.HWND_TOPMOST,
+				 screenPos.X, screenPos.Y,
+				 _width, _height,
+				 WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW)
+
+			' Now update the bitmap at the new position
+			'RefreshLayer()
+		End Sub
+		Public Sub SetOpacity(value As Double)
+			If value < 0.0 Then value = 0.0
+			If value > 1.0 Then value = 1.0
+
+			Dim byteOpacity As Byte = CByte(value * 255)
+			_opacity = byteOpacity
+
+			RefreshLayer()
+		End Sub
+		Public Sub CloseToast()
+			RaiseEvent ToastClosed()
+
+			If _hwnd <> IntPtr.Zero Then
+				WinAPI.DestroyWindow(_hwnd)
+				_hwnd = IntPtr.Zero
+			End If
+		End Sub
+		Public Sub Destroy()
+			If _hwnd <> IntPtr.Zero Then
+				WinAPI.DestroyWindow(_hwnd)
+				_hwnd = IntPtr.Zero
+			End If
+		End Sub
+
+		' ------------- Layered Render Pipeline -----------
+		Private Sub RefreshLayer()
+			' Use the last known position; window already moved via MoveTo
+			UpdateBitmapAndApply(_lastPos)
+		End Sub
+		Private Sub UpdateBitmapAndApply(screenPos As System.Drawing.Point)
+			If _hwnd = IntPtr.Zero Then Return
+
+			' ⭐ DO NOT RENDER UNTIL WE HAVE A REAL POSITION
+			If Not _hasInitialPosition Then Return
+
+			Dim size As New WinAPI.SIZE With {.cx = _width, .cy = _height}
+			Dim dstPoint As New WinAPI.POINT With {.X = screenPos.X, .Y = screenPos.Y}
+			Dim srcPoint As New WinAPI.POINT With {.X = 0, .Y = 0}
+
+			Dim hdcScreen = WinAPI.GetDC(IntPtr.Zero)
+			If hdcScreen = IntPtr.Zero Then Return
+
+			Dim hdcMem = WinAPI.CreateCompatibleDC(hdcScreen)
+			If hdcMem = IntPtr.Zero Then
+				WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
+				Return
+			End If
+
+			' Create ARGB surface for GDI+
+			Using bmp As New Bitmap(_width, _height, Imaging.PixelFormat.Format32bppArgb)
+				Using g As Graphics = Graphics.FromImage(bmp)
+					g.SmoothingMode = SmoothingMode.AntiAlias
+					RenderToast(g)
+				End Using
+
+				Dim hBitmap As IntPtr = bmp.GetHbitmap(Color.FromArgb(0)) ' preserve alpha
+				Dim oldObj = WinAPI.SelectObject(hdcMem, hBitmap)
+
+				Dim blend As New WinAPI.BLENDFUNCTION() With {
+			.BlendOp = WinAPI.AC_SRC_OVER,
+			.BlendFlags = 0,
+			.SourceConstantAlpha = _opacity,
+			.AlphaFormat = WinAPI.AC_SRC_ALPHA
+		}
+
+				' Position
+
+				Dim ok = WinAPI.UpdateLayeredWindow(_hwnd,
+									 hdcScreen,
+									 dstPoint,
+									 size,
+									 hdcMem,
+									 srcPoint,
+									 0,
+									 blend,
+									 WinAPI.ULW_ALPHA)
+
+				' Cleanup
+				WinAPI.SelectObject(hdcMem, oldObj)
+				WinAPI.DeleteObject(hBitmap)
 			End Using
 
-			' Border
-			Dim radius As Integer = _opts.CornerRadius
-			Using pen As New Pen(_opts.BorderColor, 1)
-				Dim rect As New Rectangle(0, 0, Me.Width - 1, Me.Height - 1)
-				Using path As New Drawing2D.GraphicsPath()
-					path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
-					path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
-					path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90)
-					path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90)
-					path.CloseFigure()
-					e.Graphics.DrawPath(pen, path)
+			WinAPI.DeleteDC(hdcMem)
+			WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
+
+		End Sub
+
+		' ------------- Drawing ---------------------------
+		Private Sub RenderToast(g As Graphics)
+			Dim w = _width
+			Dim h = _height
+
+			Dim bgColor = _opts.BackColor
+			Dim borderColor = _opts.BorderColor
+			Dim foreColor = _opts.ForeColor
+			Dim radius = _opts.CornerRadius
+
+			' Clear entire bitmap to transparent
+			g.Clear(Color.Transparent)
+
+			' Rounded rect background
+			Dim inset As Single = 0.5F
+			Dim rect As New RectangleF(inset, inset, w - 1 - inset, h - 1 - inset)
+
+			Using path As New GraphicsPath()
+				path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
+				path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
+				path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90)
+				path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90)
+				path.CloseFigure()
+
+				Using bgBrush As New SolidBrush(bgColor)
+					g.FillPath(bgBrush, path)
+				End Using
+
+				Using pen As New Pen(borderColor, 1)
+					g.DrawPath(pen, path)
 				End Using
 			End Using
 
@@ -2348,80 +2525,124 @@ Namespace UI
 
 			' Icon
 			If _opts.Icon IsNot Nothing Then
-				Dim maxSize As Integer = Me.ClientRectangle.Height - 20
+				Dim maxSize As Integer = h - 20
 				Dim bestIcon As Icon = _opts.Icon
-
 				Try
-					bestIcon = New Icon(_opts.Icon, New Size(maxSize, maxSize))
+					bestIcon = New Icon(_opts.Icon, New System.Drawing.Size(maxSize, maxSize))
 				Catch
 				End Try
 
-				e.Graphics.DrawIcon(bestIcon, New Rectangle(10, 10, maxSize, maxSize))
+				g.DrawIcon(bestIcon, New Rectangle(10, 10, maxSize, maxSize))
 				textX = 20 + maxSize
 			End If
 
 			' Title
-			Using brush As New SolidBrush(_opts.ForeColor)
-				Dim w As Single = Me.ClientSize.Width - textX - 10
-				If w > 0 AndAlso Not String.IsNullOrEmpty(_opts.Title) Then
-					Dim titleRect As New RectangleF(textX, 10, w, 20)
+			Using brush As New SolidBrush(foreColor)
+				Dim wAvail As Single = w - textX - 10
+				If wAvail > 0 AndAlso Not String.IsNullOrEmpty(_opts.Title) Then
+					Dim titleRect As New RectangleF(textX, 10, wAvail, 20)
 					Dim fmt As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter}
-					e.Graphics.DrawString(_opts.Title, _opts.TitleFont, brush, titleRect, fmt)
+					g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRect, fmt)
 				End If
 			End Using
-
 
 			' Message
-			Using brush As New SolidBrush(_opts.ForeColor)
+			Using brush As New SolidBrush(foreColor)
 				Dim messageRect As New RectangleF(
-						textX,
-						35,
-						Me.ClientSize.Width - textX - 10,
-						Me.ClientSize.Height - 45
-					)
+				textX,
+				35,
+				w - textX - 10,
+				h - 45
+			)
 
 				Dim fmt As New StringFormat With {
-					.Trimming = StringTrimming.EllipsisWord,
-					.FormatFlags = StringFormatFlags.LineLimit,
-					.Alignment = StringAlignment.Near,
-					.LineAlignment = StringAlignment.Near}
+				.Trimming = StringTrimming.EllipsisWord,
+				.FormatFlags = StringFormatFlags.LineLimit,
+				.Alignment = StringAlignment.Near,
+				.LineAlignment = StringAlignment.Near
+			}
 
 				If Not String.IsNullOrEmpty(_opts.Message) Then
-					e.Graphics.DrawString(_opts.Message, _opts.MessageFont, brush, messageRect, fmt)
+					g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRect, fmt)
 				End If
 			End Using
-
 		End Sub
 
-		' Handlers
-		Private Sub FadeInTick(sender As Object, e As EventArgs)
-			If Me.Opacity < 1 Then
-				Me.Opacity += 0.05
+	End Class
+
+	' WinForms Window
+	Public Class ToastWindow
+        Inherits LayeredToastWindow
+
+		' Declarations
+		Private ReadOnly _opts As ToastOptions
+		Private ReadOnly FadeTimer As Timer
+		Private ReadOnly LifeTimer As Timer
+		Private _opacity As Double = 0.0
+		Private _fadingOut As Boolean = False
+		Public ReadOnly Property IsFadingOut As Boolean
+			Get
+				Return _fadingOut
+			End Get
+		End Property
+		Public Property TargetPosition As System.Drawing.Point
+
+		Public Shadows Event ToastClosed()
+
+		' Constructor
+		Public Sub New(opts As ToastOptions)
+			MyBase.New(opts)
+			_opts = opts
+			FadeTimer = New Timer() With {.Interval = 15}
+			AddHandler FadeTimer.Tick, AddressOf FadeTick
+			LifeTimer = New Timer() With {.Interval = _opts.Duration}
+			AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
+		End Sub
+
+		' Public API
+		Public Sub ShowToastAt(p As System.Drawing.Point)
+			_opacity = 0.0
+			_fadingOut = False
+			MyBase.ShowAt(p)
+			FadeTimer.Start()
+			LifeTimer.Start()
+		End Sub
+		Public Sub CloseToastWindow()
+			FadeTimer.Stop()
+			LifeTimer.Stop()
+			_fadingOut = True
+			FadeTimer.Start()
+		End Sub
+
+		' Fade Logic
+		Private Sub FadeTick(sender As Object, e As EventArgs)
+			If Not _fadingOut Then
+				' Fade in
+				If _opacity < 1.0 Then
+					_opacity += 0.05
+					MyBase.SetOpacity(_opacity)
+				Else
+					FadeTimer.Stop()
+
+				End If
+
 			Else
-				FadeTimer.Stop()
+				' Fade out
+				If _opacity > 0.0 Then
+					_opacity -= 0.05
+					MyBase.SetOpacity(_opacity)
+				Else
+					FadeTimer.Stop()
+					RaiseEvent ToastClosed()
+					MyBase.Destroy()
+				End If
 			End If
 		End Sub
 		Private Sub BeginFadeOut(sender As Object, e As EventArgs)
 			LifeTimer.Stop()
-			RemoveHandler FadeTimer.Tick, AddressOf FadeInTick
-			AddHandler FadeTimer.Tick, AddressOf FadeOutTick
+			_fadingOut = True
 			FadeTimer.Start()
 		End Sub
-		Private Sub FadeOutTick(sender As Object, e As EventArgs)
-			If Me.Opacity > 0 Then
-				Me.Opacity -= 0.05
-			Else
-				FadeTimer.Stop()
-				RaiseEvent ToastClosed()
-				Me.Close()
-			End If
-		End Sub
-
-		' Methods
-		Public Sub MoveTo(p As Point)
-			Location = p
-		End Sub
-
 	End Class
 
 #End Region
