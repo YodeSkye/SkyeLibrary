@@ -2215,72 +2215,74 @@ Namespace UI
 
 		' Display Properties
 		Public Property Width As Integer = 300
-		Public Property Height As Integer = 80
+        Public Property Height As Integer = 80
+		Public Property Margin As Integer = 10
+		Public Property Image As Image = Nothing
 		Public Property Icon As Icon = Nothing
+
 		Public Property TitleFont As Font = New Font("Segoe UI", 11, FontStyle.Bold)
 		Public Property MessageFont As Font = New Font("Segoe UI", 9, FontStyle.Regular)
 		Public Property BackColor As Color = Color.FromArgb(40, 40, 40)
 		Public Property BorderColor As Color = Color.White
-		Public Property ForeColor As Color = Color.White
+        Public Property ForeColor As Color = Color.White
+		Public Property BorderWidth As Integer = 2
+		''' <summary>
+		''' Sets the corner radius for rounded corners of the toast window. Zero value means no rounding (square corners).
+		''' </summary>
+		''' <returns></returns>
 		Public Property CornerRadius As Integer = 16
+		Public Property Shadow As Boolean = True
 
 	End Class
 
 	' Manager
 	Friend Class ToastManager
 
-        ' Declarations
-        Private Shared ReadOnly ActiveToasts As New List(Of ToastWindow)
-		Private Shared ReadOnly ToastWidth As Integer = 300 'REMOVE THESE
-        Private Shared ReadOnly ToastHeight As Integer = 80
-        Private Shared ReadOnly Margin As Integer = 10
-        Private Shared toast As ToastWindow
+		Private Shared _activeToast As ToastWindow
+		Private Shared _margin As Integer
 
-		' Events
 		Public Shared Sub Show(opts As ToastOptions)
+			_margin = opts.Margin
 
-            ' Play sound if requested
-            If opts.PlaySound Then
-                System.Media.SystemSounds.Hand.Play()
-            End If
+			' Play sound if requested
+			If opts.PlaySound Then
+				System.Media.SystemSounds.Hand.Play()
+			End If
 
-            ' Create toast window
-            toast = New ToastWindow(opts)
+			' Close any existing toast immediately
+			If _activeToast IsNot Nothing Then
+				_activeToast.CloseImmediately()
+				_activeToast = Nothing
+			End If
 
-            ' Track active toasts BEFORE positioning
-            ActiveToasts.Add(toast)
+			' Create the new toast
+			Dim toast As New ToastWindow(opts)
+			_activeToast = toast
 
-            ' Position bottom-right, stacking upward
-            RearrangeToasts()
+			' Compute position (you will add enum support soon)
+			Dim pos As Point = ComputePosition(opts.Width, opts.Height)
+			toast.TargetPosition = pos
 
-            ' Show toast at its assigned position
-            toast.ShowToastAt(toast.TargetPosition)
+			' Show it
+			toast.ShowToastAt(pos)
 
+			' Cleanup when closed
 			AddHandler toast.ToastClosed,
-                Sub()
-                    ActiveToasts.Remove(toast)
-				End Sub
+			Sub()
+				If _activeToast Is toast Then
+					_activeToast = Nothing
+				End If
+			End Sub
 
 		End Sub
 
-		' Methods
-		Public Shared Sub RearrangeToasts()
-            If ActiveToasts.Count = 0 Then Exit Sub
+		' Placeholder for your upcoming enum-based positioning
+		Private Shared Function ComputePosition(width As Integer, height As Integer) As Point
+			Dim area = Screen.FromPoint(_activeToast.TargetPosition).WorkingArea
+			Return New Point(area.Right - width - _margin, area.Bottom - height - _margin)
+		End Function
 
-            Dim first = ActiveToasts(0)
-            Dim area = Screen.FromPoint(first.TargetPosition).WorkingArea
-
-            ' Start at the TOP of the stack
-            Dim y = area.Bottom - ((ToastHeight + Margin) * ActiveToasts.Count)
-
-            For Each toast In ActiveToasts
-                toast.TargetPosition = New Point(area.Right - ToastWidth - Margin, y)
-                toast.MoveTo(toast.TargetPosition)
-                y += (ToastHeight + Margin) ' stack downward
-            Next
-        End Sub
-
-    End Class
+	End Class
 
 	' Win32 Layered Window
 	Public Class LayeredToastWindow
@@ -2309,10 +2311,12 @@ Namespace UI
 			Select Case CInt(msg)
 				Case WinAPI.WM_MOUSEACTIVATE
 					Return New IntPtr(WinAPI.MA_NOACTIVATE)
-
 				Case WinAPI.WM_NCHITTEST
 					Return New IntPtr(WinAPI.HTCLIENT)
-
+				Case WinAPI.WM_LBUTTONDOWN
+					' User clicked the toast → close it
+					CloseToast()
+					Return IntPtr.Zero
 				Case WinAPI.WM_DESTROY
 					' no special cleanup needed here
 			End Select
@@ -2430,15 +2434,87 @@ Namespace UI
 			' Use the last known position; window already moved via MoveTo
 			UpdateBitmapAndApply(_lastPos)
 		End Sub
+		'Private Sub UpdateBitmapAndApply(screenPos As System.Drawing.Point)
+		'	If _hwnd = IntPtr.Zero Then Return
+
+		'	' ⭐ DO NOT RENDER UNTIL WE HAVE A REAL POSITION
+		'	If Not _hasInitialPosition Then Return
+
+		'	Dim size As New WinAPI.SIZE With {.cx = _width, .cy = _height}
+		'	Dim dstPoint As New WinAPI.POINT With {.X = screenPos.X, .Y = screenPos.Y}
+		'	Dim srcPoint As New WinAPI.POINT With {.X = 0, .Y = 0}
+
+		'	Dim hdcScreen = WinAPI.GetDC(IntPtr.Zero)
+		'	If hdcScreen = IntPtr.Zero Then Return
+
+		'	Dim hdcMem = WinAPI.CreateCompatibleDC(hdcScreen)
+		'	If hdcMem = IntPtr.Zero Then
+		'		WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
+		'		Return
+		'	End If
+
+		'	' Create ARGB surface for GDI+
+		'	Using bmp As New Bitmap(_width, _height, Imaging.PixelFormat.Format32bppArgb)
+		'		Using g As Graphics = Graphics.FromImage(bmp)
+		'			g.SmoothingMode = SmoothingMode.AntiAlias
+		'			RenderToast(g)
+		'		End Using
+
+		'		Dim hBitmap As IntPtr = bmp.GetHbitmap(Color.FromArgb(0)) ' preserve alpha
+		'		Dim oldObj = WinAPI.SelectObject(hdcMem, hBitmap)
+
+		'		Dim blend As New WinAPI.BLENDFUNCTION() With {
+		'	.BlendOp = WinAPI.AC_SRC_OVER,
+		'	.BlendFlags = 0,
+		'	.SourceConstantAlpha = _opacity,
+		'	.AlphaFormat = WinAPI.AC_SRC_ALPHA
+		'}
+
+		'		' Position
+
+		'		Dim ok = WinAPI.UpdateLayeredWindow(_hwnd,
+		'							 hdcScreen,
+		'							 dstPoint,
+		'							 size,
+		'							 hdcMem,
+		'							 srcPoint,
+		'							 0,
+		'							 blend,
+		'							 WinAPI.ULW_ALPHA)
+
+		'		' Cleanup
+		'		WinAPI.SelectObject(hdcMem, oldObj)
+		'		WinAPI.DeleteObject(hBitmap)
+		'	End Using
+
+		'	WinAPI.DeleteDC(hdcMem)
+		'	WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
+
+		'End Sub
+
+		' ------------- Drawing ---------------------------
 		Private Sub UpdateBitmapAndApply(screenPos As System.Drawing.Point)
 			If _hwnd = IntPtr.Zero Then Return
-
-			' ⭐ DO NOT RENDER UNTIL WE HAVE A REAL POSITION
 			If Not _hasInitialPosition Then Return
 
-			Dim size As New WinAPI.SIZE With {.cx = _width, .cy = _height}
-			Dim dstPoint As New WinAPI.POINT With {.X = screenPos.X, .Y = screenPos.Y}
+			' Shadow padding (only if shadow enabled)
+			Dim shadowPad As Integer = If(_opts.Shadow, 8, 0)
+
+			' New bitmap size (toast + shadow padding)
+			Dim bmpWidth As Integer = _width + shadowPad * 2
+			Dim bmpHeight As Integer = _height + shadowPad * 2
+
+			' Destination on screen must shift UP/LEFT by shadowPad
+			Dim dstPoint As New WinAPI.POINT With {
+		.X = screenPos.X - shadowPad,
+		.Y = screenPos.Y - shadowPad
+	}
+
+			' Source always starts at 0,0 inside the bitmap
 			Dim srcPoint As New WinAPI.POINT With {.X = 0, .Y = 0}
+
+			' Size passed to UpdateLayeredWindow must match the NEW bitmap size
+			Dim size As New WinAPI.SIZE With {.cx = bmpWidth, .cy = bmpHeight}
 
 			Dim hdcScreen = WinAPI.GetDC(IntPtr.Zero)
 			If hdcScreen = IntPtr.Zero Then Return
@@ -2449,14 +2525,22 @@ Namespace UI
 				Return
 			End If
 
-			' Create ARGB surface for GDI+
-			Using bmp As New Bitmap(_width, _height, Imaging.PixelFormat.Format32bppArgb)
+			' Create ARGB surface with padding
+			Using bmp As New Bitmap(bmpWidth, bmpHeight, Imaging.PixelFormat.Format32bppArgb)
 				Using g As Graphics = Graphics.FromImage(bmp)
 					g.SmoothingMode = SmoothingMode.AntiAlias
+
+					' Shift drawing by shadowPad so toast is centered inside padded bitmap
+					g.TranslateTransform(shadowPad, shadowPad)
+
+					' Render toast normally (shadow code inside RenderToast will now fit)
 					RenderToast(g)
+
+					' Reset transform
+					g.ResetTransform()
 				End Using
 
-				Dim hBitmap As IntPtr = bmp.GetHbitmap(Color.FromArgb(0)) ' preserve alpha
+				Dim hBitmap As IntPtr = bmp.GetHbitmap(Color.FromArgb(0))
 				Dim oldObj = WinAPI.SelectObject(hdcMem, hBitmap)
 
 				Dim blend As New WinAPI.BLENDFUNCTION() With {
@@ -2466,29 +2550,25 @@ Namespace UI
 			.AlphaFormat = WinAPI.AC_SRC_ALPHA
 		}
 
-				' Position
+				Dim ok = WinAPI.UpdateLayeredWindow(
+			_hwnd,
+			hdcScreen,
+			dstPoint,
+			size,
+			hdcMem,
+			srcPoint,
+			0,
+			blend,
+			WinAPI.ULW_ALPHA
+		)
 
-				Dim ok = WinAPI.UpdateLayeredWindow(_hwnd,
-									 hdcScreen,
-									 dstPoint,
-									 size,
-									 hdcMem,
-									 srcPoint,
-									 0,
-									 blend,
-									 WinAPI.ULW_ALPHA)
-
-				' Cleanup
 				WinAPI.SelectObject(hdcMem, oldObj)
 				WinAPI.DeleteObject(hBitmap)
 			End Using
 
 			WinAPI.DeleteDC(hdcMem)
 			WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
-
 		End Sub
-
-		' ------------- Drawing ---------------------------
 		Private Sub RenderToast(g As Graphics)
 			Dim w = _width
 			Dim h = _height
@@ -2501,37 +2581,107 @@ Namespace UI
 			' Clear entire bitmap to transparent
 			g.Clear(Color.Transparent)
 
-			' Rounded rect background
 			Dim inset As Single = 0.5F
 			Dim rect As New RectangleF(inset, inset, w - 1 - inset, h - 1 - inset)
 
-			Using path As New GraphicsPath()
-				path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
-				path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
-				path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90)
-				path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90)
-				path.CloseFigure()
+			' Shadow (optional)
+			If _opts.Shadow Then
+				Dim shadowOffset As Integer = 4
+				Dim shadowRect As New RectangleF(
+					rect.X + shadowOffset,
+					rect.Y + shadowOffset,
+					rect.Width,
+					rect.Height
+				)
 
+				For i As Integer = 1 To 6
+					Dim alpha As Integer = 30 - (i * 4)
+					If alpha < 0 Then alpha = 0
+
+					Using shadowBrush As New SolidBrush(Color.FromArgb(alpha, 0, 0, 0))
+
+						Dim shadowRadius As Integer = radius + i   ' ⭐ dynamic radius
+
+						If shadowRadius > 0 Then
+							Using shadowPath As New GraphicsPath()
+								shadowPath.AddArc(shadowRect.X, shadowRect.Y, shadowRadius, shadowRadius, 180, 90)
+								shadowPath.AddArc(shadowRect.Right - shadowRadius, shadowRect.Y, shadowRadius, shadowRadius, 270, 90)
+								shadowPath.AddArc(shadowRect.Right - shadowRadius, shadowRect.Bottom - shadowRadius, shadowRadius, shadowRadius, 0, 90)
+								shadowPath.AddArc(shadowRect.X, shadowRect.Bottom - shadowRadius, shadowRadius, shadowRadius, 90, 90)
+								shadowPath.CloseFigure()
+								g.FillPath(shadowBrush, shadowPath)
+							End Using
+						Else
+							g.FillRectangle(shadowBrush, shadowRect)
+						End If
+
+					End Using
+
+					shadowRect.Inflate(1, 1)
+				Next
+			End If
+
+			If radius <= 0 Then
+				' No rounded corners → draw a normal rectangle
 				Using bgBrush As New SolidBrush(bgColor)
-					g.FillPath(bgBrush, path)
+					g.FillRectangle(bgBrush, rect)
 				End Using
 
-				Using pen As New Pen(borderColor, 1)
-					g.DrawPath(pen, path)
+				Using pen As New Pen(borderColor, _opts.BorderWidth)
+					g.DrawRectangle(pen, Rectangle.Round(rect))
 				End Using
-			End Using
+
+			Else
+				' Rounded rectangle path
+				Using path As New GraphicsPath()
+					path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
+					path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
+					path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90)
+					path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90)
+					path.CloseFigure()
+
+					Using bgBrush As New SolidBrush(bgColor)
+						g.FillPath(bgBrush, path)
+					End Using
+
+					Using pen As New Pen(borderColor, _opts.BorderWidth)
+						g.DrawPath(pen, path)
+					End Using
+
+				End Using
+			End If
 
 			Dim textX As Integer = 10
 
-			' Icon
-			If _opts.Icon IsNot Nothing Then
-				Dim maxSize As Integer = h - 20
+			' Image Or Icon
+			Dim maxSize As Integer = h - 20
+			If _opts.Image IsNot Nothing Then
+				Dim imgRect As New Rectangle(10, 10, maxSize, maxSize)
+
+				If radius > 0 Then
+					' Rounded album art
+					Using path As New GraphicsPath()
+						path.AddArc(imgRect.X, imgRect.Y, radius, radius, 180, 90)
+						path.AddArc(imgRect.Right - radius, imgRect.Y, radius, radius, 270, 90)
+						path.AddArc(imgRect.Right - radius, imgRect.Bottom - radius, radius, radius, 0, 90)
+						path.AddArc(imgRect.X, imgRect.Bottom - radius, radius, radius, 90, 90)
+						path.CloseFigure()
+
+						g.SetClip(path)
+						g.DrawImage(_opts.Image, imgRect)
+						g.ResetClip()
+					End Using
+				Else
+					' Square album art
+					g.DrawImage(_opts.Image, imgRect)
+				End If
+				textX = 20 + maxSize
+			ElseIf _opts.Icon IsNot Nothing Then
 				Dim bestIcon As Icon = _opts.Icon
 				Try
-					bestIcon = New Icon(_opts.Icon, New System.Drawing.Size(maxSize, maxSize))
+					bestIcon = New Icon(_opts.Icon, New Size(maxSize, maxSize))
 				Catch
 				End Try
-
 				g.DrawIcon(bestIcon, New Rectangle(10, 10, maxSize, maxSize))
 				textX = 20 + maxSize
 			End If
@@ -2613,6 +2763,23 @@ Namespace UI
 			_fadingOut = True
 			FadeTimer.Start()
 		End Sub
+		Public Sub CloseImmediately()
+
+			' Stop all timers
+			FadeTimer.Stop()
+			LifeTimer.Stop()
+
+			' Skip fade-out, go straight to invisible
+			_opacity = 0
+			MyBase.SetOpacity(0)
+
+			' Notify manager
+			RaiseEvent ToastClosed()
+
+			' Destroy window
+			MyBase.Destroy()
+
+		End Sub
 
 		' Fade Logic
 		Private Sub FadeTick(sender As Object, e As EventArgs)
@@ -2643,6 +2810,7 @@ Namespace UI
 			_fadingOut = True
 			FadeTimer.Start()
 		End Sub
+
 	End Class
 
 #End Region
