@@ -2201,6 +2201,17 @@ Namespace UI
 	End Module
 
 	' Public Options Class
+	Public Enum ToastLocation
+		TopLeft
+		TopCenter
+		TopRight
+		MiddleLeft
+		MiddleCenter
+		MiddleRight
+		BottomLeft
+		BottomCenter
+		BottomRight
+	End Enum
 	Public Class ToastOptions
 
 		' Basic Properties
@@ -2215,16 +2226,16 @@ Namespace UI
 
 		' Display Properties
 		Public Property Width As Integer = 300
-        Public Property Height As Integer = 80
+		Public Property Height As Integer = 80
 		Public Property Margin As Integer = 10
 		Public Property Image As Image = Nothing
 		Public Property Icon As Icon = Nothing
-
 		Public Property TitleFont As Font = New Font("Segoe UI", 11, FontStyle.Bold)
 		Public Property MessageFont As Font = New Font("Segoe UI", 9, FontStyle.Regular)
 		Public Property BackColor As Color = Color.FromArgb(40, 40, 40)
 		Public Property BorderColor As Color = Color.White
-        Public Property ForeColor As Color = Color.White
+		Public Property ForeColor As Color = Color.White
+		Public Property Location As ToastLocation = ToastLocation.BottomRight
 		Public Property BorderWidth As Integer = 2
 		''' <summary>
 		''' Sets the corner radius for rounded corners of the toast window. Zero value means no rounding (square corners).
@@ -2285,7 +2296,7 @@ Namespace UI
 	End Class
 
 	' Win32 Layered Window
-	Public Class LayeredToastWindow
+	Friend Class LayeredToastWindow
 		Implements IDisposable
 
 		Private _hwnd As IntPtr
@@ -2434,63 +2445,6 @@ Namespace UI
 			' Use the last known position; window already moved via MoveTo
 			UpdateBitmapAndApply(_lastPos)
 		End Sub
-		'Private Sub UpdateBitmapAndApply(screenPos As System.Drawing.Point)
-		'	If _hwnd = IntPtr.Zero Then Return
-
-		'	' ⭐ DO NOT RENDER UNTIL WE HAVE A REAL POSITION
-		'	If Not _hasInitialPosition Then Return
-
-		'	Dim size As New WinAPI.SIZE With {.cx = _width, .cy = _height}
-		'	Dim dstPoint As New WinAPI.POINT With {.X = screenPos.X, .Y = screenPos.Y}
-		'	Dim srcPoint As New WinAPI.POINT With {.X = 0, .Y = 0}
-
-		'	Dim hdcScreen = WinAPI.GetDC(IntPtr.Zero)
-		'	If hdcScreen = IntPtr.Zero Then Return
-
-		'	Dim hdcMem = WinAPI.CreateCompatibleDC(hdcScreen)
-		'	If hdcMem = IntPtr.Zero Then
-		'		WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
-		'		Return
-		'	End If
-
-		'	' Create ARGB surface for GDI+
-		'	Using bmp As New Bitmap(_width, _height, Imaging.PixelFormat.Format32bppArgb)
-		'		Using g As Graphics = Graphics.FromImage(bmp)
-		'			g.SmoothingMode = SmoothingMode.AntiAlias
-		'			RenderToast(g)
-		'		End Using
-
-		'		Dim hBitmap As IntPtr = bmp.GetHbitmap(Color.FromArgb(0)) ' preserve alpha
-		'		Dim oldObj = WinAPI.SelectObject(hdcMem, hBitmap)
-
-		'		Dim blend As New WinAPI.BLENDFUNCTION() With {
-		'	.BlendOp = WinAPI.AC_SRC_OVER,
-		'	.BlendFlags = 0,
-		'	.SourceConstantAlpha = _opacity,
-		'	.AlphaFormat = WinAPI.AC_SRC_ALPHA
-		'}
-
-		'		' Position
-
-		'		Dim ok = WinAPI.UpdateLayeredWindow(_hwnd,
-		'							 hdcScreen,
-		'							 dstPoint,
-		'							 size,
-		'							 hdcMem,
-		'							 srcPoint,
-		'							 0,
-		'							 blend,
-		'							 WinAPI.ULW_ALPHA)
-
-		'		' Cleanup
-		'		WinAPI.SelectObject(hdcMem, oldObj)
-		'		WinAPI.DeleteObject(hBitmap)
-		'	End Using
-
-		'	WinAPI.DeleteDC(hdcMem)
-		'	WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
-
-		'End Sub
 
 		' ------------- Drawing ---------------------------
 		Private Sub UpdateBitmapAndApply(screenPos As System.Drawing.Point)
@@ -2721,8 +2675,8 @@ Namespace UI
 	End Class
 
 	' WinForms Window
-	Public Class ToastWindow
-        Inherits LayeredToastWindow
+	Friend Class ToastWindow
+		Inherits LayeredToastWindow
 
 		' Declarations
 		Private ReadOnly _opts As ToastOptions
@@ -2753,7 +2707,11 @@ Namespace UI
 		Public Sub ShowToastAt(p As System.Drawing.Point)
 			_opacity = 0.0
 			_fadingOut = False
-			MyBase.ShowAt(p)
+
+			Dim finalPos = ComputeLocationPosition(_opts.Location, _opts.Width, _opts.Height, p)
+			TargetPosition = finalPos
+			MyBase.ShowAt(finalPos)
+
 			FadeTimer.Start()
 			LifeTimer.Start()
 		End Sub
@@ -2810,6 +2768,56 @@ Namespace UI
 			_fadingOut = True
 			FadeTimer.Start()
 		End Sub
+
+		' Methods
+		Private Function ComputeLocationPosition(loc As ToastLocation, toastWidth As Integer, toastHeight As Integer, anchor As Point) As Point
+			Dim scr = Screen.FromPoint(anchor)
+			Dim area = scr.WorkingArea
+
+			Dim x As Integer
+			Dim y As Integer
+			Dim margin As Integer = 20
+
+			Select Case loc
+				Case ToastLocation.TopLeft
+					x = area.Left + margin
+					y = area.Top + margin
+
+				Case ToastLocation.TopCenter
+					x = area.Left + (area.Width - toastWidth) \ 2
+					y = area.Top + margin
+
+				Case ToastLocation.TopRight
+					x = area.Right - toastWidth - margin
+					y = area.Top + margin
+
+				Case ToastLocation.MiddleLeft
+					x = area.Left + margin
+					y = area.Top + (area.Height - toastHeight) \ 2
+
+				Case ToastLocation.MiddleCenter
+					x = area.Left + (area.Width - toastWidth) \ 2
+					y = area.Top + (area.Height - toastHeight) \ 2
+
+				Case ToastLocation.MiddleRight
+					x = area.Right - toastWidth - margin
+					y = area.Top + (area.Height - toastHeight) \ 2
+
+				Case ToastLocation.BottomLeft
+					x = area.Left + margin
+					y = area.Bottom - toastHeight - margin
+
+				Case ToastLocation.BottomCenter
+					x = area.Left + (area.Width - toastWidth) \ 2
+					y = area.Bottom - toastHeight - margin
+
+				Case ToastLocation.BottomRight
+					x = area.Right - toastWidth - margin
+					y = area.Bottom - toastHeight - margin
+			End Select
+
+			Return New Point(x, y)
+		End Function
 
 	End Class
 
