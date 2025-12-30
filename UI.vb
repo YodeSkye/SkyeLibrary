@@ -2314,22 +2314,19 @@ Namespace UI
 		Public Event ToastClosed()
 
 		' ------------- WndProc ---------------------------
-		Private Function WindowProc(hWnd As IntPtr,
-								msg As UInteger,
-								wParam As IntPtr,
-								lParam As IntPtr) As IntPtr
+		Private Function WindowProc(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
 
-			Select Case CInt(msg)
-				Case WinAPI.WM_MOUSEACTIVATE
-					Return New IntPtr(WinAPI.MA_NOACTIVATE)
+			Select Case msg
 				Case WinAPI.WM_NCHITTEST
-					Return New IntPtr(WinAPI.HTCLIENT)
-				Case WinAPI.WM_LBUTTONDOWN
-					' User clicked the toast → close it
+					Return CType(WinAPI.HTCAPTION, IntPtr)
+				Case WinAPI.WM_NCLBUTTONDOWN
 					CloseToast()
 					Return IntPtr.Zero
-				Case WinAPI.WM_DESTROY
-					' no special cleanup needed here
+				Case WinAPI.WM_NCRBUTTONUP
+					CloseToast()
+					Return IntPtr.Zero
+				Case WinAPI.WM_MOUSEACTIVATE
+					Return CType(WinAPI.MA_NOACTIVATE, IntPtr)
 			End Select
 
 			Return WinAPI.DefWindowProc(hWnd, msg, wParam, lParam)
@@ -2355,7 +2352,6 @@ Namespace UI
 			wc.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(_wndProc)
 			wc.hInstance = Marshal.GetHINSTANCE(GetType(LayeredToastWindow).Module)
 			wc.lpszClassName = _className
-
 			If WinAPI.RegisterClassEx(wc) = 0US Then
 				Throw New System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error())
 			End If
@@ -2365,13 +2361,13 @@ Namespace UI
 			Dim style = WinAPI.WS_POPUP
 
 			_hwnd = WinAPI.CreateWindowEx(exStyle,
-							   _className,
-							   "",
-							   style,
-							   0, 0, _width, _height,
-							   IntPtr.Zero, IntPtr.Zero,
-							   Marshal.GetHINSTANCE(GetType(LayeredToastWindow).Module),
-							   IntPtr.Zero)
+					   _className,
+					   "",
+					   style,
+					   0, 0, _width, _height,
+					   IntPtr.Zero, IntPtr.Zero,
+					   Marshal.GetHINSTANCE(GetType(LayeredToastWindow).Module),
+					   IntPtr.Zero)
 
 			If _hwnd = IntPtr.Zero Then
 				Throw New System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error())
@@ -2382,7 +2378,6 @@ Namespace UI
 			Dim newEx As Long = currentEx.ToInt64() Or WinAPI.WS_EX_LAYERED
 			WinAPI.SetWindowLongPtr(_hwnd, WinAPI.GWL_EXSTYLE, New IntPtr(newEx))
 		End Sub
-
 		' ------------- IDisposable -----------------------
 		Public Sub Dispose() Implements IDisposable.Dispose
 			If _hwnd <> IntPtr.Zero Then

@@ -12,6 +12,9 @@ Public Class WinAPI
     ' Declarations
     Public Const HWND_BROADCAST As Integer = 65535
     Public Const HTCLIENT As Integer = 1
+    Public Const HTCAPTION As Integer = 2
+    Public Const HTTRANSPARENT As Integer = -1
+    Public Const MA_NOACTIVATE As Integer = 3
     Public Const ULW_ALPHA As Integer = &H2
     Public Const AC_SRC_OVER As Byte = &H0
     Public Const AC_SRC_ALPHA As Byte = &H1
@@ -30,9 +33,12 @@ Public Class WinAPI
     Public Const WM_LBUTTONUP As Integer = &H202
     Public Const WM_RBUTTONUP As Integer = &H205
     Public Const WM_RBUTTONDOWN As Integer = &H204
+    Public Const WM_NCLBUTTONDOWN As Integer = &HA1
+    Public Const WM_NCLBUTTONUP As Integer = &HA2
+    Public Const WM_NCRBUTTONDOWN As Integer = &HA4
+    Public Const WM_NCRBUTTONUP As Integer = &HA5
     Public Const WM_CONTEXTMENU As Integer = &H7B
     Public Const WM_MOUSEACTIVATE As Integer = &H21
-    Public Const MA_NOACTIVATE As Integer = 3
     Public Const WM_NCACTIVATE As Integer = &H86
     Public Const WM_SIZE As Integer = &H5
     Public Const WM_GET_CUSTOM_DATA As UInteger = &H8001
@@ -75,6 +81,12 @@ Public Class WinAPI
                                            hMenu As IntPtr,
                                            hInstance As IntPtr,
                                            lpParam As IntPtr) As IntPtr
+    End Function
+    <DllImport("gdi32.dll", SetLastError:=True)>
+    Public Shared Function CreateRectRgn(ByVal nLeftRect As Integer, ByVal nTopRect As Integer, ByVal nRightRect As Integer, ByVal nBottomRect As Integer) As IntPtr
+    End Function
+    <DllImport("user32.dll", SetLastError:=True)>
+    Public Shared Function SetWindowRgn(ByVal hWnd As IntPtr, ByVal hRgn As IntPtr, ByVal bRedraw As Boolean) As Integer
     End Function
     <DllImport("user32.dll")>
     Public Shared Function DefWindowProc(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
