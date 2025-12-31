@@ -2654,6 +2654,9 @@ Namespace UI
 				End Using
 
 				textX = iconRect.Right + padding
+			Else
+				' No icon, no image → add horizontal inset
+				textX = padding * 2 + 1
 			End If
 
 			Dim wAvail As Integer = w - textX - padding
