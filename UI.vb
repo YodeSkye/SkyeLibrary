@@ -2634,9 +2634,25 @@ Namespace UI
 				textX = iconRect.Right + (padding * 2)
 
 			ElseIf _opts.Icon IsNot Nothing Then
-				Dim size As Integer = h - padding * 2
-				iconRect = New Rectangle(padding, padding, size, size)
-				g.DrawIcon(_opts.Icon, iconRect)
+				Dim size As Integer = ICON_SIZE
+
+				' Center the icon square vertically
+				Dim iconY As Integer = padding + (h - padding * 2 - size) \ 2
+				iconRect = New Rectangle(padding, iconY, size, size)
+
+				Using bmp As Bitmap = _opts.Icon.ToBitmap()
+					Dim bmpW As Integer = bmp.Width
+					Dim bmpH As Integer = bmp.Height
+
+					' Center the bitmap INSIDE iconRect
+					Dim offsetX As Integer = iconRect.X + (size - bmpW) \ 2
+					Dim offsetY As Integer = iconRect.Y + (size - bmpH) \ 2
+
+					Dim centeredRect As New Rectangle(offsetX, offsetY, bmpW, bmpH)
+
+					g.DrawImage(bmp, centeredRect)
+				End Using
+
 				textX = iconRect.Right + padding
 			End If
 
@@ -2709,7 +2725,7 @@ Namespace UI
 				' Dynamic scaling based on message height
 				_iconSize = Math.Max(24, Math.Min(_messageHeight, 96))
 			ElseIf _opts.Icon IsNot Nothing Then
-				_iconSize = Math.Max(24, Math.Min(_messageHeight, 96))
+				_iconSize = ICON_SIZE
 			Else
 				_iconSize = 0
 			End If
