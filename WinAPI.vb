@@ -138,8 +138,8 @@ Public Class WinAPI
     Public Const CF_HDROP As UInteger = 15
     Public Const CF_DIB As UInteger = 8
     Public Const CF_DIBV5 As UInteger = 17
-    Private _CF_RTF As UInteger = 0
-    Public ReadOnly Property CF_RTF As UInteger
+    Private Shared _CF_RTF As UInteger = 0
+    Public Shared ReadOnly Property CF_RTF As UInteger
         Get
             If _CF_RTF = 0 Then
                 _CF_RTF = RegisterClipboardFormat("Rich Text Format")
@@ -147,8 +147,8 @@ Public Class WinAPI
             Return _CF_RTF
         End Get
     End Property
-    Private _CF_HTML As UInteger = 0
-    Public ReadOnly Property CF_HTML As UInteger
+    Private Shared _CF_HTML As UInteger = 0
+    Public Shared ReadOnly Property CF_HTML As UInteger
         Get
             If _CF_HTML = 0 Then
                 _CF_HTML = RegisterClipboardFormat("HTML Format")
