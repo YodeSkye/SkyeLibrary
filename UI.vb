@@ -2255,41 +2255,36 @@ Namespace UI
 		Public Shared Sub Show(opts As ToastOptions)
 			_margin = opts.Margin
 
-			' Play sound if requested
 			If opts.PlaySound Then
 				System.Media.SystemSounds.Hand.Play()
 			End If
 
-			' Close any existing toast immediately
+			' Close previous toast immediately
 			If _activeToast IsNot Nothing Then
 				_activeToast.CloseImmediately()
 				_activeToast = Nothing
 			End If
 
-			' Create the new toast
+			' Create new toast
 			Dim toast As New ToastWindow(opts)
 			_activeToast = toast
 
-			' Compute position (you will add enum support soon)
-			Dim pos As Point = ComputePosition(opts.Width, opts.Height)
-			toast.TargetPosition = pos
+			' Initial anchor guess — final position is computed inside ToastWindow
+			Dim anchor As Point = ComputePosition(opts.Width, opts.Height)
+			toast.TargetPosition = anchor
+			toast.ShowToastAt(anchor)
 
-			' Show it
-			toast.ShowToastAt(pos)
-
-			' Cleanup when closed
 			AddHandler toast.ToastClosed,
 			Sub()
 				If _activeToast Is toast Then
 					_activeToast = Nothing
 				End If
 			End Sub
-
 		End Sub
 
-		' Placeholder for your upcoming enum-based positioning
+		' Initial anchor guess only — final positioning happens in ToastWindow
 		Private Shared Function ComputePosition(width As Integer, height As Integer) As Point
-			Dim area = Screen.FromPoint(_activeToast.TargetPosition).WorkingArea
+			Dim area = Screen.PrimaryScreen.WorkingArea
 			Return New Point(area.Right - width - _margin, area.Bottom - height - _margin)
 		End Function
 
@@ -2304,9 +2299,22 @@ Namespace UI
 		Private ReadOnly _wndProc As WinAPI.WndProcDelegate
 		Private ReadOnly _opts As ToastOptions
 
-		Private ReadOnly _width As Integer
-		Private ReadOnly _height As Integer
+		Public ReadOnly _width As Integer
+		Public _height As Integer
+		Private _titleHeight As Integer
+		Private _messageHeight As Integer
+		Private _iconSize As Integer = 0
 		Private _opacity As Byte = 0
+
+		' ---- Layout Constants ----
+		Private Const TOAST_PADDING As Integer = 10
+		Private Const TITLE_MESSAGE_GAP As Integer = 5
+		Private Const DEFAULT_MARGIN As Integer = 20
+		Private Const ICON_SIZE As Integer = 48
+		Private Const MAX_HEIGHT_PADDING As Integer = 40
+		Private Const SHADOW_SIZE As Integer = 8
+		Private Const TEXT_TOP_OFFSET As Integer = 7
+
 
 		Private _lastPos As System.Drawing.Point
 		Private _hasInitialPosition As Boolean = False
@@ -2336,7 +2344,6 @@ Namespace UI
 		Public Sub New(opts As ToastOptions)
 			_opts = opts
 			_width = opts.Width
-			_height = opts.Height
 
 			_className = "LayeredToast_" & Guid.NewGuid().ToString("N")
 			_wndProc = AddressOf Me.WindowProc
@@ -2344,6 +2351,8 @@ Namespace UI
 			RegisterWindowClass()
 			CreateLayeredWindow()
 
+			' Now that window exists, measure text and compute final height
+			AutoSizeToast()
 		End Sub
 		Private Sub RegisterWindowClass()
 			Dim wc As New WinAPI.WNDCLASSEX()
@@ -2397,19 +2406,22 @@ Namespace UI
 			RefreshLayer()
 
 		End Sub
-		Public Sub MoveTo(screenPos As System.Drawing.Point)
-			' Store the new position
+		Public Sub MoveTo(screenPos As Point)
 			_lastPos = screenPos
 			_hasInitialPosition = True
 
-			' Move the window WITHOUT redrawing the bitmap
-			WinAPI.SetWindowPos(_hwnd, WinAPI.HWND_TOPMOST,
-				 screenPos.X, screenPos.Y,
-				 _width, _height,
-				 WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW)
+			' Move without resizing — height is controlled by AutoSizeToast
+			WinAPI.SetWindowPos(
+				_hwnd,
+				WinAPI.HWND_TOPMOST,
+				screenPos.X,
+				screenPos.Y,
+				0,
+				0,
+				WinAPI.SWP_NOACTIVATE Or WinAPI.SWP_SHOWWINDOW Or WinAPI.SWP_NOSIZE
+			)
 
-			' Now update the bitmap at the new position
-			'RefreshLayer()
+			Debug.WriteLine($"[MoveTo] pos=({_lastPos.X},{_lastPos.Y}) size=({_width},{_height})")
 		End Sub
 		Public Sub SetOpacity(value As Double)
 			If value < 0.0 Then value = 0.0
@@ -2527,29 +2539,25 @@ Namespace UI
 			Dim foreColor = _opts.ForeColor
 			Dim radius = _opts.CornerRadius
 
-			' Clear entire bitmap to transparent
 			g.Clear(Color.Transparent)
 
+			' Outer rect
 			Dim inset As Single = 0.5F
 			Dim rect As New RectangleF(inset, inset, w - 1 - inset, h - 1 - inset)
 
-			' Shadow (optional)
+			'-----------------------------------------
+			' SHADOW
+			'-----------------------------------------
 			If _opts.Shadow Then
 				Dim shadowOffset As Integer = 4
-				Dim shadowRect As New RectangleF(
-					rect.X + shadowOffset,
-					rect.Y + shadowOffset,
-					rect.Width,
-					rect.Height
-				)
+				Dim shadowRect As New RectangleF(rect.X + shadowOffset, rect.Y + shadowOffset, rect.Width, rect.Height)
 
 				For i As Integer = 1 To 6
 					Dim alpha As Integer = 30 - (i * 4)
 					If alpha < 0 Then alpha = 0
 
 					Using shadowBrush As New SolidBrush(Color.FromArgb(alpha, 0, 0, 0))
-
-						Dim shadowRadius As Integer = radius + i   ' ⭐ dynamic radius
+						Dim shadowRadius As Integer = radius + i
 
 						If shadowRadius > 0 Then
 							Using shadowPath As New GraphicsPath()
@@ -2563,25 +2571,23 @@ Namespace UI
 						Else
 							g.FillRectangle(shadowBrush, shadowRect)
 						End If
-
 					End Using
 
 					shadowRect.Inflate(1, 1)
 				Next
 			End If
 
+			'-----------------------------------------
+			' BACKGROUND
+			'-----------------------------------------
 			If radius <= 0 Then
-				' No rounded corners → draw a normal rectangle
 				Using bgBrush As New SolidBrush(bgColor)
 					g.FillRectangle(bgBrush, rect)
 				End Using
-
 				Using pen As New Pen(borderColor, _opts.BorderWidth)
 					g.DrawRectangle(pen, Rectangle.Round(rect))
 				End Using
-
 			Else
-				' Rounded rectangle path
 				Using path As New GraphicsPath()
 					path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
 					path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
@@ -2592,79 +2598,190 @@ Namespace UI
 					Using bgBrush As New SolidBrush(bgColor)
 						g.FillPath(bgBrush, path)
 					End Using
-
 					Using pen As New Pen(borderColor, _opts.BorderWidth)
 						g.DrawPath(pen, path)
 					End Using
-
 				End Using
 			End If
 
-			Dim textX As Integer = 10
+			'-----------------------------------------
+			' ICON / IMAGE
+			'-----------------------------------------
+			Dim padding As Integer = TOAST_PADDING
+			Dim textX As Integer = padding
+			Dim iconRect As Rectangle = Nothing
 
-			' Image Or Icon
-			Dim maxSize As Integer = h - 20
 			If _opts.Image IsNot Nothing Then
-				Dim imgRect As New Rectangle(10, 10, maxSize, maxSize)
+				Dim size As Integer = h - padding * 2
+				iconRect = New Rectangle(padding, padding, size, size)
 
 				If radius > 0 Then
-					' Rounded album art
 					Using path As New GraphicsPath()
-						path.AddArc(imgRect.X, imgRect.Y, radius, radius, 180, 90)
-						path.AddArc(imgRect.Right - radius, imgRect.Y, radius, radius, 270, 90)
-						path.AddArc(imgRect.Right - radius, imgRect.Bottom - radius, radius, radius, 0, 90)
-						path.AddArc(imgRect.X, imgRect.Bottom - radius, radius, radius, 90, 90)
+						path.AddArc(iconRect.X, iconRect.Y, radius, radius, 180, 90)
+						path.AddArc(iconRect.Right - radius, iconRect.Y, radius, radius, 270, 90)
+						path.AddArc(iconRect.Right - radius, iconRect.Bottom - radius, radius, radius, 0, 90)
+						path.AddArc(iconRect.X, iconRect.Bottom - radius, radius, radius, 90, 90)
 						path.CloseFigure()
 
 						g.SetClip(path)
-						g.DrawImage(_opts.Image, imgRect)
+						g.DrawImage(_opts.Image, iconRect)
 						g.ResetClip()
 					End Using
 				Else
-					' Square album art
-					g.DrawImage(_opts.Image, imgRect)
+					g.DrawImage(_opts.Image, iconRect)
 				End If
-				textX = 20 + maxSize
+
+				textX = iconRect.Right + (padding * 2)
+
 			ElseIf _opts.Icon IsNot Nothing Then
-				Dim bestIcon As Icon = _opts.Icon
-				Try
-					bestIcon = New Icon(_opts.Icon, New Size(maxSize, maxSize))
-				Catch
-				End Try
-				g.DrawIcon(bestIcon, New Rectangle(10, 10, maxSize, maxSize))
-				textX = 20 + maxSize
+				Dim size As Integer = h - padding * 2
+				iconRect = New Rectangle(padding, padding, size, size)
+				g.DrawIcon(_opts.Icon, iconRect)
+				textX = iconRect.Right + padding
 			End If
 
+			Dim wAvail As Integer = w - textX - padding
+
+			'-----------------------------------------
+			' TITLE (TextRenderer)
+			'-----------------------------------------
+			Dim titleY As Integer = padding + TEXT_TOP_OFFSET
+
+			If Not String.IsNullOrEmpty(_opts.Title) AndAlso _titleHeight > 0 Then
+				Dim titleRect As New Rectangle(textX, titleY, wAvail, _titleHeight)
+
+				Dim titleFlags As TextFormatFlags =
+			TextFormatFlags.EndEllipsis Or
+			TextFormatFlags.TextBoxControl Or
+			TextFormatFlags.NoPadding
+
+				TextRenderer.DrawText(
+					g,
+					_opts.Title,
+					_opts.TitleFont,
+					titleRect,
+					foreColor,
+					titleFlags
+				)
+			End If
+
+			'-----------------------------------------
+			' MESSAGE (TextRenderer)
+			'-----------------------------------------
+			Dim messageY As Integer
+
+			If String.IsNullOrEmpty(_opts.Title) Then
+				' No title: message starts at the normal text top area
+				messageY = padding + TEXT_TOP_OFFSET + 3
+			Else
+				' Normal layout when title exists: message under the title
+				messageY = padding + TEXT_TOP_OFFSET + _titleHeight + TITLE_MESSAGE_GAP
+			End If
+
+			If Not String.IsNullOrEmpty(_opts.Message) AndAlso _messageHeight > 0 Then
+				Dim messageRect As New Rectangle(textX, messageY, wAvail, _messageHeight)
+
+				Dim msgFlags As TextFormatFlags =
+					TextFormatFlags.WordBreak Or
+					TextFormatFlags.TextBoxControl Or
+					TextFormatFlags.NoPadding Or
+					TextFormatFlags.EndEllipsis
+
+				TextRenderer.DrawText(
+					g,
+					_opts.Message,
+					_opts.MessageFont,
+					messageRect,
+					foreColor,
+					msgFlags
+				)
+			End If
+			Debug.WriteLine($"HEIGHT = {_height}")
+			Debug.WriteLine($"MESSAGEHEIGHT = {_messageHeight}")
+			Debug.WriteLine($"ICONSIZE = {_iconSize}")
+			Debug.WriteLine($"PADDING = {TOAST_PADDING}")
+		End Sub
+		Private Sub AutoSizeToast()
+			Dim padding As Integer = TOAST_PADDING
+
+			' Compute icon size FIRST
+			If _opts.Image IsNot Nothing Then
+				' Dynamic scaling based on message height
+				_iconSize = Math.Max(24, Math.Min(_messageHeight, 96))
+			ElseIf _opts.Icon IsNot Nothing Then
+				_iconSize = Math.Max(24, Math.Min(_messageHeight, 96))
+			Else
+				_iconSize = 0
+			End If
+
+			' Now compute textX using the correct icon size
+			Dim textX As Integer = padding
+			If _iconSize > 0 Then
+				textX = padding + _iconSize + padding
+			End If
+
+			Dim wAvail As Integer = _width - textX - padding
+			Debug.WriteLine($"[AutoSizeToast] wAvail = {wAvail}")
+            _titleHeight = 0
+			_messageHeight = 0
+
+			Dim flags As TextFormatFlags =
+				TextFormatFlags.WordBreak Or
+				TextFormatFlags.TextBoxControl Or
+				TextFormatFlags.NoPadding
+
 			' Title
-			Using brush As New SolidBrush(foreColor)
-				Dim wAvail As Single = w - textX - 10
-				If wAvail > 0 AndAlso Not String.IsNullOrEmpty(_opts.Title) Then
-					Dim titleRect As New RectangleF(textX, 10, wAvail, 20)
-					Dim fmt As New StringFormat With {.Trimming = StringTrimming.EllipsisCharacter}
-					g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRect, fmt)
-				End If
-			End Using
+			If Not String.IsNullOrEmpty(_opts.Title) Then
+				Dim size As Size = TextRenderer.MeasureText(
+					_opts.Title,
+					_opts.TitleFont,
+					New Size(wAvail, Integer.MaxValue),
+					flags
+				)
+				_titleHeight = size.Height
+			End If
 
 			' Message
-			Using brush As New SolidBrush(foreColor)
-				Dim messageRect As New RectangleF(
-				textX,
-				35,
-				w - textX - 10,
-				h - 45
-			)
+			If Not String.IsNullOrEmpty(_opts.Message) Then
+				Dim size As Size = TextRenderer.MeasureText(
+					_opts.Message,
+					_opts.MessageFont,
+					New Size(wAvail, Integer.MaxValue),
+					flags
+				)
+				_messageHeight = size.Height
+			End If
 
-				Dim fmt As New StringFormat With {
-				.Trimming = StringTrimming.EllipsisWord,
-				.FormatFlags = StringFormatFlags.LineLimit,
-				.Alignment = StringAlignment.Near,
-				.LineAlignment = StringAlignment.Near
-			}
+			' Natural height
+			Dim totalHeight As Integer = padding + TEXT_TOP_OFFSET + _titleHeight + TITLE_MESSAGE_GAP + _messageHeight + (padding - TEXT_TOP_OFFSET)
 
-				If Not String.IsNullOrEmpty(_opts.Message) Then
-					g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRect, fmt)
-				End If
-			End Using
+			' Clamp to monitor working area
+			Dim wa As Rectangle = Screen.PrimaryScreen.WorkingArea
+			Dim maxHeight As Integer = wa.Height - MAX_HEIGHT_PADDING
+
+			If totalHeight > maxHeight Then
+				totalHeight = maxHeight
+
+				' Recompute message height to fit inside clamped toast
+				Dim availableForMessage As Integer =
+					totalHeight - padding - _titleHeight - TITLE_MESSAGE_GAP - padding
+
+				_messageHeight = Math.Max(availableForMessage, 0)
+			End If
+
+			_height = totalHeight
+
+			Debug.WriteLine($"[AutoSizeToast] final _height = {_height}")
+
+			' Compute final icon size based on final toast height
+			If _opts.Image IsNot Nothing Then
+				_iconSize = _height - TOAST_PADDING * 2
+			ElseIf _opts.Icon IsNot Nothing Then
+				_iconSize = ICON_SIZE
+			Else
+				_iconSize = 0
+			End If
+
 		End Sub
 
 	End Class
@@ -2699,12 +2816,14 @@ Namespace UI
 		End Sub
 
 		' Public API
-		Public Sub ShowToastAt(p As System.Drawing.Point)
+		Public Sub ShowToastAt(anchor As Point)
 			_opacity = 0.0
 			_fadingOut = False
 
-			Dim finalPos = ComputeLocationPosition(_opts.Location, _opts.Width, _opts.Height, p)
+			' Compute final position using real measured height
+			Dim finalPos = ComputeLocationPosition(_opts.Location, _width, _height, anchor)
 			TargetPosition = finalPos
+
 			MyBase.ShowAt(finalPos)
 
 			FadeTimer.Start()
@@ -2773,6 +2892,8 @@ Namespace UI
 			Dim y As Integer
 			Dim margin As Integer = 20
 
+			Debug.WriteLine($"[ComputeLocationPosition] loc={loc} toastHeight={toastHeight} area.Top={area.Top} area.Bottom={area.Bottom}")
+
 			Select Case loc
 				Case ToastLocation.TopLeft
 					x = area.Left + margin
@@ -2810,6 +2931,24 @@ Namespace UI
 					x = area.Right - toastWidth - margin
 					y = area.Bottom - toastHeight - margin
 			End Select
+
+			Debug.WriteLine($"[ComputeLocationPosition] result=({x},{y})")
+
+
+
+			'-----------------------------------------
+			' ⭐ Clamp Y so toast never goes off-screen
+			'-----------------------------------------
+			If y < area.Top Then
+				y = area.Top
+			End If
+
+			If y + toastHeight > area.Bottom Then
+				y = area.Bottom - toastHeight
+			End If
+
+			Debug.WriteLine($"[ComputeLocationPosition] clamped=({x},{y})")
+
 
 			Return New Point(x, y)
 		End Function
