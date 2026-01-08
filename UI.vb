@@ -1823,11 +1823,11 @@ Namespace UI
 
 	End Class
 
-	''' <summary>
-	''' Improved And Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
-	''' Also includes a SetAlignment method to easily set text alignment.
-	''' </summary>
-	<ToolboxItem(True)>
+    ''' <summary>
+    ''' Improved And Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
+    ''' Also includes a SetAlignment method to easily set text alignment. Now includes methods to append and insert both RTF and plain text at specified positions.
+    ''' </summary>
+    <ToolboxItem(True)>
 	<DesignerCategory("Code")>
 	Public Class RichTextBox
 		Inherits System.Windows.Forms.RichTextBox
@@ -1844,10 +1844,62 @@ Namespace UI
 			MyBase.WndProc(m)
 		End Sub
 
+		''' <summary>
+		''' Sets the text alignment of the RichTextBox.
+		''' </summary>
+		''' <param name="align">The alignment to set.</param>
 		Public Sub SetAlignment(align As HorizontalAlignment)
 			Me.SelectAll()
 			Me.SelectionAlignment = align
 			Me.DeselectAll()
+		End Sub
+		''' <summary>
+		''' Appends RTF formatted text to the end of the RichTextBox.
+		''' </summary>
+		''' <param name="rtf">The RTF formatted text to append.</param>
+		Public Sub AppendRTF(rtf As String)
+			If String.IsNullOrEmpty(rtf) Then Exit Sub
+			Me.Select(Me.TextLength, 0)
+			Me.SelectedRtf = rtf
+			Me.Select(Me.TextLength, 0)
+			Me.ScrollToCaret()
+		End Sub
+		''' <summary>
+		''' Inserts RTF formatted text at the specified index in the RichTextBox.
+		''' </summary>
+		''' <param name="index">The zero-based index at which to insert the text.</param>
+		''' <param name="rtf">The RTF formatted text to insert.</param>
+		Public Sub InsertRTFAt(index As Integer, rtf As String)
+			If String.IsNullOrEmpty(rtf) Then Exit Sub
+			If index < 0 OrElse index > Me.TextLength Then Exit Sub
+			Me.Select(index, 0)
+			Me.SelectedRtf = rtf
+			Me.Select(index, 0)
+			Me.ScrollToCaret()
+		End Sub
+		''' <summary>
+		''' Appends plain text to the end of the RichTextBox.
+		''' </summary>
+		''' <param name="text">The plain text to append.</param>
+		Public Sub AppendPlainText(text As String)
+			If text Is Nothing Then Exit Sub
+			Me.Select(Me.TextLength, 0)
+			Me.SelectedText = text
+			Me.Select(Me.TextLength, 0)
+			Me.ScrollToCaret()
+		End Sub
+		''' <summary>
+		''' Inserts plain text at the specified index in the RichTextBox.
+		''' </summary>
+		''' <param name="index">The zero-based index at which to insert the text.</param>
+		''' <param name="text">The plain text to insert.</param>
+		Public Sub InsertPlainTextAt(index As Integer, text As String)
+			If text Is Nothing Then Exit Sub
+			If index < 0 OrElse index > Me.TextLength Then Exit Sub
+			Me.Select(index, 0)
+			Me.SelectedText = text
+			Me.Select(index, 0)
+			Me.ScrollToCaret()
 		End Sub
 
 	End Class
