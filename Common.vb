@@ -1,5 +1,6 @@
 ﻿
 Imports System.Text
+Imports System.Text.RegularExpressions
 
 ''' <summary>
 ''' Common Utility Functions
@@ -188,7 +189,7 @@ Public Class Common
     ''' <returns>
     ''' The plain text content of the RTF. Returns an empty string if the input is null or empty.
     ''' </returns>
-    Public Shared Function ExtractPlainTextFromRtf(bytes As Byte()) As String
+    Public Shared Function ExtractPlainTextFromRTF(bytes As Byte()) As String
         Dim rtfString = Encoding.Default.GetString(bytes)
         Dim rtfBox As New RichTextBox With {.Rtf = rtfString}
         Return rtfBox.Text
@@ -202,7 +203,7 @@ Public Class Common
     ''' The plain text content between <!--StartFragment--> and <!--EndFragment--> if found,
     ''' otherwise returns the entire HTML string.
     ''' </returns>
-    Public Shared Function ExtractPlainTextFromHtml(bytes As Byte()) As String
+    Public Shared Function ExtractPlainTextFromHTML(bytes As Byte()) As String
         Dim htmlString = Encoding.Default.GetString(bytes)
         Dim startIdx = htmlString.IndexOf("<!--StartFragment-->")
         Dim endIdx = htmlString.IndexOf("<!--EndFragment-->")
@@ -210,6 +211,28 @@ Public Class Common
             Return htmlString.Substring(startIdx + 20, endIdx - (startIdx + 20))
         End If
         Return htmlString
+    End Function
+
+    ''' <summary>
+    ''' Converts an RTF string to plain text.
+    ''' </summary>
+    ''' <param name="rtf">The RTF string to convert.</param>
+    ''' <returns>The plain text representation of the RTF string.</returns>
+    Public Shared Function RTFToPlainText(rtf As String) As String
+        Using rtb As New RichTextBox()
+            rtb.Rtf = rtf
+            Return rtb.Text
+        End Using
+    End Function
+
+    ''' <summary>
+    ''' Converts an HTML string to plain text by stripping HTML tags.
+    ''' </summary>
+    ''' <param name="html">The HTML string to convert.</param>
+    ''' <returns>The plain text representation of the HTML string.</returns>
+    Public Shared Function HTMLToPlainText(html As String) As String
+        Dim noTags = Regex.Replace(html, "<.*?>", " ")
+        Return Regex.Replace(noTags, "\s+", " ").Trim()
     End Function
 
 End Class
