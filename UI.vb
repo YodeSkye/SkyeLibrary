@@ -3200,20 +3200,33 @@ Namespace UI
 	Public Module ThemeManager
 
 		Public Property CurrentTheme As SkyeTheme = SkyeThemes.Dark
+		Public Event ThemeChanged As EventHandler
 
-		' Apply theme to a single form
-		Public Sub ApplyTheme(target As Form)
-			If target Is Nothing Then Return
+		Public Sub SetTheme(theme As SkyeTheme)
+			CurrentTheme = theme
+			RaiseEvent ThemeChanged(Nothing, EventArgs.Empty)
+		End Sub
 
-			target.BackColor = CurrentTheme.BackColor
-			target.ForeColor = CurrentTheme.ForeColor
+        ' Apply theme to a single form
+        Public Sub ApplyTheme(target As Form)
+            If target Is Nothing Then Return
 
-			ApplyToControls(target.Controls)
+            target.BackColor = CurrentTheme.BackColor
+            target.ForeColor = CurrentTheme.ForeColor
 
-			' If the form itself has a menu
-			If target.ContextMenuStrip IsNot Nothing Then
-				ApplyToMenu(target.ContextMenuStrip)
-			End If
+            ApplyToControls(target.Controls)
+
+            ' If the form itself has a menu
+            If target.ContextMenuStrip IsNot Nothing Then
+                ApplyToMenu(target.ContextMenuStrip)
+            End If
+        End Sub
+		' Apply them to all forms in the application
+		Public Sub ApplyThemeToAllOpenForms()
+			For Each f As Form In Application.OpenForms
+				ApplyTheme(f)
+				f.Invalidate()
+			Next
 		End Sub
 
 		' Recursively theme all controls
