@@ -3076,58 +3076,66 @@ Namespace UI
 
 	Public Module SkyeThemes
 
-		Public ReadOnly Light As New SkyeTheme With {
-			.Name = "Light",
-			.BackColor = Color.White,
-			.ForeColor = Color.Black,
-			.AccentColor = Color.DeepSkyBlue,
-			.BorderColor = Color.LightGray,
-			.ButtonBack = Color.White,
-			.ButtonFore = Color.Black,
-			.TextBack = Color.White,
-			.TextFore = Color.Black,
-			.GroupBoxFore = Color.Black,
-			.GridBack = Color.White,
-			.GridFore = Color.Black,
-			.GridHeaderBack = Color.Gainsboro,
-			.GridHeaderFore = Color.Black,
-			.GridBorder = Color.LightGray,
-			.GridAlternateRowBack = Color.FromArgb(245, 245, 245),
-			.TooltipBack = Color.WhiteSmoke,
-			.TooltipFore = Color.Black,
-			.MenuBack = Color.White,
-			.MenuFore = Color.Black,
-			.MenuHover = Color.FromArgb(230, 230, 230),
-			.MenuBorder = Color.LightGray,
-			.MenuSeparator = Color.LightGray
-		}
-		Public ReadOnly Dark As New SkyeTheme With {
-			.Name = "Dark",
-			.BackColor = Color.FromArgb(32, 32, 32),
-			.ForeColor = Color.White,
-			.AccentColor = Color.DeepSkyBlue,
-			.BorderColor = Color.FromArgb(64, 64, 64),
-			.ButtonBack = Color.FromArgb(45, 45, 45),
-			.ButtonFore = Color.White,
-			.TextBack = Color.FromArgb(40, 40, 40),
-			.TextFore = Color.White,
-			.GroupBoxFore = Color.White,
-			.GridBack = Color.FromArgb(32, 32, 32),
-			.GridFore = Color.White,
-			.GridHeaderBack = Color.FromArgb(45, 45, 45),
-			.GridHeaderFore = Color.White,
-			.GridBorder = Color.FromArgb(70, 70, 70),
-			.GridAlternateRowBack = Color.FromArgb(40, 40, 40),
-			.TooltipBack = Color.FromArgb(50, 50, 50),
-			.TooltipFore = Color.White,
-			.MenuBack = Color.FromArgb(40, 40, 40),
-			.MenuFore = Color.White,
-			.MenuHover = Color.FromArgb(60, 60, 60),
-			.MenuBorder = Color.FromArgb(80, 80, 80),
-			.MenuSeparator = Color.FromArgb(90, 90, 90)
-		}
+		Public ReadOnly Property AllThemes As List(Of SkyeTheme)
+			Get
+				Return New List(Of SkyeTheme) From {Light, Dark}
+			End Get
+		End Property
 
-		Public Function GetTheme(name As String) As SkyeTheme
+        Public ReadOnly Light As New SkyeTheme With {
+            .Name = "Light",
+            .BackColor = Color.White,
+            .ForeColor = Color.Black,
+            .AccentColor = Color.DeepSkyBlue,
+            .BorderColor = Color.LightGray,
+            .ButtonBack = Color.White,
+            .ButtonFore = Color.Black,
+            .TextBack = Color.White,
+            .TextFore = Color.Black,
+            .GroupBoxFore = Color.Black,
+            .GridBack = Color.White,
+            .GridFore = Color.Black,
+            .GridHeaderBack = Color.Gainsboro,
+            .GridHeaderFore = Color.Black,
+            .GridBorder = Color.LightGray,
+            .GridAlternateRowBack = Color.FromArgb(245, 245, 245),
+            .TooltipBack = Color.WhiteSmoke,
+            .TooltipFore = Color.Black,
+            .TooltipBorder = Color.Gray,
+            .MenuBack = Color.White,
+            .MenuFore = Color.Black,
+            .MenuHover = Color.FromArgb(230, 230, 230),
+            .MenuBorder = Color.LightGray,
+            .MenuSeparator = Color.LightGray
+        }
+        Public ReadOnly Dark As New SkyeTheme With {
+            .Name = "Dark",
+            .BackColor = Color.FromArgb(32, 32, 32),
+            .ForeColor = Color.White,
+            .AccentColor = Color.DeepSkyBlue,
+            .BorderColor = Color.FromArgb(64, 64, 64),
+            .ButtonBack = Color.FromArgb(45, 45, 45),
+            .ButtonFore = Color.White,
+            .TextBack = Color.FromArgb(40, 40, 40),
+            .TextFore = Color.White,
+            .GroupBoxFore = Color.White,
+            .GridBack = Color.FromArgb(32, 32, 32),
+            .GridFore = Color.White,
+            .GridHeaderBack = Color.FromArgb(45, 45, 45),
+            .GridHeaderFore = Color.White,
+            .GridBorder = Color.FromArgb(70, 70, 70),
+            .GridAlternateRowBack = Color.FromArgb(40, 40, 40),
+            .TooltipBack = Color.FromArgb(50, 50, 50),
+            .TooltipFore = Color.White,
+            .TooltipBorder = Color.FromArgb(80, 80, 80),
+            .MenuBack = Color.FromArgb(40, 40, 40),
+            .MenuFore = Color.White,
+            .MenuHover = Color.FromArgb(60, 60, 60),
+            .MenuBorder = Color.FromArgb(80, 80, 80),
+            .MenuSeparator = Color.FromArgb(90, 90, 90)
+        }
+
+        Public Function GetTheme(name As String) As SkyeTheme
 			If String.Equals(name, "Light", StringComparison.OrdinalIgnoreCase) Then
 				Return Light
 			ElseIf String.Equals(name, "Dark", StringComparison.OrdinalIgnoreCase) Then
