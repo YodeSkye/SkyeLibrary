@@ -3288,11 +3288,23 @@ Namespace UI
 			alt.ForeColor = CurrentTheme.GridFore
 		End Sub
 
-		' Theme a tooltip (generic)
-		Public Sub ApplyToTooltip(tip As ToolTip)
+		' Theme a tooltip
+		Public Sub ApplyToTooltip(tip As System.Windows.Forms.ToolTip)
 			If tip Is Nothing Then Return
 			tip.BackColor = CurrentTheme.TooltipBack
 			tip.ForeColor = CurrentTheme.TooltipFore
+		End Sub
+		Public Sub ApplyToTooltip(tip As Skye.UI.ToolTip)
+			If tip Is Nothing Then Return
+			tip.BackColor = CurrentTheme.TooltipBack
+			tip.ForeColor = CurrentTheme.TooltipFore
+			tip.BorderColor = CurrentTheme.TooltipBorder
+		End Sub
+		Public Sub ApplyToTooltip(tip As ToolTipEX)
+			If tip Is Nothing Then Return
+			tip.BackColor = CurrentTheme.TooltipBack
+			tip.ForeColor = CurrentTheme.TooltipFore
+			tip.BorderColor = CurrentTheme.TooltipBorder
 		End Sub
 
 		' Theme a menu (generic)
