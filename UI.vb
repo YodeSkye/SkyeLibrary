@@ -3150,6 +3150,11 @@ Namespace UI
 	Public Class SkyeMenuRenderer
 		Inherits ToolStripProfessionalRenderer
 
+		Protected Overrides Sub OnRenderToolStripBackground(e As ToolStripRenderEventArgs)
+			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
+				e.Graphics.FillRectangle(b, e.AffectedBounds)
+			End Using
+		End Sub
 		Protected Overrides Sub OnRenderMenuItemBackground(e As ToolStripItemRenderEventArgs)
 			Dim t = ThemeManager.CurrentTheme
 			Dim g = e.Graphics
@@ -3163,7 +3168,6 @@ Namespace UI
 				g.FillRectangle(b, rect)
 			End Using
 		End Sub
-
 		Protected Overrides Sub OnRenderToolStripBorder(e As ToolStripRenderEventArgs)
 			Dim t = ThemeManager.CurrentTheme
 			Dim g = e.Graphics
@@ -3173,18 +3177,28 @@ Namespace UI
 				g.DrawRectangle(p, rect)
 			End Using
 		End Sub
-
-		Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
-			Dim t = ThemeManager.CurrentTheme
-			Dim g = e.Graphics
-			Dim rect = New Rectangle(0, 0, e.Item.Width, e.Item.Height)
-			Dim y = rect.Top + rect.Height \ 2
-
-			Using p As New Pen(t.MenuSeparator)
-				g.DrawLine(p, rect.Left + 4, y, rect.Right - 4, y)
+		Protected Overrides Sub OnRenderImageMargin(e As ToolStripRenderEventArgs)
+			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
+				e.Graphics.FillRectangle(b, e.AffectedBounds)
 			End Using
 		End Sub
+		'Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
+		'	Dim t = ThemeManager.CurrentTheme
+		'	Dim g = e.Graphics
+		'	Dim rect = New Rectangle(0, 0, e.Item.Width, e.Item.Height)
+		'	Dim y = rect.Top + rect.Height \ 2
 
+		'	Using p As New Pen(t.MenuSeparator)
+		'		g.DrawLine(p, rect.Left + 4, y, rect.Right - 4, y)
+		'	End Using
+		'End Sub
+		Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
+			Dim c = ThemeManager.CurrentTheme.MenuSeparator
+			Using p As New Pen(c)
+				Dim y = e.Item.Height \ 2
+				e.Graphics.DrawLine(p, 2, y, e.Item.Width - 2, y)
+			End Using
+		End Sub
 		Protected Overrides Sub OnRenderItemText(e As ToolStripItemTextRenderEventArgs)
 			Dim t = ThemeManager.CurrentTheme
 			Dim g = e.Graphics
