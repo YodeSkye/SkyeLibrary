@@ -3082,33 +3082,33 @@ Namespace UI
 			End Get
 		End Property
 
-        Public ReadOnly Light As New SkyeTheme With {
-            .Name = "Light",
-            .BackColor = Color.White,
-            .ForeColor = Color.Black,
-            .AccentColor = Color.DeepSkyBlue,
-            .BorderColor = Color.LightGray,
-            .ButtonBack = Color.White,
-            .ButtonFore = Color.Black,
-            .TextBack = Color.White,
-            .TextFore = Color.Black,
-            .GroupBoxFore = Color.Black,
-            .GridBack = Color.White,
-            .GridFore = Color.Black,
-            .GridHeaderBack = Color.Gainsboro,
-            .GridHeaderFore = Color.Black,
-            .GridBorder = Color.LightGray,
-            .GridAlternateRowBack = Color.FromArgb(245, 245, 245),
-            .TooltipBack = Color.WhiteSmoke,
-            .TooltipFore = Color.Black,
-            .TooltipBorder = Color.Gray,
-            .MenuBack = Color.White,
-            .MenuFore = Color.Black,
-            .MenuHover = Color.FromArgb(230, 230, 230),
-            .MenuBorder = Color.LightGray,
-            .MenuSeparator = Color.LightGray
-        }
-        Public ReadOnly Dark As New SkyeTheme With {
+		Public ReadOnly Light As New SkyeTheme With {
+			.Name = "Light",
+			.BackColor = Color.White,
+			.ForeColor = Color.Black,
+			.AccentColor = Color.DeepSkyBlue,
+			.BorderColor = Color.LightGray,
+			.ButtonBack = Color.White,
+			.ButtonFore = Color.Black,
+			.TextBack = Color.White,
+			.TextFore = Color.Black,
+			.GroupBoxFore = Color.Black,
+			.GridBack = Color.White,
+			.GridFore = Color.Black,
+			.GridHeaderBack = Color.Gainsboro,
+			.GridHeaderFore = Color.Black,
+			.GridBorder = Color.LightGray,
+			.GridAlternateRowBack = Color.FromArgb(245, 245, 245),
+			.TooltipBack = Color.WhiteSmoke,
+			.TooltipFore = Color.Black,
+			.TooltipBorder = Color.LightGray,
+			.MenuBack = Color.White,
+			.MenuFore = Color.Black,
+			.MenuHover = Color.FromArgb(230, 230, 230),
+			.MenuBorder = Color.LightGray,
+			.MenuSeparator = Color.LightGray
+		}
+		Public ReadOnly Dark As New SkyeTheme With {
             .Name = "Dark",
             .BackColor = Color.FromArgb(32, 32, 32),
             .ForeColor = Color.White,
