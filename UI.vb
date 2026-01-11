@@ -1,10 +1,8 @@
 ﻿
 Imports System.ComponentModel
-Imports System.Drawing
 Imports System.Drawing.Drawing2D
 Imports System.Runtime.InteropServices
 Imports System.Text
-Imports System.Windows.Forms
 
 Namespace UI
 
@@ -2530,11 +2528,12 @@ Namespace UI
 			Dim size As New WinAPI.SIZE With {.cx = bmpWidth, .cy = bmpHeight}
 
 			Dim hdcScreen = WinAPI.GetDC(IntPtr.Zero)
-			If hdcScreen = IntPtr.Zero Then Return
+            If hdcScreen = IntPtr.Zero Then Return
 
-			Dim hdcMem = WinAPI.CreateCompatibleDC(hdcScreen)
+            Dim hresult As Integer
+            Dim hdcMem = WinAPI.CreateCompatibleDC(hdcScreen)
 			If hdcMem = IntPtr.Zero Then
-				WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
+				hresult = WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
 				Return
 			End If
 
@@ -2580,7 +2579,7 @@ Namespace UI
 			End Using
 
 			WinAPI.DeleteDC(hdcMem)
-			WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
+			hresult = WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
 		End Sub
 		Private Sub RenderToast(g As Graphics)
 			Dim w = _width
@@ -2660,8 +2659,8 @@ Namespace UI
 			' ICON / IMAGE
 			'-----------------------------------------
 			Dim padding As Integer = TOAST_PADDING
-			Dim textX As Integer = padding
-			Dim iconRect As Rectangle = Nothing
+			Dim textX As Integer
+			Dim iconRect As Rectangle
 
 			If _opts.Image IsNot Nothing Then
 				Dim size As Integer = h - padding * 2
@@ -2955,7 +2954,7 @@ Namespace UI
 		End Sub
 
 		' Methods
-		Private Function ComputeLocationPosition(loc As ToastLocation, toastWidth As Integer, toastHeight As Integer, anchor As Point) As Point
+		Private Shared Function ComputeLocationPosition(loc As ToastLocation, toastWidth As Integer, toastHeight As Integer, anchor As Point) As Point
 			Dim scr = Screen.FromPoint(anchor)
 			Dim area = scr.WorkingArea
 
@@ -3076,12 +3075,6 @@ Namespace UI
 
 	Public Module SkyeThemes
 
-		Public ReadOnly Property AllThemes As List(Of SkyeTheme)
-			Get
-				Return New List(Of SkyeTheme) From {Light, Dark}
-			End Get
-		End Property
-
 		Public ReadOnly Light As New SkyeTheme With {
 			.Name = "Light",
 			.BackColor = Color.White,
@@ -3109,116 +3102,57 @@ Namespace UI
 			.MenuSeparator = Color.LightGray
 		}
 		Public ReadOnly Dark As New SkyeTheme With {
-            .Name = "Dark",
-            .BackColor = Color.FromArgb(32, 32, 32),
-            .ForeColor = Color.White,
-            .AccentColor = Color.DeepSkyBlue,
-            .BorderColor = Color.FromArgb(64, 64, 64),
-            .ButtonBack = Color.FromArgb(45, 45, 45),
-            .ButtonFore = Color.White,
-            .TextBack = Color.FromArgb(40, 40, 40),
-            .TextFore = Color.White,
-            .GroupBoxFore = Color.White,
-            .GridBack = Color.FromArgb(32, 32, 32),
-            .GridFore = Color.White,
-            .GridHeaderBack = Color.FromArgb(45, 45, 45),
-            .GridHeaderFore = Color.White,
-            .GridBorder = Color.FromArgb(70, 70, 70),
-            .GridAlternateRowBack = Color.FromArgb(40, 40, 40),
-            .TooltipBack = Color.FromArgb(50, 50, 50),
-            .TooltipFore = Color.White,
-            .TooltipBorder = Color.FromArgb(80, 80, 80),
-            .MenuBack = Color.FromArgb(40, 40, 40),
-            .MenuFore = Color.White,
-            .MenuHover = Color.FromArgb(60, 60, 60),
-            .MenuBorder = Color.FromArgb(80, 80, 80),
-            .MenuSeparator = Color.FromArgb(90, 90, 90)
-        }
+			.Name = "Dark",
+			.BackColor = Color.FromArgb(32, 32, 32),
+			.ForeColor = Color.White,
+			.AccentColor = Color.DeepSkyBlue,
+			.BorderColor = Color.FromArgb(64, 64, 64),
+			.ButtonBack = Color.FromArgb(45, 45, 45),
+			.ButtonFore = Color.White,
+			.TextBack = Color.FromArgb(40, 40, 40),
+			.TextFore = Color.White,
+			.GroupBoxFore = Color.White,
+			.GridBack = Color.FromArgb(32, 32, 32),
+			.GridFore = Color.White,
+			.GridHeaderBack = Color.FromArgb(45, 45, 45),
+			.GridHeaderFore = Color.White,
+			.GridBorder = Color.FromArgb(70, 70, 70),
+			.GridAlternateRowBack = Color.FromArgb(40, 40, 40),
+			.TooltipBack = Color.FromArgb(50, 50, 50),
+			.TooltipFore = Color.White,
+			.TooltipBorder = Color.FromArgb(80, 80, 80),
+			.MenuBack = Color.FromArgb(40, 40, 40),
+			.MenuFore = Color.White,
+			.MenuHover = Color.FromArgb(60, 60, 60),
+			.MenuBorder = Color.FromArgb(80, 80, 80),
+			.MenuSeparator = Color.FromArgb(90, 90, 90)
+		}
+		Private ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark}
+		Public ReadOnly Property AllThemes As List(Of SkyeTheme)
+			Get
+				Return _themes
+			End Get
+		End Property
 
-        Public Function GetTheme(name As String) As SkyeTheme
-			If String.Equals(name, "Light", StringComparison.OrdinalIgnoreCase) Then
-				Return Light
-			ElseIf String.Equals(name, "Dark", StringComparison.OrdinalIgnoreCase) Then
-				Return Dark
-			End If
-			' Fallback
-			Return Dark
+		Public Sub AddTheme(t As SkyeTheme)
+			_themes.Add(t)
+		End Sub
+		Public Sub RemoveTheme(t As SkyeTheme)
+			If t Is Light OrElse t Is Dark Then Exit Sub
+			_themes.Remove(t)
+		End Sub
+		Public Sub RemoveTheme(name As String)
+			Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+			If t IsNot Nothing AndAlso Not (t Is Light OrElse t Is Dark) Then _themes.Remove(t)
+		End Sub
+		Public Function GetTheme(name As String) As SkyeTheme
+			Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+			If t IsNot Nothing Then Return t
+			Return Light
 		End Function
 
 	End Module
 
-	Public Class SkyeMenuRenderer
-		Inherits ToolStripProfessionalRenderer
-
-		Protected Overrides Sub OnRenderToolStripBackground(e As ToolStripRenderEventArgs)
-			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
-				e.Graphics.FillRectangle(b, e.AffectedBounds)
-			End Using
-		End Sub
-		Protected Overrides Sub OnRenderMenuItemBackground(e As ToolStripItemRenderEventArgs)
-			Dim t = ThemeManager.CurrentTheme
-			Dim g = e.Graphics
-			Dim rect = New Rectangle(Point.Empty, e.Item.Size)
-
-			Dim backColor As Color = If(e.Item.Selected OrElse e.Item.Pressed,
-										t.MenuHover,
-										t.MenuBack)
-
-			Using b As New SolidBrush(backColor)
-				g.FillRectangle(b, rect)
-			End Using
-		End Sub
-		Protected Overrides Sub OnRenderToolStripBorder(e As ToolStripRenderEventArgs)
-			Dim t = ThemeManager.CurrentTheme
-			Dim g = e.Graphics
-			Dim rect = New Rectangle(Point.Empty, e.ToolStrip.Size - New Size(1, 1))
-
-			Using p As New Pen(t.MenuBorder)
-				g.DrawRectangle(p, rect)
-			End Using
-		End Sub
-		Protected Overrides Sub OnRenderImageMargin(e As ToolStripRenderEventArgs)
-			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
-				e.Graphics.FillRectangle(b, e.AffectedBounds)
-			End Using
-		End Sub
-		'Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
-		'	Dim t = ThemeManager.CurrentTheme
-		'	Dim g = e.Graphics
-		'	Dim rect = New Rectangle(0, 0, e.Item.Width, e.Item.Height)
-		'	Dim y = rect.Top + rect.Height \ 2
-
-		'	Using p As New Pen(t.MenuSeparator)
-		'		g.DrawLine(p, rect.Left + 4, y, rect.Right - 4, y)
-		'	End Using
-		'End Sub
-		Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
-			Dim c = ThemeManager.CurrentTheme.MenuSeparator
-			Using p As New Pen(c)
-				Dim y = e.Item.Height \ 2
-				e.Graphics.DrawLine(p, 2, y, e.Item.Width - 2, y)
-			End Using
-		End Sub
-		Protected Overrides Sub OnRenderItemText(e As ToolStripItemTextRenderEventArgs)
-			Dim t = ThemeManager.CurrentTheme
-			Dim g = e.Graphics
-			Dim item = e.Item
-
-			Dim textColor As Color = If(item.Enabled,
-										t.MenuFore,
-										ControlPaint.LightLight(t.MenuFore))
-
-			TextRenderer.DrawText(
-				g,
-				item.Text,
-				e.TextFont,
-				e.TextRectangle,
-				textColor,
-				TextFormatFlags.Left Or TextFormatFlags.VerticalCenter
-			)
-		End Sub
-
-	End Class
 	Public Module ThemeManager
 
 		Public Property CurrentTheme As SkyeTheme = SkyeThemes.Dark
@@ -3229,20 +3163,20 @@ Namespace UI
 			RaiseEvent ThemeChanged(Nothing, EventArgs.Empty)
 		End Sub
 
-        ' Apply theme to a single form
-        Public Sub ApplyTheme(target As Form)
-            If target Is Nothing Then Return
+		' Apply theme to a single form
+		Public Sub ApplyTheme(target As Form)
+			If target Is Nothing Then Return
 
-            target.BackColor = CurrentTheme.BackColor
-            target.ForeColor = CurrentTheme.ForeColor
+			target.BackColor = CurrentTheme.BackColor
+			target.ForeColor = CurrentTheme.ForeColor
 
-            ApplyToControls(target.Controls)
+			ApplyToControls(target.Controls)
 
-            ' If the form itself has a menu
-            If target.ContextMenuStrip IsNot Nothing Then
-                ApplyToMenu(target.ContextMenuStrip)
-            End If
-        End Sub
+			' If the form itself has a menu
+			If target.ContextMenuStrip IsNot Nothing Then
+				ApplyToMenu(target.ContextMenuStrip)
+			End If
+		End Sub
 		' Apply them to all forms in the application
 		Public Sub ApplyThemeToAllOpenForms()
 			For Each f As Form In Application.OpenForms
@@ -3356,6 +3290,78 @@ Namespace UI
 		End Sub
 
 	End Module
+	Public Class SkyeMenuRenderer
+		Inherits ToolStripProfessionalRenderer
+
+		Protected Overrides Sub OnRenderToolStripBackground(e As ToolStripRenderEventArgs)
+			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
+				e.Graphics.FillRectangle(b, e.AffectedBounds)
+			End Using
+		End Sub
+		Protected Overrides Sub OnRenderMenuItemBackground(e As ToolStripItemRenderEventArgs)
+			Dim t = ThemeManager.CurrentTheme
+			Dim g = e.Graphics
+			Dim rect = New Rectangle(Point.Empty, e.Item.Size)
+
+			Dim backColor As Color = If(e.Item.Selected OrElse e.Item.Pressed,
+										t.MenuHover,
+										t.MenuBack)
+
+			Using b As New SolidBrush(backColor)
+				g.FillRectangle(b, rect)
+			End Using
+		End Sub
+		Protected Overrides Sub OnRenderToolStripBorder(e As ToolStripRenderEventArgs)
+			Dim t = ThemeManager.CurrentTheme
+			Dim g = e.Graphics
+			Dim rect = New Rectangle(Point.Empty, e.ToolStrip.Size - New Size(1, 1))
+
+			Using p As New Pen(t.MenuBorder)
+				g.DrawRectangle(p, rect)
+			End Using
+		End Sub
+		Protected Overrides Sub OnRenderImageMargin(e As ToolStripRenderEventArgs)
+			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
+				e.Graphics.FillRectangle(b, e.AffectedBounds)
+			End Using
+		End Sub
+		'Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
+		'	Dim t = ThemeManager.CurrentTheme
+		'	Dim g = e.Graphics
+		'	Dim rect = New Rectangle(0, 0, e.Item.Width, e.Item.Height)
+		'	Dim y = rect.Top + rect.Height \ 2
+
+		'	Using p As New Pen(t.MenuSeparator)
+		'		g.DrawLine(p, rect.Left + 4, y, rect.Right - 4, y)
+		'	End Using
+		'End Sub
+		Protected Overrides Sub OnRenderSeparator(e As ToolStripSeparatorRenderEventArgs)
+			Dim c = ThemeManager.CurrentTheme.MenuSeparator
+			Using p As New Pen(c)
+				Dim y = e.Item.Height \ 2
+				e.Graphics.DrawLine(p, 2, y, e.Item.Width - 2, y)
+			End Using
+		End Sub
+		Protected Overrides Sub OnRenderItemText(e As ToolStripItemTextRenderEventArgs)
+			Dim t = ThemeManager.CurrentTheme
+			Dim g = e.Graphics
+			Dim item = e.Item
+
+			Dim textColor As Color = If(item.Enabled,
+										t.MenuFore,
+										ControlPaint.LightLight(t.MenuFore))
+
+			TextRenderer.DrawText(
+				g,
+				item.Text,
+				e.TextFont,
+				e.TextRectangle,
+				textColor,
+				TextFormatFlags.Left Or TextFormatFlags.VerticalCenter
+			)
+		End Sub
+
+	End Class
 
 #End Region
 
