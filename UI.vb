@@ -3195,40 +3195,35 @@ Namespace UI
 				End If
 
 				Select Case True
-
 					Case TypeOf c Is Button
 						Dim b = DirectCast(c, Button)
 						b.BackColor = CurrentTheme.ButtonBack
 						b.ForeColor = CurrentTheme.ButtonFore
-
 					Case TypeOf c Is TextBoxBase
 						Dim t = DirectCast(c, TextBoxBase)
 						t.BackColor = CurrentTheme.TextBack
 						t.ForeColor = CurrentTheme.TextFore
-
 					Case TypeOf c Is RichTextBox
 						Dim r = DirectCast(c, RichTextBox)
 						r.BackColor = CurrentTheme.TextBack
 						r.ForeColor = CurrentTheme.TextFore
-
 					Case TypeOf c Is GroupBox
 						c.ForeColor = CurrentTheme.GroupBoxFore
-
 					Case TypeOf c Is Panel OrElse TypeOf c Is SplitContainer
 						c.BackColor = CurrentTheme.BackColor
-
 					Case TypeOf c Is DataGridView
 						ApplyToDataGridView(DirectCast(c, DataGridView))
-
+					Case TypeOf c Is ListView
+						ApplyToListView(DirectCast(c, ListView))
 					Case TypeOf c Is StatusStrip
 						c.BackColor = CurrentTheme.BackColor
 						c.ForeColor = CurrentTheme.ForeColor
-
 				End Select
 
 				If c.HasChildren Then
 					ApplyToControls(c.Controls)
 				End If
+
 			Next
 		End Sub
 
@@ -3279,11 +3274,24 @@ Namespace UI
 			tip.ForeColor = CurrentTheme.TooltipFore
 			tip.BorderColor = CurrentTheme.TooltipBorder
 		End Sub
-		Public Sub ApplyToTooltip(tip As ToolTipEX)
-			If tip Is Nothing Then Return
-			tip.BackColor = CurrentTheme.TooltipBack
-			tip.ForeColor = CurrentTheme.TooltipFore
-			tip.BorderColor = CurrentTheme.TooltipBorder
+        Public Sub ApplyToTooltip(tip As ToolTipEX)
+            If tip Is Nothing Then Return
+            tip.BackColor = CurrentTheme.TooltipBack
+            tip.ForeColor = CurrentTheme.TooltipFore
+            tip.BorderColor = CurrentTheme.TooltipBorder
+        End Sub
+
+        ' Theme a ListView (generic)
+        Private Sub ApplyToListView(lv As ListView)
+			' Only apply basic theming when OwnerDraw is False
+			If lv.OwnerDraw = False Then
+				lv.BackColor = CurrentTheme.BackColor
+				lv.ForeColor = CurrentTheme.ForeColor
+				lv.BorderStyle = BorderStyle.FixedSingle
+
+				' Optional: makes the control feel more "modern"
+				lv.HideSelection = False
+			End If
 		End Sub
 
 		' Theme a menu (generic)
