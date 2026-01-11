@@ -3246,6 +3246,16 @@ Namespace UI
 			header.SelectionBackColor = CurrentTheme.GridHeaderBack
 			header.SelectionForeColor = CurrentTheme.GridHeaderFore
 
+			With dgv
+				.EnableHeadersVisualStyles = False
+				.RowHeadersDefaultCellStyle.BackColor = CurrentTheme.GridBack
+				.RowHeadersDefaultCellStyle.ForeColor = CurrentTheme.GridFore
+				.RowHeadersDefaultCellStyle.SelectionBackColor = CurrentTheme.AccentColor
+				.RowHeadersDefaultCellStyle.SelectionForeColor = CurrentTheme.GridFore
+				.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.None
+				.RowHeadersWidth = 24
+			End With
+
 			Dim cell = dgv.DefaultCellStyle
 			cell.BackColor = CurrentTheme.GridBack
 			cell.ForeColor = CurrentTheme.GridFore
