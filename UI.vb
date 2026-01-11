@@ -3252,7 +3252,7 @@ Namespace UI
 				.RowHeadersDefaultCellStyle.ForeColor = CurrentTheme.GridFore
 				.RowHeadersDefaultCellStyle.SelectionBackColor = CurrentTheme.AccentColor
 				.RowHeadersDefaultCellStyle.SelectionForeColor = CurrentTheme.GridFore
-				.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.None
+				'.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.None
 				.RowHeadersWidth = 24
 			End With
 
