@@ -674,25 +674,29 @@ Namespace UI
 					End Using
 				End If
 
-				'Draw Image
-				If TooltipImage IsNot Nothing Then
-					Dim bounds As Rectangle = GetImageBounds(TooltipImage, _owner.ImageAlignment, Me.Width, CInt(Me.Height / 2 - TooltipImage.Height / 2) - 1)
-					g.DrawImage(TooltipImage, bounds)
-				End If
 
 				'Draw Text
 				Dim textRect As Rectangle
-				If TooltipImage Is Nothing Then
-					textRect = New Rectangle(_owner.TextPadding, _owner.TextPadding - _owner.ShadowThickness, Me.Width - _owner.TextPadding, Me.Height - _owner.TextPadding)
-				Else
-					Select Case _owner.ImageAlignment
-						Case ImageAlignments.Left
-							textRect = New Rectangle(TooltipImage.Width + _owner.TextPadding * 2, _owner.TextPadding - _owner.ShadowThickness, Me.Width - _owner.TextPadding, Me.Height - _owner.TextPadding)
-						Case ImageAlignments.Right
-							textRect = New Rectangle(_owner.TextPadding, _owner.TextPadding - _owner.ShadowThickness, Me.Width - TooltipImage.Width - _owner.TextPadding * 2, Me.Height - _owner.TextPadding)
-					End Select
-				End If
+                If TooltipImage Is Nothing Then
+                    textRect = New Rectangle(_owner.TextPadding, _owner.TextPadding - _owner.ShadowThickness, Me.Width - _owner.TextPadding, Me.Height - _owner.TextPadding)
+                Else
+                    Select Case _owner.ImageAlignment
+                        Case ImageAlignments.Left
+                            textRect = New Rectangle(TooltipImage.Width + _owner.TextPadding * 2, _owner.TextPadding - _owner.ShadowThickness, Me.Width - _owner.TextPadding, Me.Height - _owner.TextPadding)
+                        Case ImageAlignments.Right
+                            textRect = New Rectangle(_owner.TextPadding, _owner.TextPadding - _owner.ShadowThickness, Me.Width - TooltipImage.Width - _owner.TextPadding * 2, Me.Height - _owner.TextPadding)
+                    End Select
+                End If
+				' See if multiline text for image layout
+				Dim measured As Size = TextRenderer.MeasureText(TooltipText, _owner.Font, New Size(textRect.Width, Integer.MaxValue), TextFormatFlags.WordBreak Or TextFormatFlags.NoPrefix)
+				Dim isMultiLine As Boolean = measured.Height > _owner.Font.Height
 				TextRenderer.DrawText(g, TooltipText, _owner.Font, textRect, _owner.ForeColor, TextFormatFlags.Left Or TextFormatFlags.Top Or TextFormatFlags.WordBreak Or TextFormatFlags.NoPrefix)
+
+				'Draw Image
+				If TooltipImage IsNot Nothing Then
+					Dim bounds As Rectangle = GetImageBounds(TooltipImage, _owner.ImageAlignment, Me.Width, CInt(Me.Height / 2 - TooltipImage.Height / 2) + If(isMultiLine, 0, 1))
+					g.DrawImage(TooltipImage, bounds)
+				End If
 
 			End Sub
 			Private Sub Form_Click(sender As Object, e As EventArgs) Handles MyBase.Click
