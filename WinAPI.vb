@@ -42,6 +42,7 @@ Public Class WinAPI
     Public Const WM_NCACTIVATE As Integer = &H86
     Public Const WM_SIZE As Integer = &H5
     Public Const WM_GET_CUSTOM_DATA As UInteger = &H8001
+    Public Const WM_SETTINGCHANGE As Integer = &H1A
     Public Const WM_THEMECHANGED As Integer = &H31A
     Public Const WM_SYSCOLORCHANGE As Integer = &H15
     Public Const WM_DPICHANGED As Integer = &H2E0
