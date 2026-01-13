@@ -2758,8 +2758,8 @@ Namespace UI
 		Public Property Margin As Integer = 10
 		Public Property Image As Image = Nothing
 		Public Property Icon As Icon = Nothing
-		Public Property TitleFont As Font = New Font("Segoe UI", 11, FontStyle.Bold)
-		Public Property MessageFont As Font = New Font("Segoe UI", 9, FontStyle.Regular)
+		Public Property TitleFont As Font = New Font("Segoe UI", 10, FontStyle.Bold)
+		Public Property MessageFont As Font = New Font("Segoe UI", 10, FontStyle.Regular)
 		Public Property BackColor As Color = Color.FromArgb(40, 40, 40)
 		Public Property BorderColor As Color = Color.White
 		Public Property ForeColor As Color = Color.White
