@@ -27,6 +27,10 @@ Public Class WinAPI
     Public Const WM_SYSCOMMAND As Integer = 274 '&H112
     Public Const WM_ACTIVATE As UShort = &H6
     Public Const WM_PAINT As Integer = &HF
+    Public Const WM_PRINTCLIENT As Integer = &H318
+    Public Const WM_ERASEBKGND As Integer = &H14
+    Public Const WM_MOUSEMOVE As Integer = &H200
+    Public Const WM_SETCURSOR As Integer = &H20
     Public Const WM_RIGHTCLICKTASKBAR As Integer = 787 '&H313 'UnDocumented Message passed when a user RightClicks on the app taskbar entry before the SystemMenu is displayed. Unless this message is fowarded, the SystemMenu won't display. Useful for replacing with custom menus or for when FormBorderStyle is set to None and the SystemMenu never displays. Just intercept and show your own custom menu. XP & earlier; after XP, ShiftRightClick is required.
     Public Const WM_LBUTTONDOWN As Integer = &H201
     Public Const WM_LBUTTONDBLCLK As Integer = &H203

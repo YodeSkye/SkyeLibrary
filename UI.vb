@@ -1829,6 +1829,7 @@ Namespace UI
     ''' A TextBox that only allows numeric input, with options for decimal points and negative values. Also includes min/max value enforcement and a ValueCommitted event.
     ''' </summary>
     <ToolboxItem(True)>
+	<DesignerCategory("Code")>
 	Public Class NumericTextBox
 		Inherits System.Windows.Forms.TextBox
 
@@ -2058,9 +2059,9 @@ Namespace UI
 				End If
 			Catch
 			Finally
-                _isNormalizing = False
-            End Try
-        End Sub
+				_isNormalizing = False
+			End Try
+		End Sub
 		Private Function FormatValue(value As Decimal) As String
 			If CurrencyMode Then
 				' Currency formatting: $1,234.56
@@ -2160,6 +2161,222 @@ Namespace UI
 			Me.Select(index, 0)
 			Me.ScrollToCaret()
 		End Sub
+
+	End Class
+
+	''' <summary>
+	''' A ComboBox that supports custom items with text, images, and color swatches. Fixes the stock combobox dropdownlist draw background issues, making it theme-ready. Also includes hover effects for improved user experience.
+	''' </summary>
+	<ToolboxItem(True)>
+	<DesignerCategory("Code")>
+	Public Class ComboBox
+		Inherits System.Windows.Forms.ComboBox
+
+		' Declarations
+		Private _hovering As Boolean = False
+
+		' Control Events
+		Protected Overrides Sub WndProc(ByRef m As Message)
+			MyBase.WndProc(m)
+			If m.Msg = WinAPI.WM_PAINT OrElse m.Msg = WinAPI.WM_PRINTCLIENT OrElse m.Msg = WinAPI.WM_ERASEBKGND Then
+				Using g As Graphics = CreateGraphics()
+					PaintCombo(g)
+				End Using
+			End If
+		End Sub
+		Public Sub New()
+			MyBase.New()
+			DrawMode = DrawMode.OwnerDrawFixed
+			DropDownStyle = ComboBoxStyle.DropDownList
+			DoubleBuffered = True
+			SetStyle(ControlStyles.AllPaintingInWmPaint Or ControlStyles.OptimizedDoubleBuffer Or ControlStyles.UserPaint, True)
+			UpdateStyles()
+		End Sub
+		Protected Overrides Sub OnDrawItem(e As DrawItemEventArgs)
+			MyBase.OnDrawItem(e)
+			If e.Index < 0 Then Return
+
+			Dim item = TryCast(Me.Items(e.Index), ComboItem)
+			If item Is Nothing Then
+				' Fallback for non-ComboItem entries
+				e.DrawBackground()
+				Using b As New SolidBrush(Me.ForeColor)
+					e.Graphics.DrawString(Me.Items(e.Index).ToString(),
+								  Me.Font,
+								  b,
+								  e.Bounds.Left + 4,
+								  e.Bounds.Top + (e.Bounds.Height - Me.Font.Height) \ 2)
+				End Using
+				e.DrawFocusRectangle()
+				Return
+			End If
+
+			Dim g = e.Graphics
+			g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+			g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+
+			' Background (selection aware)
+			Dim bg As Color = If((e.State And DrawItemState.Selected) = DrawItemState.Selected,
+						 SystemColors.Highlight,
+						 Me.BackColor)
+
+			Using b As New SolidBrush(bg)
+				g.FillRectangle(b, e.Bounds)
+			End Using
+
+			' Text color (selection aware)
+			Dim textColor As Color = If((e.State And DrawItemState.Selected) = DrawItemState.Selected,
+								SystemColors.HighlightText,
+								Me.ForeColor)
+
+			Dim iconSize As Integer = e.Bounds.Height - 4
+			Dim iconX As Integer = e.Bounds.Left + 4
+			Dim iconY As Integer = e.Bounds.Top + 2
+			Dim textX As Integer = iconX
+
+			' Image And Swatch
+			If item.Image IsNot Nothing Then ' 1) Image
+				g.DrawImage(item.Image, New Rectangle(iconX, iconY, iconSize, iconSize))
+				textX += iconSize + 6
+			ElseIf item.Swatch.HasValue Then ' 2) Color swatch
+				Dim swatchRect As New Rectangle(iconX, iconY, iconSize, iconSize)
+				Using b As New SolidBrush(item.Swatch.Value)
+					g.FillRectangle(b, swatchRect)
+				End Using
+				Using p As New Pen(Color.Black)
+					g.DrawRectangle(p, swatchRect)
+				End Using
+				textX += iconSize + 6
+			Else ' 3) Neither – text starts near left
+				textX = iconX
+			End If
+
+			' Text
+			Using b As New SolidBrush(textColor)
+				g.DrawString(item.Text,
+					 Me.Font,
+					 b,
+					 textX,
+					 e.Bounds.Top + (e.Bounds.Height - Me.Font.Height) \ 2)
+			End Using
+
+			e.DrawFocusRectangle()
+		End Sub
+		Protected Overrides Sub OnMouseEnter(e As EventArgs)
+			MyBase.OnMouseEnter(e)
+			_hovering = True
+			Invalidate()
+		End Sub
+		Protected Overrides Sub OnMouseLeave(e As EventArgs)
+			MyBase.OnMouseLeave(e)
+			_hovering = False
+			Invalidate()
+		End Sub
+		Protected Overrides Sub OnMouseMove(e As MouseEventArgs)
+			MyBase.OnMouseMove(e)
+			Dim overNow As Boolean = Me.ClientRectangle.Contains(e.Location)
+			If overNow <> _hovering Then
+				_hovering = overNow
+				Me.Invalidate()
+			End If
+		End Sub
+		Protected Overrides Sub OnDropDownClosed(e As EventArgs)
+			MyBase.OnDropDownClosed(e)
+			_hovering = False
+			Invalidate()
+		End Sub
+
+		' Methods
+		Private Sub PaintCombo(g As Graphics)
+			g.SmoothingMode = Drawing2D.SmoothingMode.AntiAlias
+			g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+			Dim rc As Rectangle = ClientRectangle
+
+			' Background (you may already have hover logic; keep that)
+			Dim bg As Color = If(_hovering, ControlPaint.Light(BackColor, 0.15F), BackColor)
+			Using b As New SolidBrush(bg)
+				g.FillRectangle(b, rc)
+			End Using
+
+			' Determine selected item
+			Dim text As String = ""
+			Dim selectedItem = TryCast(Me.SelectedItem, ComboItem)
+			Dim textX As Integer
+			If selectedItem IsNot Nothing Then
+				text = selectedItem.Text
+				Dim iconSize As Integer = rc.Height - 6
+				Dim iconX As Integer = 4
+				Dim iconY As Integer = (rc.Height - iconSize) \ 2
+				If selectedItem.Image IsNot Nothing Then ' Image
+					g.DrawImage(selectedItem.Image,
+						New Rectangle(iconX, iconY, iconSize, iconSize))
+					textX = iconX + iconSize + 6
+				ElseIf selectedItem.Swatch.HasValue Then ' Color swatch
+					Dim swatchRect As New Rectangle(iconX, iconY, iconSize, iconSize)
+					Using b As New SolidBrush(selectedItem.Swatch.Value)
+						g.FillRectangle(b, swatchRect)
+					End Using
+					Using p As New Pen(Color.Black)
+						g.DrawRectangle(p, swatchRect)
+					End Using
+					textX = iconX + iconSize + 6
+				Else
+					textX = 4
+				End If
+			Else ' No selected ComboItem – fallback
+				If Me.SelectedItem IsNot Nothing Then
+					text = Me.SelectedItem.ToString()
+				End If
+				textX = 4
+			End If
+
+			' Text
+			Dim arrowWidth As Integer = 6
+			Dim textRect As New Rectangle(textX, rc.Top, rc.Width - textX - arrowWidth - 4, rc.Height)
+			Dim sf As New StringFormat With {
+				.FormatFlags = StringFormatFlags.NoWrap,
+				.Trimming = StringTrimming.EllipsisCharacter,
+				.LineAlignment = StringAlignment.Center,   ' vertical centering
+				.Alignment = StringAlignment.Near         ' left align
+				}
+			Using b As New SolidBrush(ForeColor)
+				g.DrawString(text, Me.Font, b, textRect, sf)
+			End Using
+
+			' Arrow
+			Dim arrowSize As Integer = 6
+			Dim arrowX As Integer = rc.Right - arrowSize - 6
+			Dim arrowY As Integer = (rc.Height - arrowSize) \ 2
+			Dim pts As Point() = {
+				New Point(arrowX, arrowY),
+				New Point(arrowX + arrowSize, arrowY),
+				New Point(arrowX + arrowSize \ 2, arrowY + arrowSize)
+			}
+			Dim arrowColor As Color = If(_hovering, ControlPaint.Dark(ForeColor, 0.1F), ForeColor)
+			Using b As New SolidBrush(arrowColor)
+				g.FillPolygon(b, pts)
+			End Using
+
+		End Sub
+
+		Public Class ComboItem
+
+			Public Property Text As String
+			Public Property Image As Image
+			Public Property Swatch As Color?
+
+			Public Sub New(text As String,
+						   Optional img As Image = Nothing,
+						   Optional swatch As Color? = Nothing)
+				Me.Text = text
+				Me.Image = img
+				Me.Swatch = swatch
+			End Sub
+			Public Overrides Function ToString() As String
+				Return Text
+			End Function
+
+		End Class
 
 	End Class
 
