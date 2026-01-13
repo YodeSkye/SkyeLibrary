@@ -7,12 +7,12 @@
     <AssemblyName>Skye</AssemblyName>
     <OptionStrict>On</OptionStrict>
     <Title>Skye's Library</Title>
-    <AssemblyVersion>1.3.41</AssemblyVersion>
-    <FileVersion>1.3.41</FileVersion>
+    <AssemblyVersion>1.3.42</AssemblyVersion>
+    <FileVersion>1.3.42</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>SkyeLibrary</PackageId>
     <Description>Skye's .NET UI Control &amp; Windows API Library</Description>
-    <Version>1.3.41</Version>
+    <Version>1.3.42</Version>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 

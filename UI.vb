@@ -1826,10 +1826,267 @@ Namespace UI
 	End Class
 
     ''' <summary>
-    ''' Improved And Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
-    ''' Also includes a SetAlignment method to easily set text alignment. Now includes methods to append and insert both RTF and plain text at specified positions.
+    ''' A TextBox that only allows numeric input, with options for decimal points and negative values. Also includes min/max value enforcement and a ValueCommitted event.
     ''' </summary>
     <ToolboxItem(True)>
+	Public Class NumericTextBox
+		Inherits System.Windows.Forms.TextBox
+
+		' Declarations
+		Private _isNormalizing As Boolean = False
+		<Browsable(False), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
+		Public Property Value As Decimal?
+			Get
+				Dim v As Decimal
+				If Decimal.TryParse(Me.Text, v) Then Return v
+				Return Nothing
+			End Get
+			Set(value As Decimal?)
+				If value.HasValue Then
+					Me.Text = value.Value.ToString()
+				Else
+					Me.Text = ""
+				End If
+			End Set
+		End Property
+		<Category("Behavior"), Description("Value Committed Event"), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Event ValueCommitted(sender As Object, value As Decimal?)
+
+		' Designer Properties
+		<Category("Behavior"), Description("Allow Decimal Point."), DefaultValue(False), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property AllowDecimal As Boolean = False
+		<Category("Behavior"), Description("Allow Negative Indicator."), DefaultValue(False), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property AllowNegative As Boolean = False
+		<Category("Behavior"), Description("Minimum allowed value."), DefaultValue(GetType(Decimal), "-79228162514264337593543950335"), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property Minimum As Decimal = Decimal.MinValue
+		<Category("Behavior"), Description("Maximum allowed value."), DefaultValue(GetType(Decimal), "79228162514264337593543950335"), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property Maximum As Decimal = Decimal.MaxValue
+		<Category("Appearance"), Description("Show thousands separators."), DefaultValue(False), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property UseThousandsSeparator As Boolean = False
+		<Category("Appearance"), Description("Format as currency."), DefaultValue(False), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property CurrencyMode As Boolean = False
+		<Category("Appearance"), Description("Currency symbol to display."), DefaultValue("$"), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property CurrencySymbol As String = "$"
+
+		' Control Events
+		Protected Overrides Sub OnKeyPress(e As KeyPressEventArgs)
+			MyBase.OnKeyPress(e)
+
+			' Allow control keys
+			If Char.IsControl(e.KeyChar) Then Return
+
+			' Digits always allowed
+			If Char.IsDigit(e.KeyChar) Then Return
+
+			' Decimal point
+			If AllowDecimal AndAlso e.KeyChar = "."c AndAlso Not Me.Text.Contains(".") Then Return
+
+			' Negative sign
+			If AllowNegative AndAlso e.KeyChar = "-"c AndAlso Me.SelectionStart = 0 AndAlso Not Me.Text.Contains("-") Then Return
+
+			' Otherwise block
+			e.Handled = True
+		End Sub
+		Protected Overrides Sub OnKeyDown(e As KeyEventArgs)
+
+			' If user is editing formatted text, strip formatting first
+			' If user is editing formatted text, strip formatting first
+			If Not _isNormalizing Then
+				If Me.Text.Contains(",") OrElse (CurrencyMode AndAlso Me.Text.StartsWith(CurrencySymbol)) Then
+
+					Dim original = Me.Text
+					Dim originalPos = Me.SelectionStart
+
+					' Count how many formatting characters are before the caret
+					Dim removedBefore As Integer = 0
+
+					' Currency symbol at the start
+					If CurrencyMode AndAlso original.StartsWith(CurrencySymbol, StringComparison.Ordinal) Then
+						If originalPos > 0 Then
+							removedBefore += CurrencySymbol.Length
+						End If
+					End If
+
+					' Commas before the caret
+					For i = 0 To Math.Min(originalPos - 1, original.Length - 1)
+						If original(i) = ","c Then
+							removedBefore += 1
+						End If
+					Next
+
+					' Build raw text (no commas, no currency symbol)
+					Dim raw = original.Replace(",", "")
+					If CurrencyMode Then
+						raw = raw.Replace(CurrencySymbol, "")
+					End If
+
+					' New caret position = old position - chars removed before it
+					Dim newPos = Math.Max(0, originalPos - removedBefore)
+
+					Me.Text = raw
+					Me.SelectionStart = Math.Min(newPos, Me.Text.Length)
+				End If
+			End If
+
+			If e.KeyCode = Keys.Enter Then
+				NormalizeText()
+				RaiseValueCommitted()
+				e.Handled = True
+				e.SuppressKeyPress = True
+				Return
+			End If
+
+			MyBase.OnKeyDown(e)
+		End Sub
+		Protected Overrides Sub OnTextChanged(e As EventArgs)
+			MyBase.OnTextChanged(e)
+
+			' Skip filtering during normalization
+			If _isNormalizing Then Return
+
+			' Skip filtering if text is already formatted
+			If Me.Text.Contains(",") OrElse (CurrencyMode AndAlso Me.Text.StartsWith(CurrencySymbol)) Then Return
+
+			Dim original = Me.Text
+			Dim filtered = FilterText(original)
+
+			If filtered <> original Then
+				Dim pos = Me.SelectionStart
+				Me.Text = filtered
+				Me.SelectionStart = Math.Min(pos, Me.Text.Length)
+			End If
+		End Sub
+		Protected Overrides Sub OnLeave(e As EventArgs)
+			MyBase.OnLeave(e)
+			NormalizeText()
+			RaiseValueCommitted()
+		End Sub
+
+		' Methods
+		Private Sub RaiseValueCommitted()
+			RaiseEvent ValueCommitted(Me, Me.Value)
+		End Sub
+		Private Function FilterText(input As String) As String
+			If String.IsNullOrEmpty(input) Then Return String.Empty
+
+			Dim sb As New System.Text.StringBuilder()
+			Dim hasDecimal As Boolean = False
+			Dim hasNegative As Boolean = False
+
+			For i = 0 To input.Length - 1
+				Dim ch = input(i)
+
+				If Char.IsDigit(ch) Then
+					sb.Append(ch)
+					Continue For
+				End If
+
+				If AllowDecimal AndAlso ch = "."c AndAlso Not hasDecimal Then
+					sb.Append("."c)
+					hasDecimal = True
+					Continue For
+				End If
+
+				If AllowNegative AndAlso ch = "-"c AndAlso i = 0 AndAlso Not hasNegative Then
+					sb.Append("-"c)
+					hasNegative = True
+					Continue For
+				End If
+			Next
+
+			Return sb.ToString()
+		End Function
+		Private Sub NormalizeText()
+			_isNormalizing = True
+			Try
+				Dim t = Me.Text.Trim()
+
+				' If text ends with a decimal point, append a zero
+				If t.EndsWith(".") Then
+					t &= "0"
+				End If
+
+				If t = "" Then
+					Me.Text = ""
+					Return
+				End If
+
+				' Lone decimal → "0."
+				If t = "." Then
+					Me.Text = "0."
+					Return
+				End If
+
+				' Lone negative → "-0"
+				If t = "-" Then
+					Me.Text = "-0"
+					Return
+				End If
+
+				' "-." → "-0."
+				If t = "-." Then
+					Me.Text = "-0."
+					Return
+				End If
+
+				' DECIMAL MODE
+				If AllowDecimal Then
+					Dim value As Decimal
+					If Decimal.TryParse(t, value) Then
+
+						' Clamp
+						If value < Minimum Then value = Minimum
+						If value > Maximum Then value = Maximum
+
+						' Apply formatting
+						Me.Text = FormatValue(value)
+					End If
+
+					Return
+				End If
+
+				' INTEGER MODE
+				Dim intValue As Integer
+				If Integer.TryParse(t, intValue) Then
+
+					' Clamp
+					If intValue < Minimum Then intValue = CInt(Minimum)
+					If intValue > Maximum Then intValue = CInt(Maximum)
+
+					' Apply formatting
+					Me.Text = FormatValue(intValue)
+				End If
+			Catch
+			Finally
+                _isNormalizing = False
+            End Try
+        End Sub
+		Private Function FormatValue(value As Decimal) As String
+			If CurrencyMode Then
+				' Currency formatting: $1,234.56
+				Return CurrencySymbol & value.ToString("N2")
+			End If
+
+			If UseThousandsSeparator Then
+				' Thousands only: 1,234.56 or 1,234
+				If AllowDecimal Then
+					Return value.ToString("N2")
+				Else
+					Return value.ToString("N0")
+				End If
+			End If
+
+			' No formatting
+			Return value.ToString()
+		End Function
+
+	End Class
+
+	''' <summary>
+	''' Improved And Extended RichTextBox control that prevents the cursor from changing to the I-beam when hovering over the control. It can cause cursor "blinking". This is especially useful in scenarios where the RichTextBox is used for display purposes only and should not allow text selection or editing.
+	''' Also includes a SetAlignment method to easily set text alignment. Now includes methods to append and insert both RTF and plain text at specified positions.
+	''' </summary>
+	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
 	Public Class RichTextBox
 		Inherits System.Windows.Forms.RichTextBox
