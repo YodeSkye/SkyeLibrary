@@ -2620,10 +2620,8 @@ Namespace UI
 		' ---- Layout Constants ----
 		Private Const TOAST_PADDING As Integer = 10
 		Private Const TITLE_MESSAGE_GAP As Integer = 5
-		Private Const DEFAULT_MARGIN As Integer = 20
 		Private Const ICON_SIZE As Integer = 48
 		Private Const MAX_HEIGHT_PADDING As Integer = 40
-		Private Const SHADOW_SIZE As Integer = 8
 		Private Const TEXT_TOP_OFFSET As Integer = 7
 
 
@@ -2943,7 +2941,7 @@ Namespace UI
 					g.DrawImage(_opts.Image, iconRect)
 				End If
 
-				textX = iconRect.Right + (padding * 2)
+				textX = iconRect.Right + padding
 
 			ElseIf _opts.Icon IsNot Nothing Then
 				Dim size As Integer = ICON_SIZE
@@ -2965,10 +2963,10 @@ Namespace UI
 					g.DrawImage(bmp, centeredRect)
 				End Using
 
-				textX = iconRect.Right + padding
+				textX = iconRect.Right + 2
 			Else
 				' No icon, no image → add horizontal inset
-				textX = padding * 2 + 1
+				textX = padding + 2
 			End If
 
 			Dim wAvail As Integer = w - textX - padding
@@ -2979,21 +2977,14 @@ Namespace UI
 			Dim titleY As Integer = padding + TEXT_TOP_OFFSET
 
 			If Not String.IsNullOrEmpty(_opts.Title) AndAlso _titleHeight > 0 Then
-				Dim titleRect As New Rectangle(textX, titleY, wAvail, _titleHeight)
-
-				Dim titleFlags As TextFormatFlags =
-			TextFormatFlags.EndEllipsis Or
-			TextFormatFlags.TextBoxControl Or
-			TextFormatFlags.NoPadding
-
-				TextRenderer.DrawText(
-					g,
-					_opts.Title,
-					_opts.TitleFont,
-					titleRect,
-					foreColor,
-					titleFlags
-				)
+				Dim titleRectF As New RectangleF(textX, padding + 2, wAvail, _titleHeight)
+				Using brush As New SolidBrush(foreColor)
+					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+					Using sf As New StringFormat(StringFormatFlags.LineLimit)
+						sf.Trimming = StringTrimming.EllipsisCharacter
+						g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRectF, sf)
+					End Using
+				End Using
 			End If
 
 			'-----------------------------------------
@@ -3010,34 +3001,28 @@ Namespace UI
 			End If
 
 			If Not String.IsNullOrEmpty(_opts.Message) AndAlso _messageHeight > 0 Then
-				Dim messageRect As New Rectangle(textX, messageY, wAvail, _messageHeight)
-
-				Dim msgFlags As TextFormatFlags =
-					TextFormatFlags.WordBreak Or
-					TextFormatFlags.TextBoxControl Or
-					TextFormatFlags.NoPadding Or
-					TextFormatFlags.EndEllipsis
-
-				TextRenderer.DrawText(
-					g,
-					_opts.Message,
-					_opts.MessageFont,
-					messageRect,
-					foreColor,
-					msgFlags
-				)
+				Dim messageRectF As New RectangleF(textX, padding + _titleHeight + TITLE_MESSAGE_GAP, wAvail, _messageHeight)
+				Using brush As New SolidBrush(foreColor)
+					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+					Using sf As New StringFormat(StringFormatFlags.LineLimit)
+						sf.Trimming = StringTrimming.EllipsisWord
+						g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRectF, sf)
+					End Using
+				End Using
 			End If
-			Debug.WriteLine($"HEIGHT = {_height}")
-			Debug.WriteLine($"MESSAGEHEIGHT = {_messageHeight}")
-			Debug.WriteLine($"ICONSIZE = {_iconSize}")
-			Debug.WriteLine($"PADDING = {TOAST_PADDING}")
+			'Debug.WriteLine($"HEIGHT = {_height}")
+			'Debug.WriteLine($"MESSAGEHEIGHT = {_messageHeight}")
+			'Debug.WriteLine($"ICONSIZE = {_iconSize}")
+			'Debug.WriteLine($"PADDING = {TOAST_PADDING}")
 		End Sub
 		Private Sub AutoSizeToast()
 			Dim padding As Integer = TOAST_PADDING
 
+			_titleHeight = 0
+			_messageHeight = 0
+
 			' Compute icon size FIRST
 			If _opts.Image IsNot Nothing Then
-				' Dynamic scaling based on message height
 				_iconSize = Math.Max(24, Math.Min(_messageHeight, 96))
 			ElseIf _opts.Icon IsNot Nothing Then
 				_iconSize = ICON_SIZE
@@ -3045,66 +3030,61 @@ Namespace UI
 				_iconSize = 0
 			End If
 
-			' Now compute textX using the correct icon size
+			' Compute textX
 			Dim textX As Integer = padding
 			If _iconSize > 0 Then
 				textX = padding + _iconSize + padding
 			End If
 
 			Dim wAvail As Integer = _width - textX - padding
-			Debug.WriteLine($"[AutoSizeToast] wAvail = {wAvail}")
-            _titleHeight = 0
-			_messageHeight = 0
 
-			Dim flags As TextFormatFlags =
-				TextFormatFlags.WordBreak Or
-				TextFormatFlags.TextBoxControl Or
-				TextFormatFlags.NoPadding
+			' Measure using DrawString-compatible metrics
+			Using bmp As New Bitmap(1, 1)
+				Using g As Graphics = Graphics.FromImage(bmp)
+					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
 
-			' Title
-			If Not String.IsNullOrEmpty(_opts.Title) Then
-				Dim size As Size = TextRenderer.MeasureText(
-					_opts.Title,
-					_opts.TitleFont,
-					New Size(wAvail, Integer.MaxValue),
-					flags
-				)
-				_titleHeight = size.Height
-			End If
+					' Title
+					If Not String.IsNullOrEmpty(_opts.Title) Then
+						Using sf As New StringFormat(StringFormatFlags.LineLimit)
+							sf.Trimming = StringTrimming.EllipsisCharacter
+							Dim sizeF As SizeF = g.MeasureString(_opts.Title, _opts.TitleFont, wAvail, sf)
+							_titleHeight = CInt(Math.Ceiling(sizeF.Height))
+						End Using
+					End If
 
-			' Message
-			If Not String.IsNullOrEmpty(_opts.Message) Then
-				Dim size As Size = TextRenderer.MeasureText(
-					_opts.Message,
-					_opts.MessageFont,
-					New Size(wAvail, Integer.MaxValue),
-					flags
-				)
-				_messageHeight = size.Height
-			End If
+					' Message
+					If Not String.IsNullOrEmpty(_opts.Message) Then
+						Using sf As New StringFormat(StringFormatFlags.LineLimit)
+							sf.Trimming = StringTrimming.EllipsisWord
+							Dim sizeF As SizeF = g.MeasureString(_opts.Message, _opts.MessageFont, wAvail, sf)
+							_messageHeight = CInt(Math.Ceiling(sizeF.Height))
+						End Using
+					End If
+				End Using
+			End Using
 
-			' Natural height
-			Dim totalHeight As Integer = padding + TEXT_TOP_OFFSET + _titleHeight + TITLE_MESSAGE_GAP + _messageHeight + (padding - TEXT_TOP_OFFSET)
+			' NEW: Clean DrawString-based height math
+			Dim totalHeight As Integer =
+				padding +
+				_titleHeight +
+				TITLE_MESSAGE_GAP +
+				_messageHeight +
+				padding
 
-			' Clamp to monitor working area
+			' Clamp
 			Dim wa As Rectangle = Screen.PrimaryScreen.WorkingArea
 			Dim maxHeight As Integer = wa.Height - MAX_HEIGHT_PADDING
 
 			If totalHeight > maxHeight Then
 				totalHeight = maxHeight
-
-				' Recompute message height to fit inside clamped toast
 				Dim availableForMessage As Integer =
 					totalHeight - padding - _titleHeight - TITLE_MESSAGE_GAP - padding
-
 				_messageHeight = Math.Max(availableForMessage, 0)
 			End If
 
 			_height = totalHeight
 
-			Debug.WriteLine($"[AutoSizeToast] final _height = {_height}")
-
-			' Compute final icon size based on final toast height
+			' Final icon size
 			If _opts.Image IsNot Nothing Then
 				_iconSize = _height - TOAST_PADDING * 2
 			ElseIf _opts.Icon IsNot Nothing Then
@@ -3112,7 +3092,6 @@ Namespace UI
 			Else
 				_iconSize = 0
 			End If
-
 		End Sub
 
 	End Class
