@@ -1879,10 +1879,10 @@ Namespace UI
 			If Char.IsDigit(e.KeyChar) Then Return
 
 			' Decimal point
-			If AllowDecimal AndAlso e.KeyChar = "."c AndAlso Not Me.Text.Contains(".") Then Return
+			If AllowDecimal AndAlso e.KeyChar = "."c AndAlso Not Me.Text.Contains("."c) Then Return
 
 			' Negative sign
-			If AllowNegative AndAlso e.KeyChar = "-"c AndAlso Me.SelectionStart = 0 AndAlso Not Me.Text.Contains("-") Then Return
+			If AllowNegative AndAlso e.KeyChar = "-"c AndAlso Me.SelectionStart = 0 AndAlso Not Me.Text.Contains("-"c) Then Return
 
 			' Otherwise block
 			e.Handled = True
@@ -1892,7 +1892,7 @@ Namespace UI
 			' If user is editing formatted text, strip formatting first
 			' If user is editing formatted text, strip formatting first
 			If Not _isNormalizing Then
-				If Me.Text.Contains(",") OrElse (CurrencyMode AndAlso Me.Text.StartsWith(CurrencySymbol)) Then
+				If Me.Text.Contains(","c) OrElse (CurrencyMode AndAlso Me.Text.StartsWith(CurrencySymbol)) Then
 
 					Dim original = Me.Text
 					Dim originalPos = Me.SelectionStart
@@ -1945,7 +1945,7 @@ Namespace UI
 			If _isNormalizing Then Return
 
 			' Skip filtering if text is already formatted
-			If Me.Text.Contains(",") OrElse (CurrencyMode AndAlso Me.Text.StartsWith(CurrencySymbol)) Then Return
+			If Me.Text.Contains(","c) OrElse (CurrencyMode AndAlso Me.Text.StartsWith(CurrencySymbol)) Then Return
 
 			Dim original = Me.Text
 			Dim filtered = FilterText(original)
@@ -2002,7 +2002,7 @@ Namespace UI
 				Dim t = Me.Text.Trim()
 
 				' If text ends with a decimal point, append a zero
-				If t.EndsWith(".") Then
+				If t.EndsWith("."c) Then
 					t &= "0"
 				End If
 
