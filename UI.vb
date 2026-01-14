@@ -3630,10 +3630,10 @@ Namespace UI
 			.TooltipBack = Color.FromArgb(255, 35, 35, 35),
 			.TooltipFore = Color.DeepPink,
 			.TooltipBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
-			.MenuBack = Color.DeepPink,
-			.MenuFore = Color.White,
+			.MenuBack = Color.FromArgb(255, 35, 35, 35),
+			.MenuFore = Color.DeepPink,
 			.MenuHover = Color.HotPink,
-			.MenuBorder = Color.FromArgb(255, 80, 80, 80),
+			.MenuBorder = Color.DeepPink,
 			.MenuSeparator = Color.FromArgb(255, 90, 90, 90)
 		}
 		Private ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark, Blossom, CrimsonNight}
