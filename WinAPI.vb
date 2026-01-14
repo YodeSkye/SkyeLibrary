@@ -27,6 +27,9 @@ Public Class WinAPI
     Public Const WM_SYSCOMMAND As Integer = 274 '&H112
     Public Const WM_ACTIVATE As UShort = &H6
     Public Const WM_PAINT As Integer = &HF
+    Public Const WM_SETREDRAW As Integer = &HB
+    Public Const WM_SETFOCUS As Integer = &H7
+    Public Const WM_KILLFOCUS As Integer = &H8
     Public Const WM_PRINTCLIENT As Integer = &H318
     Public Const WM_ERASEBKGND As Integer = &H14
     Public Const WM_MOUSEMOVE As Integer = &H200
