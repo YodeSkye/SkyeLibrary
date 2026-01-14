@@ -2292,8 +2292,8 @@ Namespace UI
 			g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
 			Dim rc As Rectangle = ClientRectangle
 
-			' Background (you may already have hover logic; keep that)
-			Dim bg As Color = If(_hovering, ControlPaint.Light(BackColor, 0.15F), BackColor)
+			' Background
+			Dim bg As Color = If(_hovering, ControlPaint.Light(BackColor, 0.25F), BackColor)
 			Using b As New SolidBrush(bg)
 				g.FillRectangle(b, rc)
 			End Using
@@ -3538,7 +3538,7 @@ Namespace UI
 			.ForeColor = Color.Black,
 			.AccentColor = Color.DeepSkyBlue,
 			.BorderColor = Color.LightGray,
-			.ButtonBack = Color.White,
+			.ButtonBack = Color.FromArgb(245, 245, 245),
 			.ButtonFore = Color.Black,
 			.TextBack = Color.White,
 			.TextFore = Color.Black,
@@ -3584,7 +3584,59 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(80, 80, 80),
 			.MenuSeparator = Color.FromArgb(90, 90, 90)
 		}
-		Private ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark}
+		Public ReadOnly Blossom As New SkyeTheme With {
+			.Name = "Blossom",
+			.BackColor = Color.Pink,
+			.ForeColor = Color.DeepPink,
+			.AccentColor = Color.White,
+			.BorderColor = ControlPaint.Light(Color.DeepPink, 0.75F),
+			.ButtonBack = Color.HotPink,
+			.ButtonFore = Color.White,
+			.TextBack = Color.Pink,
+			.TextFore = Color.DeepPink,
+			.GroupBoxFore = Color.DeepPink,
+			.GridBack = Color.Pink,
+			.GridFore = Color.DeepPink,
+			.GridHeaderBack = Color.Pink,
+			.GridHeaderFore = Color.DeepPink,
+			.GridBorder = ControlPaint.Light(Color.DeepPink, 0.75F),
+			.GridAlternateRowBack = ControlPaint.Light(Color.Pink, 0.25F),
+			.TooltipBack = Color.Pink,
+			.TooltipFore = Color.DeepPink,
+			.TooltipBorder = ControlPaint.Light(Color.DeepPink, 0.75F),
+			.MenuBack = Color.Pink,
+			.MenuFore = Color.DeepPink,
+			.MenuHover = Color.LightPink,
+			.MenuBorder = Color.DeepPink,
+			.MenuSeparator = Color.LightGray
+		}
+		Public ReadOnly CrimsonNight As New SkyeTheme With {
+			.Name = "Crimson Night",
+			.BackColor = Color.FromArgb(255, 35, 35, 35),
+			.ForeColor = Color.DeepPink,
+			.AccentColor = Color.White,
+			.BorderColor = ControlPaint.Dark(Color.DeepPink, 0.25F),
+			.ButtonBack = Color.DeepPink,
+			.ButtonFore = Color.White,
+			.TextBack = Color.FromArgb(255, 35, 35, 35),
+			.TextFore = Color.DeepPink,
+			.GroupBoxFore = Color.White,
+			.GridBack = Color.FromArgb(255, 35, 35, 35),
+			.GridFore = Color.DeepPink,
+			.GridHeaderBack = Color.FromArgb(255, 35, 35, 35),
+			.GridHeaderFore = Color.White,
+			.GridBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
+			.GridAlternateRowBack = Color.FromArgb(255, 40, 40, 40),
+			.TooltipBack = Color.FromArgb(255, 35, 35, 35),
+			.TooltipFore = Color.DeepPink,
+			.TooltipBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
+			.MenuBack = Color.FromArgb(255, 35, 35, 35),
+			.MenuFore = Color.White,
+			.MenuHover = Color.HotPink,
+			.MenuBorder = Color.FromArgb(255, 80, 80, 80),
+			.MenuSeparator = Color.FromArgb(255, 90, 90, 90)
+		}
+		Private ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark, Blossom, CrimsonNight}
 		Public ReadOnly Property AllThemes As List(Of SkyeTheme)
 			Get
 				Return _themes
@@ -3634,7 +3686,7 @@ Namespace UI
 				ApplyToMenu(target.ContextMenuStrip)
 			End If
 		End Sub
-		' Apply them to all forms in the application
+		' Apply theme to all forms in the application
 		Public Sub ApplyThemeToAllOpenForms()
 			For Each f As Form In Application.OpenForms
 				ApplyTheme(f)
@@ -3660,10 +3712,14 @@ Namespace UI
 						Dim t = DirectCast(c, TextBoxBase)
 						t.BackColor = CurrentTheme.TextBack
 						t.ForeColor = CurrentTheme.TextFore
-					Case TypeOf c Is RichTextBox
-						Dim r = DirectCast(c, RichTextBox)
+					Case TypeOf c Is System.Windows.Forms.RichTextBox
+						Dim r = DirectCast(c, System.Windows.Forms.RichTextBox)
 						r.BackColor = CurrentTheme.TextBack
 						r.ForeColor = CurrentTheme.TextFore
+					Case TypeOf c Is System.Windows.Forms.ComboBox
+						Dim cb = DirectCast(c, System.Windows.Forms.ComboBox)
+						cb.BackColor = CurrentTheme.ButtonBack
+						cb.ForeColor = CurrentTheme.ButtonFore
 					Case TypeOf c Is GroupBox
 						c.ForeColor = CurrentTheme.GroupBoxFore
 					Case TypeOf c Is Panel OrElse TypeOf c Is SplitContainer
