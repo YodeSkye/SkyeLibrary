@@ -2200,12 +2200,8 @@ Namespace UI
 			If item Is Nothing Then
 				' Fallback for non-ComboItem entries
 				e.DrawBackground()
-				Using b As New SolidBrush(Me.ForeColor)
-					e.Graphics.DrawString(Me.Items(e.Index).ToString(),
-								  Me.Font,
-								  b,
-								  e.Bounds.Left + 4,
-								  e.Bounds.Top + (e.Bounds.Height - Me.Font.Height) \ 2)
+				Using b As New SolidBrush(ForeColor)
+					e.Graphics.DrawString(Items(e.Index).ToString(), New Font(Font, FontStyle.Bold), b, e.Bounds.Left + 4, e.Bounds.Top + (e.Bounds.Height - Font.Height) \ 2)
 				End Using
 				e.DrawFocusRectangle()
 				Return
@@ -2225,10 +2221,7 @@ Namespace UI
 			End Using
 
 			' Text color (selection aware)
-			Dim textColor As Color = If((e.State And DrawItemState.Selected) = DrawItemState.Selected,
-								SystemColors.HighlightText,
-								Me.ForeColor)
-
+			Dim textColor As Color = If((e.State And DrawItemState.Selected) = DrawItemState.Selected, SystemColors.HighlightText, ForeColor)
 			Dim iconSize As Integer = e.Bounds.Height - 4
 			Dim iconX As Integer = e.Bounds.Left + 4
 			Dim iconY As Integer = e.Bounds.Top + 2
@@ -2253,11 +2246,7 @@ Namespace UI
 
 			' Text
 			Using b As New SolidBrush(textColor)
-				g.DrawString(item.Text,
-					 Me.Font,
-					 b,
-					 textX,
-					 e.Bounds.Top + (e.Bounds.Height - Me.Font.Height) \ 2)
+				g.DrawString(item.Text, New Font(Font, FontStyle.Bold), b, textX, e.Bounds.Top + (e.Bounds.Height - Font.Height) \ 2)
 			End Using
 
 			e.DrawFocusRectangle()
@@ -2340,7 +2329,7 @@ Namespace UI
 				.Alignment = StringAlignment.Near         ' left align
 				}
 			Using b As New SolidBrush(ForeColor)
-				g.DrawString(text, Me.Font, b, textRect, sf)
+				g.DrawString(text, Font, b, textRect, sf)
 			End Using
 
 			' Arrow
