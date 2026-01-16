@@ -2745,13 +2745,16 @@ Namespace UI
 #Region "Toast System"
 
 	' Public API
-	Public Module Toast
+	Public NotInheritable Class Toast
 
-		Public Sub ShowToast(options As ToastOptions)
+		Private Sub New()
+		End Sub
+
+		Public Shared Sub ShowToast(options As ToastOptions)
 			ToastManager.Show(options)
 		End Sub
 
-	End Module
+	End Class
 
 	' Public Options Class
 	Public Enum ToastLocation
@@ -2796,6 +2799,9 @@ Namespace UI
 		''' <returns></returns>
 		Public Property CornerRadius As Integer = 16
 		Public Property Shadow As Boolean = True
+
+		' Click Action
+		Public Property ClickAction As Action = Nothing
 
 	End Class
 
@@ -2879,9 +2885,11 @@ Namespace UI
 				Case WinAPI.WM_NCHITTEST
 					Return CType(WinAPI.HTCAPTION, IntPtr)
 				Case WinAPI.WM_NCLBUTTONDOWN
+					OnToastClicked()
 					CloseToast()
 					Return IntPtr.Zero
 				Case WinAPI.WM_NCRBUTTONUP
+					OnToastClicked()
 					CloseToast()
 					Return IntPtr.Zero
 				Case WinAPI.WM_MOUSEACTIVATE
@@ -2944,6 +2952,10 @@ Namespace UI
 				WinAPI.DestroyWindow(_hwnd)
 				_hwnd = IntPtr.Zero
 			End If
+		End Sub
+
+		Protected Overridable Sub OnToastClicked()
+			' Base does nothing — derived class will handle it
 		End Sub
 
 		' ------------- Public API -------------------------
@@ -3365,6 +3377,10 @@ Namespace UI
 			AddHandler FadeTimer.Tick, AddressOf FadeTick
 			LifeTimer = New Timer() With {.Interval = _opts.Duration}
 			AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
+		End Sub
+
+		Protected Overrides Sub OnToastClicked()
+			If _opts.ClickAction IsNot Nothing Then _opts.ClickAction.Invoke()
 		End Sub
 
 		' Public API
