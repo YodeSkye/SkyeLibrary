@@ -9,6 +9,8 @@
 
 - ToolTipEX: Enhanced tooltips with custom styling and behavior
 - ComboBox: Customizable combo box control that fixes some default ComboBox issues and extends functionality
+- Toasts: Non-intrusive notification pop-ups
+- Themes: Built-in light and dark and so many more themes for consistent UI design
 - WinAPI: Simplified access to Windows API functions
 - And so much more!
 
