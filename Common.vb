@@ -358,6 +358,25 @@ Public Class Common
             End Using
         End Sub
 
+        Public Shared Function GetStringFromHKCU(subKey As String, valueName As String, defaultValue As String) As String
+            Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(subKey, writable:=False)
+                If key Is Nothing Then Return defaultValue
+                Dim v = key.GetValue(valueName)
+                If v Is Nothing Then Return defaultValue
+                Return CStr(v)
+            End Using
+        End Function
+        Public Shared Sub SetStringInHKCU(subKey As String, valueName As String, valueData As String)
+            Using key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(subKey)
+                key.SetValue(valueName, valueData, Microsoft.Win32.RegistryValueKind.String)
+            End Using
+        End Sub
+        Public Shared Sub DeleteValueInHKCU(subKey As String, valueName As String)
+            Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(subKey, writable:=True)
+                key?.DeleteValue(valueName, throwOnMissingValue:=False)
+            End Using
+        End Sub
+
     End Class
 
 End Class
