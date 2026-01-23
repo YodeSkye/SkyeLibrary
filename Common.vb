@@ -236,6 +236,76 @@ Public Class Common
         Return Regex.Replace(noTags, "\s+", " ").Trim()
     End Function
 
+    Public Shared Function ToSentenceCase(input As String) As String
+        If String.IsNullOrWhiteSpace(input) Then Return input
+
+        Dim sb As New StringBuilder(input.Length)
+        Dim capitalizeNext As Boolean = True
+
+        For Each ch As Char In input
+            If capitalizeNext AndAlso Char.IsLetter(ch) Then
+                sb.Append(Char.ToUpperInvariant(ch))
+                capitalizeNext = False
+            Else
+                sb.Append(Char.ToLowerInvariant(ch))
+            End If
+
+            ' Detect sentence boundaries
+            If ch = "."c OrElse ch = "!"c OrElse ch = "?"c Then
+                capitalizeNext = True
+            End If
+
+            ' Also capitalize after line breaks
+            If ch = vbLf OrElse ch = vbCr Then
+                capitalizeNext = True
+            End If
+
+        Next
+
+        Return sb.ToString()
+    End Function
+    Public Shared Sub ToSentenceCasePreserveFormatting(rtb As RichTextBox)
+        Dim start = rtb.SelectionStart
+        Dim length = rtb.SelectionLength
+
+        If length = 0 Then
+            rtb.SelectAll()
+            start = rtb.SelectionStart
+            length = rtb.SelectionLength
+        End If
+
+        Dim text = rtb.SelectedText
+        Dim chars = text.ToCharArray()
+
+        Dim capitalizeNext As Boolean = True
+
+        For i = 0 To chars.Length - 1
+            Dim ch = chars(i)
+
+            If capitalizeNext AndAlso Char.IsLetter(ch) Then
+                chars(i) = Char.ToUpperInvariant(ch)
+                capitalizeNext = False
+            Else
+                chars(i) = Char.ToLowerInvariant(ch)
+            End If
+
+            If ch = "."c OrElse ch = "!"c OrElse ch = "?"c OrElse
+               ch = vbLf OrElse ch = vbCr Then
+                capitalizeNext = True
+            End If
+        Next
+
+        ' Replace characters in-place
+        For i = 0 To chars.Length - 1
+            rtb.SelectionStart = start + i
+            rtb.SelectionLength = 1
+            rtb.SelectedText = chars(i)
+        Next
+
+        rtb.SelectionStart = start
+        rtb.SelectionLength = length
+    End Sub
+
     ' RegistryHelper
     ''' <summary>
     ''' Provides helper methods for reading and writing application settings 
