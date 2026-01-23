@@ -236,6 +236,12 @@ Public Class Common
         Return Regex.Replace(noTags, "\s+", " ").Trim()
     End Function
 
+    ''' <summary>
+    ''' Converts the input string to sentence case, capitalizing the first letter of each sentence
+    ''' and converting the rest to lowercase.
+    ''' </summary>
+    ''' <param name="input">The input string to convert.</param>
+    ''' <returns>The sentence-cased string.</returns>
     Public Shared Function ToSentenceCase(input As String) As String
         If String.IsNullOrWhiteSpace(input) Then Return input
 
@@ -264,6 +270,11 @@ Public Class Common
 
         Return sb.ToString()
     End Function
+    ''' <summary>
+    ''' Converts the selected text in a RichTextBox to sentence case,
+    ''' preserving the original formatting by replacing characters in-place.
+    ''' </summary>
+    ''' <param name="rtb">The RichTextBox containing the text to convert.</param>
     Public Shared Sub ToSentenceCasePreserveFormatting(rtb As RichTextBox)
         Dim start = rtb.SelectionStart
         Dim length = rtb.SelectionLength
