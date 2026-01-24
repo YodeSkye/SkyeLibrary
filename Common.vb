@@ -135,15 +135,18 @@ Public Class Common
     ''' if its length exceeds the specified maximum. Null values return an empty string.
     ''' </summary>
     ''' <param name="s">The input string to truncate.</param>
-    ''' <param name="n">The maximum allowed length of the string.</param>
+    ''' <param name="max">The maximum allowed length of the string.</param>
     ''' <returns>
-    ''' The original string if its length is less than or equal to <paramref name="n"/>, 
-    ''' otherwise the first <paramref name="n"/> characters followed by "…".
+    ''' The original string if its length is less than or equal to <paramref name="max"/>, 
+    ''' otherwise the first <paramref name="max"/>-1 characters followed by "…".
     ''' </returns>
-    Public Shared Function Trunc(s As String, n As Integer) As String
-        If s Is Nothing Then Return ""
-        If s.Length <= n Then Return s
-        Return String.Concat(s.AsSpan(0, n), "…")
+    Public Shared Function Trunc(s As String, max As Integer) As String
+        If s Is Nothing Then Return String.Empty
+        If s.Length <= max Then Return s
+        If max <= 1 Then
+            Return s.Substring(0, max)   ' edge case: not enough room for ellipsis
+        End If
+        Return String.Concat(s.AsSpan(0, max - 1), "…")
     End Function
 
     ''' <summary>
