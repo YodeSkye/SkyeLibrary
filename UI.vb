@@ -2492,6 +2492,18 @@ Namespace UI
 		Public Sub New()
 			SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
 		End Sub
+		Protected Overrides Function ProcessCmdKey(ByRef msg As Message, keyData As Keys) As Boolean
+
+			If keyData = Keys.Tab OrElse keyData = (Keys.Shift Or Keys.Tab) Then
+				If _editBox IsNot Nothing Then
+					' Simulate a KeyDown event for Tab
+					EditBox_KeyDown(_editBox, New KeyEventArgs(keyData))
+					Return True
+				End If
+			End If
+
+			Return MyBase.ProcessCmdKey(msg, keyData)
+		End Function
 		Protected Overrides Sub OnMouseDown(e As MouseEventArgs)
 			MyBase.OnMouseDown(e)
 
@@ -2523,17 +2535,41 @@ Namespace UI
 		End Sub
 		Private Sub EditBox_KeyDown(sender As Object, e As KeyEventArgs)
 			If e.KeyCode = Keys.Enter Then
+				e.SuppressKeyPress = True
 				EndEditSubItem(commit:=True)
-			ElseIf e.KeyCode = Keys.Escape Then
+				Return
+			End If
+			If e.KeyCode = Keys.Escape Then
+				e.SuppressKeyPress = True
 				EndEditSubItem(commit:=False)
+				Return
+			End If
+            ' ⭐ TAB NAVIGATION
+            If e.KeyCode = Keys.Tab Then
+                Debug.Print("Tab pressed in edit box. Shift: " & e.Shift.ToString())
+                e.SuppressKeyPress = True
+				e.Handled = True
+
+				Dim shift As Boolean = e.Shift
+				Dim currentCol = _editSubItem
+				Dim item = _editItem
+
+				EndEditSubItem(commit:=True)
+
+				Dim nextCol = FindNextEditableColumn(currentCol, shift)
+				If nextCol >= 0 Then
+					BeginEditSubItem(item, nextCol)
+				End If
+
+				Return
 			End If
 		End Sub
-        Private Sub EditBox_LostFocus(sender As Object, e As EventArgs)
-            EndEditSubItem(commit:=True)
-        End Sub
+		Private Sub EditBox_LostFocus(sender As Object, e As EventArgs)
+			EndEditSubItem(commit:=True)
+		End Sub
 
-        ' Handlers
-        Private Sub BeginEditSubItem(item As ListViewItem, subIndex As Integer)
+		' Handlers
+		Private Sub BeginEditSubItem(item As ListViewItem, subIndex As Integer)
 			If _editBox IsNot Nothing Then Return
 
 			Dim cancel As Boolean = False
@@ -2549,7 +2585,6 @@ Namespace UI
 			_editSubItem = subIndex
 
 			Dim bounds = item.SubItems(subIndex).Bounds
-
 			_editBox = New TextBox With {
 				.Bounds = bounds,
 				.Text = item.SubItems(subIndex).Text,
@@ -2558,6 +2593,10 @@ Namespace UI
 				.ForeColor = Me.ForeColor,
 				.Font = Me.Font
 			}
+			If subIndex = 0 Then
+				bounds.Width = Me.Columns(0).Width
+				_editBox.Width = bounds.Width
+			End If
 
 			AddHandler _editBox.LostFocus, AddressOf EditBox_LostFocus
 			AddHandler _editBox.KeyDown, AddressOf EditBox_KeyDown
@@ -2604,6 +2643,27 @@ Namespace UI
 				If x < current Then Return i
 			Next
 			Return Columns.Count - 1
+		End Function
+		Private Function FindNextEditableColumn(current As Integer, backwards As Boolean) As Integer
+			If EditableColumns Is Nothing OrElse EditableColumns.Count = 0 Then
+				Return -1
+			End If
+
+			If backwards Then
+				For i = current - 1 To 0 Step -1
+					If i < EditableColumns.Count AndAlso EditableColumns(i) Then
+						Return i
+					End If
+				Next
+			Else
+				For i = current + 1 To Columns.Count - 1
+					If i < EditableColumns.Count AndAlso EditableColumns(i) Then
+						Return i
+					End If
+				Next
+			End If
+
+			Return -1
 		End Function
 
 	End Class
