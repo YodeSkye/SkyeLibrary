@@ -2422,7 +2422,6 @@ Namespace UI
 		' Inline Editing
 		Private _lastClickTime As Integer = 0
 		Private _lastClickSubItem As Integer = -1
-		Private ReadOnly DoubleClickThreshold As Integer = SystemInformation.DoubleClickTime
 		Private _editBox As TextBox = Nothing
 		Private _editItem As ListViewItem = Nothing
 		Private _editSubItem As Integer = -1
@@ -2492,6 +2491,17 @@ Namespace UI
 		Public Sub New()
 			SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
 		End Sub
+		Protected Overrides Sub OnCreateControl()
+			MyBase.OnCreateControl()
+
+			' Designer has not set anything
+			If _editableColumns.Count = 0 Then
+				For i = 0 To Me.Columns.Count - 1
+					_editableColumns.Add(False)
+				Next
+			End If
+		End Sub
+
 		Protected Overrides Function ProcessCmdKey(ByRef msg As Message, keyData As Keys) As Boolean
 
 			If keyData = Keys.Tab OrElse keyData = (Keys.Shift Or Keys.Tab) Then
