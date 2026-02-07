@@ -2501,7 +2501,6 @@ Namespace UI
 				Next
 			End If
 		End Sub
-
 		Protected Overrides Function ProcessCmdKey(ByRef msg As Message, keyData As Keys) As Boolean
 
 			If keyData = Keys.Tab OrElse keyData = (Keys.Shift Or Keys.Tab) Then
@@ -2514,6 +2513,24 @@ Namespace UI
 
 			Return MyBase.ProcessCmdKey(msg, keyData)
 		End Function
+		Protected Overrides Sub OnKeyDown(e As KeyEventArgs)
+			MyBase.OnKeyDown(e)
+
+			If e.KeyCode = Keys.F2 Then
+				Dim item = FocusedItem
+				If item IsNot Nothing Then
+					' Edit the first editable column
+					For i = 0 To EditableColumns.Count - 1
+						If EditableColumns(i) Then
+							EditSubItem(item, i)
+							Exit For
+						End If
+					Next
+				End If
+				e.Handled = True
+			End If
+
+		End Sub
 		Protected Overrides Sub OnMouseDown(e As MouseEventArgs)
 			MyBase.OnMouseDown(e)
 
@@ -2635,6 +2652,13 @@ Namespace UI
 		End Sub
 
 		' Methods
+		Public Sub EditSubItem(item As ListViewItem, subIndex As Integer)
+			If item Is Nothing Then Exit Sub
+			If subIndex < 0 OrElse subIndex >= item.SubItems.Count Then Exit Sub
+			If Not EditableColumns(subIndex) Then Exit Sub
+
+			BeginEditSubItem(item, subIndex)
+		End Sub
 		Private Sub DrawInsertionLine(g As Graphics, X1 As Integer, X2 As Integer, Y As Integer)
 			Using p As New Pen(_InsertionLineColor) With {.Width = 3}
 				g.DrawLine(p, X1, Y, X2 - 1, Y)
