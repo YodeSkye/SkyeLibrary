@@ -2406,19 +2406,29 @@ Namespace UI
 	End Class
 
 	''' <summary>
-	''' Extended Listview control with Insertion Line for drag/drop operations.
+	''' Extended Listview control with Insertion Line for drag/drop operations. The Insertion Line is drawn in the specified color and appears between items to indicate where a dragged item would be dropped.
+	''' Also supports inline editing of subitems on double-click, with events for BeforeEdit, AfterEdit, and SubItemEdited. Inline editing allows users to edit subitems directly within the ListView, with customizable editability per column and proper handling of edit lifecycle events.
 	''' </summary>
 	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
 	Public Class ListViewEX
 		Inherits ListView
 
-		'Declarations
+		' DECLARATIONS
+		' Insertion Line
 		Private _LineBefore As Integer = -1
 		Private _LineAfter As Integer = -1
 		Private _InsertionLineColor As Color = Color.Teal
+		' Inline Editing
+		Private _lastClickTime As Integer = 0
+		Private _lastClickSubItem As Integer = -1
+		Private ReadOnly DoubleClickThreshold As Integer = SystemInformation.DoubleClickTime
+		Private _editBox As TextBox = Nothing
+		Private _editItem As ListViewItem = Nothing
+		Private _editSubItem As Integer = -1
+		Private _editableColumns As New List(Of Boolean)
 
-		'Properties
+		' PROPERTIES
 		<DefaultValue(-1)>
 		Public Property LineBefore As Integer
 			Get
@@ -2447,12 +2457,23 @@ Namespace UI
 				Me.Invalidate()
 			End Set
 		End Property
+		<Category("Behavior"), Description("Specifies which ListView columns are editable."), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property EditableColumns As List(Of Boolean)
+			Get
+				Return _editableColumns
+			End Get
+			Set(value As List(Of Boolean))
+				_editableColumns = value
+			End Set
+		End Property
 
-		'Events
-		Public Sub New()
-			SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
-		End Sub
-		Protected Overrides Sub WndProc(ByRef m As Message)
+		' EVENTS
+		Public Event SubItemEdited(item As ListViewItem, subItemIndex As Integer, newValue As String)
+		Public Event BeforeEdit(item As ListViewItem, subItemIndex As Integer, ByRef cancel As Boolean)
+        Public Event AfterEdit(item As ListViewItem, subItemIndex As Integer, newValue As String)
+
+        ' Control Events
+        Protected Overrides Sub WndProc(ByRef m As Message)
 			MyBase.WndProc(m)
 
 			If m.Msg = WinAPI.WM_PAINT AndAlso Me.IsHandleCreated AndAlso Not DesignMode Then
@@ -2468,8 +2489,103 @@ Namespace UI
 				End Using
 			End If
 		End Sub
+		Public Sub New()
+			SetStyle(ControlStyles.OptimizedDoubleBuffer, True)
+		End Sub
+		Protected Overrides Sub OnMouseDown(e As MouseEventArgs)
+			MyBase.OnMouseDown(e)
 
-		'Procedures
+			Dim info = HitTest(e.Location)
+			If info.Item Is Nothing Then Return
+
+			' Determine subitem index
+			Dim subIndex As Integer = info.Item.SubItems.IndexOf(info.SubItem)
+
+			If subIndex < 0 Then
+				' Empty cell: determine column manually
+				subIndex = GetColumnFromX(e.X)
+			End If
+
+			' Optional: per-column editability
+			If subIndex < 0 Then Return
+			If subIndex < EditableColumns.Count AndAlso Not EditableColumns(subIndex) Then
+				Return
+			End If
+
+			' Double-click detection using system threshold
+			Dim now = Environment.TickCount
+			If subIndex = _lastClickSubItem AndAlso (now - _lastClickTime) <= SystemInformation.DoubleClickTime Then
+				BeginEditSubItem(info.Item, subIndex)
+			End If
+
+			_lastClickTime = now
+			_lastClickSubItem = subIndex
+		End Sub
+		Private Sub EditBox_KeyDown(sender As Object, e As KeyEventArgs)
+			If e.KeyCode = Keys.Enter Then
+				EndEditSubItem(commit:=True)
+			ElseIf e.KeyCode = Keys.Escape Then
+				EndEditSubItem(commit:=False)
+			End If
+		End Sub
+        Private Sub EditBox_LostFocus(sender As Object, e As EventArgs)
+            EndEditSubItem(commit:=True)
+        End Sub
+
+        ' Handlers
+        Private Sub BeginEditSubItem(item As ListViewItem, subIndex As Integer)
+			If _editBox IsNot Nothing Then Return
+
+			Dim cancel As Boolean = False
+			RaiseEvent BeforeEdit(item, subIndex, cancel)
+			If cancel Then Return
+
+			' Ensure the subitem exists
+			While item.SubItems.Count <= subIndex
+				item.SubItems.Add(String.Empty)
+			End While
+
+			_editItem = item
+			_editSubItem = subIndex
+
+			Dim bounds = item.SubItems(subIndex).Bounds
+
+			_editBox = New TextBox With {
+				.Bounds = bounds,
+				.Text = item.SubItems(subIndex).Text,
+				.BorderStyle = BorderStyle.FixedSingle,
+				.BackColor = Me.BackColor,
+				.ForeColor = Me.ForeColor,
+				.Font = Me.Font
+			}
+
+			AddHandler _editBox.LostFocus, AddressOf EditBox_LostFocus
+			AddHandler _editBox.KeyDown, AddressOf EditBox_KeyDown
+			Me.Controls.Add(_editBox)
+			_editBox.Focus()
+			_editBox.SelectAll()
+
+		End Sub
+		Private Sub EndEditSubItem(commit As Boolean)
+			If _editBox Is Nothing Then Return
+
+			If commit AndAlso _editItem IsNot Nothing AndAlso _editSubItem >= 0 Then
+				_editItem.SubItems(_editSubItem).Text = _editBox.Text
+				RaiseEvent SubItemEdited(_editItem, _editSubItem, _editBox.Text)
+				RaiseEvent AfterEdit(_editItem, _editSubItem, _editBox.Text)
+			End If
+
+			RemoveHandler _editBox.LostFocus, AddressOf EditBox_LostFocus
+			RemoveHandler _editBox.KeyDown, AddressOf EditBox_KeyDown
+			Me.Controls.Remove(_editBox)
+			_editBox.Dispose()
+			_editBox = Nothing
+			_editItem = Nothing
+			_editSubItem = -1
+
+		End Sub
+
+		' Methods
 		Private Sub DrawInsertionLine(g As Graphics, X1 As Integer, X2 As Integer, Y As Integer)
 			Using p As New Pen(_InsertionLineColor) With {.Width = 3}
 				g.DrawLine(p, X1, Y, X2 - 1, Y)
@@ -2481,6 +2597,14 @@ Namespace UI
 				End Using
 			End Using
 		End Sub
+		Private Function GetColumnFromX(x As Integer) As Integer
+			Dim current As Integer = 0
+			For i = 0 To Columns.Count - 1
+				current += Columns(i).Width
+				If x < current Then Return i
+			Next
+			Return Columns.Count - 1
+		End Function
 
 	End Class
 
