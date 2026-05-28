@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Skye</RootNamespace>
+	<TargetFrameworks>net8.0-windows7.0;net9.0-windows7.0;net10.0-windows7.0</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Skye</AssemblyName>
+    <OptionStrict>On</OptionStrict>
+    <Title>Skye's Library</Title>
+    <AssemblyVersion>1.4.58</AssemblyVersion>
+    <FileVersion>1.4.58</FileVersion>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>SkyeLibrary</PackageId>
+    <Description>Skye's .NET UI Control &amp; Windows API Library</Description>
+    <Version>1.4.58</Version>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="My Project\Resources.Designer.vb">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="My Project\Resources.resx">
+      <CustomToolNamespace>Resources</CustomToolNamespace>
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{94e38dff-614b-4cbd-b67c-f211bb35ce8b}" />
+  </ItemGroup>
+
+</Project>
