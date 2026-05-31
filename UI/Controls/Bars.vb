@@ -1,6 +1,7 @@
 ﻿
 Imports System.ComponentModel
 Imports System.Drawing.Drawing2D
+Imports Skye.UI.ProgressEX
 
 Namespace UI
 
@@ -317,6 +318,399 @@ Namespace UI
 			End If
 			Invalidate()
 		End Sub
+
+	End Class
+
+	''' <summary>
+	''' A versatile data bar control that supports horizontal and vertical orientations, solid or gradient fills, optional percentage text display, and customizable colors and corner radius.
+	''' </summary>
+	<ToolboxItem(True)>
+	<DesignerCategory("Code")>
+	Public Class DataBarEX
+        Inherits Control
+
+        ' DECLARATIONS
+        Public Enum GradientMode
+			None
+			Horizontal
+			Vertical
+		End Enum
+		Public Enum OrientationMode
+			Horizontal
+			VerticalUp
+			VerticalDown
+		End Enum
+        Public Enum TextPositionMode
+            Centered
+            InsideBar
+        End Enum
+		Public Enum TextDisplayFormats
+			ValueOnly
+			ValueAndMaximum
+			Percentage
+		End Enum
+		Private _value As Integer
+		Private _maximum As Integer = 100
+		Private _orientation As OrientationMode = OrientationMode.Horizontal
+		Private _text As String = ""
+		Private _textDisplayFormat As TextDisplayFormats = TextDisplayFormats.ValueAndMaximum
+		Private _barColor As Color = Color.DeepSkyBlue
+		Private _barBackColor As Color = Color.FromArgb(40, 40, 40)
+		Private _gradient As GradientMode = GradientMode.None
+		Private _gradientStart As Color = Color.DeepSkyBlue
+		Private _gradientEnd As Color = Color.MediumBlue
+		Private _showText As Boolean = False
+		Private _textPosition As TextPositionMode = TextPositionMode.Centered
+		Private _textColor As Color = Color.White
+		Private _autoTextColor As Boolean = False
+
+		' DESGINER PROPERTIES
+		<Category("Behavior"), Description("Current value of the bar"), DefaultValue(0)>
+		Public Property Value As Integer
+			Get
+				Return _value
+			End Get
+			Set(v As Integer)
+				_value = Math.Max(0, Math.Min(v, _maximum))
+				Invalidate()
+			End Set
+		End Property
+		<Category("Behavior"), Description("Maximum value of the bar"), DefaultValue(100)>
+		Public Property Maximum As Integer
+			Get
+				Return _maximum
+			End Get
+			Set(v As Integer)
+				_maximum = Math.Max(1, v)
+				If _value > _maximum Then _value = _maximum
+				Invalidate()
+			End Set
+		End Property
+		<Category("Behavior"), Description("Specify the orientation of the bar"), DefaultValue(OrientationMode.Horizontal)>
+		Public Property Orientation As OrientationMode
+			Get
+				Return _orientation
+			End Get
+			Set(value As OrientationMode)
+				_orientation = value
+				Invalidate()
+			End Set
+		End Property
+		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
+		Public Overrides Property BackColor As Color
+			Get
+				Return Color.Transparent
+			End Get
+			Set(value As Color)
+				MyBase.BackColor = Color.Transparent
+			End Set
+		End Property
+		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
+		Public Overrides Property ForeColor As Color
+			Get
+				Return Color.Transparent
+			End Get
+			Set(value As Color)
+				MyBase.ForeColor = Color.Transparent
+			End Set
+		End Property
+		<Category("Appearance"), Description("Text displayed on the bar, null to display current value"), DefaultValue("")>
+		Public Overrides Property Text As String
+			Get
+				Return _text
+			End Get
+			Set(value As String)
+				If value <> _text Then
+					_text = value
+					Invalidate()
+				End If
+			End Set
+		End Property
+		<Category("Appearance"), Description("Specify the display format of the text on the bar"), DefaultValue(TextDisplayFormats.ValueAndMaximum)>
+		Public Property TextDisplayFormat As TextDisplayFormats
+			Get
+				Return _textDisplayFormat
+			End Get
+			Set(value As TextDisplayFormats)
+				If value <> _textDisplayFormat Then
+					_textDisplayFormat = value
+					Invalidate()
+				End If
+			End Set
+		End Property
+		<Category("Appearance"), Description("Solid bar color when no gradient is used."), DefaultValue(GetType(Color), "DeepSkyBlue")>
+		Public Property BarColor As Color
+			Get
+				Return _barColor
+			End Get
+			Set(value As Color)
+				If value <> _barColor Then
+					_barColor = value
+					Invalidate()
+				End If
+			End Set
+		End Property
+		<Category("Appearance"), Description("Background color of the rounded bar shape."), DefaultValue(GetType(Color), "40, 40, 40")>
+		Public Property BarBackColor As Color
+			Get
+				Return _barBackColor
+			End Get
+			Set(value As Color)
+				_barBackColor = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Specify the gradient mode of the bar"), DefaultValue(GradientMode.None)>
+		Public Property BarGradient As GradientMode
+			Get
+				Return _gradient
+			End Get
+			Set(value As GradientMode)
+				_gradient = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Start color of the bar gradient."), DefaultValue(GetType(Color), "DeepSkyBlue")>
+		Public Property GradientStart As Color
+			Get
+				Return _gradientStart
+			End Get
+			Set(value As Color)
+				If value <> _gradientStart Then
+					_gradientStart = value
+					Invalidate()
+				End If
+			End Set
+		End Property
+		<Category("Appearance"), Description("End color of the bar gradient."), DefaultValue(GetType(Color), "MediumBlue")>
+		Public Property GradientEnd As Color
+			Get
+				Return _gradientEnd
+			End Get
+			Set(value As Color)
+				If value <> _gradientEnd Then
+					_gradientEnd = value
+					Invalidate()
+				End If
+			End Set
+		End Property
+		<Category("Appearance"), Description("Specify whether to show the text overlay (e.g. '50/100')"), DefaultValue(False)>
+		Public Property ShowText As Boolean
+			Get
+				Return _showText
+			End Get
+			Set(value As Boolean)
+				_showText = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Specify the position of the text overlay"), DefaultValue(TextPositionMode.Centered)>
+		Public Property TextPosition As TextPositionMode
+			Get
+				Return _textPosition
+			End Get
+			Set(value As TextPositionMode)
+				_textPosition = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Specify the color of the text overlay"), DefaultValue(GetType(Color), "White")>
+		Public Property TextColor As Color
+			Get
+				Return _textColor
+			End Get
+			Set(value As Color)
+				_textColor = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Specify whether to automatically adjust the text color for better contrast"), DefaultValue(False)>
+		Public Property AutoTextColor As Boolean
+			Get
+				Return _autoTextColor
+			End Get
+			Set(value As Boolean)
+				_autoTextColor = value
+				Invalidate()
+			End Set
+		End Property
+
+		' EVENTS
+		Public Sub New()
+            SetStyle(ControlStyles.UserPaint Or
+                 ControlStyles.AllPaintingInWmPaint Or
+                 ControlStyles.OptimizedDoubleBuffer Or
+                 ControlStyles.ResizeRedraw Or
+                 ControlStyles.SupportsTransparentBackColor, True)
+
+            BackColor = Color.Transparent ' locked, don't allow change
+            ForeColor = Color.Transparent ' locked, don't allow change
+
+            _value = 50
+			_maximum = 100
+		End Sub
+		Protected Overrides Sub OnPaint(e As PaintEventArgs)
+			MyBase.OnPaint(e)
+
+			Dim g = e.Graphics
+			g.SmoothingMode = SmoothingMode.AntiAlias
+
+			DrawBackgroundBar(g, Me.ClientRectangle)
+
+			If _value <= 0 OrElse _maximum <= 0 Then
+				If _showText Then DrawText(g, Rectangle.Empty)
+				Return
+			End If
+
+			Dim pct As Double = _value / _maximum
+			Dim barRect As Rectangle
+			Select Case _orientation
+				Case OrientationMode.Horizontal
+					barRect = New Rectangle(0, 0, CInt(ClientSize.Width * pct), ClientSize.Height)
+				Case OrientationMode.VerticalUp
+					Dim h As Integer = CInt(ClientSize.Height * pct)
+					barRect = New Rectangle(0, ClientSize.Height - h, ClientSize.Width, h)
+				Case OrientationMode.VerticalDown
+					Dim h As Integer = CInt(ClientSize.Height * pct)
+					barRect = New Rectangle(0, 0, ClientSize.Width, h)
+			End Select
+
+			DrawForegroundBar(g, barRect)
+
+			If _showText Then DrawText(g, barRect)
+
+		End Sub
+
+		' METHODS
+		Private Sub DrawBackgroundBar(g As Graphics, rect As Rectangle)
+			If rect.Width <= 0 OrElse rect.Height <= 0 Then Return
+
+			Dim collapsedRect As Rectangle
+			Dim radius As Integer
+			If _orientation = OrientationMode.Horizontal Then
+
+				' HORIZONTAL GEOMETRY
+				Dim fullHeight As Integer = rect.Height
+				Dim width As Integer = rect.Width
+
+				Dim h As Integer = Math.Min(fullHeight, width)
+				Dim y As Integer = rect.Top + (fullHeight - h) \ 2
+
+				collapsedRect = New Rectangle(rect.Left, y, width, h)
+				radius = h
+			Else
+				' VERTICAL GEOMETRY
+				Dim fullWidth As Integer = rect.Width
+				Dim height As Integer = rect.Height
+
+				Dim w As Integer = Math.Min(fullWidth, height)
+				Dim x As Integer = rect.Left + (fullWidth - w) \ 2
+
+				collapsedRect = New Rectangle(x, rect.Top, w, height)
+				radius = w
+			End If
+
+			Using path As GraphicsPath = CreateRoundRect(collapsedRect, radius)
+				Using br As New SolidBrush(_barBackColor)
+					g.FillPath(br, path)
+				End Using
+			End Using
+		End Sub
+		Private Sub DrawForegroundBar(g As Graphics, rect As Rectangle)
+			If rect.Width <= 0 OrElse rect.Height <= 0 Then Return
+
+			Dim collapsedRect As Rectangle
+			Dim radius As Integer
+			If _orientation = OrientationMode.Horizontal Then
+				' HORIZONTAL GEOMETRY
+				Dim fullHeight As Integer = rect.Height
+				Dim width As Integer = rect.Width
+
+				Dim h As Integer = Math.Min(fullHeight, width)
+				Dim y As Integer = rect.Top + (fullHeight - h) \ 2
+
+				collapsedRect = New Rectangle(rect.Left, y, width, h)
+				radius = h
+			Else
+				' VERTICAL GEOMETRY
+				Dim fullWidth As Integer = rect.Width
+				Dim height As Integer = rect.Height
+
+				Dim w As Integer = Math.Min(fullWidth, height)
+				Dim x As Integer = rect.Left + (fullWidth - w) \ 2
+
+				collapsedRect = New Rectangle(x, rect.Top, w, height)
+				radius = w
+			End If
+
+			Using path As GraphicsPath = CreateRoundRect(collapsedRect, radius)
+				Using br As New SolidBrush(_barColor)
+					g.FillPath(br, path)
+				End Using
+			End Using
+		End Sub
+        Private Sub DrawText(g As Graphics, barRect As Rectangle)
+            Dim txt As String
+			If String.IsNullOrWhiteSpace(Text) Then
+				Select Case _textDisplayFormat
+                    Case TextDisplayFormats.ValueOnly
+                        txt = _value.ToString()
+                    Case TextDisplayFormats.ValueAndMaximum
+						txt = $"{_value}/{_maximum}"
+					Case TextDisplayFormats.Percentage
+						txt = $"{CInt((_value / _maximum) * 100)}%"
+				End Select
+			Else
+				txt = Text
+			End If
+			Dim colorToUse As Color = _textColor
+			If _autoTextColor Then colorToUse = ComputeAutoContrastColor()
+
+			Using br As New SolidBrush(colorToUse)
+				Using sf As New StringFormat With {
+					.Alignment = StringAlignment.Center,
+					.LineAlignment = StringAlignment.Center
+				}
+					Dim rect As Rectangle = ClientRectangle
+					Select Case _textPosition
+						Case TextPositionMode.Centered
+							g.DrawString(txt, Font, br, rect, sf)
+						Case TextPositionMode.InsideBar
+							If barRect.Width < 10 OrElse barRect.Height < 10 Then Return
+							g.DrawString(txt, Font, br, barRect, sf)
+					End Select
+				End Using
+			End Using
+		End Sub
+
+		' HELPERS
+		Private Shared Function CreateRoundRect(rect As Rectangle, radius As Integer) As GraphicsPath
+			Dim path As New GraphicsPath()
+			Dim d As Integer = radius
+
+			path.AddArc(rect.X, rect.Y, d, d, 180, 90)
+			path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90)
+			path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90)
+			path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90)
+			path.CloseFigure()
+
+			Return path
+		End Function
+		Private Function ComputeAutoContrastColor() As Color
+			Dim c As Color
+			If _gradient = GradientMode.None Then
+				c = BarColor
+			Else
+				' midpoint of gradient
+				c = Color.FromArgb(
+				(GradientStart.R + GradientEnd.R) \ 2,
+				(GradientStart.G + GradientEnd.G) \ 2,
+				(GradientStart.B + GradientEnd.B) \ 2)
+			End If
+			Dim luminance As Double = (0.299 * c.R) + (0.587 * c.G) + (0.114 * c.B)
+
+			Return If(luminance < 128, Color.White, Color.Black)
+		End Function
 
 	End Class
 
