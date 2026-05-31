@@ -349,6 +349,8 @@ Namespace UI
 			ValueAndMaximum
 			Percentage
 		End Enum
+
+		' Fields
 		Private _value As Integer
 		Private _maximum As Integer = 100
 		Private _orientation As OrientationMode = OrientationMode.Horizontal
@@ -364,7 +366,25 @@ Namespace UI
 		Private _textColor As Color = Color.White
 		Private _autoTextColor As Boolean = False
 
-		' DESGINER PROPERTIES
+		' DESIGNER PROPERTIES
+		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
+		Public Overrides Property BackColor As Color
+			Get
+				Return Color.Transparent
+			End Get
+			Set(value As Color)
+				MyBase.BackColor = Color.Transparent
+			End Set
+		End Property
+		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
+		Public Overrides Property ForeColor As Color
+			Get
+				Return Color.Transparent
+			End Get
+			Set(value As Color)
+				MyBase.ForeColor = Color.Transparent
+			End Set
+		End Property
 		<Category("Behavior"), Description("Current value of the bar"), DefaultValue(0)>
 		Public Property Value As Integer
 			Get
@@ -394,24 +414,6 @@ Namespace UI
 			Set(value As OrientationMode)
 				_orientation = value
 				Invalidate()
-			End Set
-		End Property
-		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
-		Public Overrides Property BackColor As Color
-			Get
-				Return Color.Transparent
-			End Get
-			Set(value As Color)
-				MyBase.BackColor = Color.Transparent
-			End Set
-		End Property
-		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
-		Public Overrides Property ForeColor As Color
-			Get
-				Return Color.Transparent
-			End Get
-			Set(value As Color)
-				MyBase.ForeColor = Color.Transparent
 			End Set
 		End Property
 		<Category("Appearance"), Description("Text displayed on the bar, null to display current value"), DefaultValue("")>
@@ -588,7 +590,6 @@ Namespace UI
 			Dim collapsedRect As Rectangle
 			Dim radius As Integer
 			If _orientation = OrientationMode.Horizontal Then
-
 				' HORIZONTAL GEOMETRY
 				Dim fullHeight As Integer = rect.Height
 				Dim width As Integer = rect.Width
@@ -609,6 +610,7 @@ Namespace UI
 				collapsedRect = New Rectangle(x, rect.Top, w, height)
 				radius = w
 			End If
+			collapsedRect = Rectangle.Inflate(collapsedRect, -1, -1)
 
 			Using path As GraphicsPath = CreateRoundRect(collapsedRect, radius)
 				Using br As New SolidBrush(_barBackColor)
@@ -642,11 +644,19 @@ Namespace UI
 				collapsedRect = New Rectangle(x, rect.Top, w, height)
 				radius = w
 			End If
+			collapsedRect = Rectangle.Inflate(collapsedRect, -1, -1)
 
 			Using path As GraphicsPath = CreateRoundRect(collapsedRect, radius)
-				Using br As New SolidBrush(_barColor)
-					g.FillPath(br, path)
-				End Using
+				If _gradient = GradientMode.None Then
+					Using br As New SolidBrush(_barColor)
+						g.FillPath(br, path)
+					End Using
+				Else
+					Dim mode As LinearGradientMode = If(_gradient = GradientMode.Horizontal, LinearGradientMode.Horizontal, LinearGradientMode.Vertical)
+					Using lg As New LinearGradientBrush(collapsedRect, _gradientStart, _gradientEnd, mode)
+						g.FillPath(lg, path)
+					End Using
+				End If
 			End Using
 		End Sub
         Private Sub DrawText(g As Graphics, barRect As Rectangle)
@@ -701,11 +711,12 @@ Namespace UI
 			If _gradient = GradientMode.None Then
 				c = BarColor
 			Else
-				' midpoint of gradient
+				' midpoint of gradient (safe integer math)
 				c = Color.FromArgb(
-				(GradientStart.R + GradientEnd.R) \ 2,
-				(GradientStart.G + GradientEnd.G) \ 2,
-				(GradientStart.B + GradientEnd.B) \ 2)
+					CInt((CInt(GradientStart.R) + CInt(GradientEnd.R)) \ 2),
+					CInt((CInt(GradientStart.G) + CInt(GradientEnd.G)) \ 2),
+					CInt((CInt(GradientStart.B) + CInt(GradientEnd.B)) \ 2)
+				)
 			End If
 			Dim luminance As Double = (0.299 * c.R) + (0.587 * c.G) + (0.114 * c.B)
 
