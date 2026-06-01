@@ -331,7 +331,8 @@ Namespace UI
 
         ' DECLARATIONS
         Public Enum GradientMode
-			None
+			Flat
+			Micro
 			Horizontal
 			Vertical
 		End Enum
@@ -356,11 +357,14 @@ Namespace UI
 		Private _orientation As OrientationMode = OrientationMode.Horizontal
 		Private _text As String = ""
 		Private _textDisplayFormat As TextDisplayFormats = TextDisplayFormats.ValueAndMaximum
-		Private _barColor As Color = Color.DeepSkyBlue
+		Private _barColor As Color = Color.IndianRed
 		Private _barBackColor As Color = Color.FromArgb(40, 40, 40)
-		Private _gradient As GradientMode = GradientMode.None
-		Private _gradientStart As Color = Color.DeepSkyBlue
-		Private _gradientEnd As Color = Color.MediumBlue
+		Private _gradient As GradientMode = GradientMode.Flat
+		Private _gradientStart As Color = Color.IndianRed
+		Private _gradientEnd As Color = Color.PaleVioletRed
+		Private _innerHighlight As Boolean = False
+		Private _bevel As Boolean = False
+		Private _trailingGlow As Boolean = False
 		Private _showText As Boolean = False
 		Private _textPosition As TextPositionMode = TextPositionMode.Centered
 		Private _textColor As Color = Color.White
@@ -440,7 +444,7 @@ Namespace UI
 				End If
 			End Set
 		End Property
-		<Category("Appearance"), Description("Solid bar color when no gradient is used."), DefaultValue(GetType(Color), "DeepSkyBlue")>
+		<Category("Appearance"), Description("Solid bar color when no gradient is used."), DefaultValue(GetType(Color), "IndianRed")>
 		Public Property BarColor As Color
 			Get
 				Return _barColor
@@ -462,7 +466,7 @@ Namespace UI
 				Invalidate()
 			End Set
 		End Property
-		<Category("Appearance"), Description("Specify the gradient mode of the bar"), DefaultValue(GradientMode.None)>
+		<Category("Appearance"), Description("Specify the gradient mode of the bar"), DefaultValue(GradientMode.Flat)>
 		Public Property BarGradient As GradientMode
 			Get
 				Return _gradient
@@ -472,7 +476,7 @@ Namespace UI
 				Invalidate()
 			End Set
 		End Property
-		<Category("Appearance"), Description("Start color of the bar gradient."), DefaultValue(GetType(Color), "DeepSkyBlue")>
+		<Category("Appearance"), Description("Start color of the bar gradient."), DefaultValue(GetType(Color), "IndianRed")>
 		Public Property GradientStart As Color
 			Get
 				Return _gradientStart
@@ -484,7 +488,7 @@ Namespace UI
 				End If
 			End Set
 		End Property
-		<Category("Appearance"), Description("End color of the bar gradient."), DefaultValue(GetType(Color), "MediumBlue")>
+		<Category("Appearance"), Description("End color of the bar gradient."), DefaultValue(GetType(Color), "PaleVioletRed")>
 		Public Property GradientEnd As Color
 			Get
 				Return _gradientEnd
@@ -494,6 +498,36 @@ Namespace UI
 					_gradientEnd = value
 					Invalidate()
 				End If
+			End Set
+		End Property
+		<Category("Appearance"), Description("Draw a subtle highlight line along the top edge of the bar"), DefaultValue(False)>
+		Public Property InnerHighlight As Boolean
+			Get
+				Return _innerHighlight
+			End Get
+			Set(value As Boolean)
+				_innerHighlight = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Draw a subtle bevel on the rounded trailing edge"), DefaultValue(False)>
+		Public Property Bevel As Boolean
+			Get
+				Return _bevel
+			End Get
+			Set(value As Boolean)
+				_bevel = value
+				Invalidate()
+			End Set
+		End Property
+		<Category("Appearance"), Description("Draw a soft glow near the trailing edge of the bar"), DefaultValue(False)>
+		Public Property TrailingGlow As Boolean
+			Get
+				Return _trailingGlow
+			End Get
+			Set(value As Boolean)
+				_trailingGlow = value
+				Invalidate()
 			End Set
 		End Property
 		<Category("Appearance"), Description("Specify whether to show the text overlay (e.g. '50/100')"), DefaultValue(False)>
@@ -647,9 +681,18 @@ Namespace UI
 			collapsedRect = Rectangle.Inflate(collapsedRect, -1, -1)
 
 			Using path As GraphicsPath = CreateRoundRect(collapsedRect, radius)
-				If _gradient = GradientMode.None Then
+				If _gradient = GradientMode.Flat Then
 					Using br As New SolidBrush(_barColor)
 						g.FillPath(br, path)
+					End Using
+				ElseIf _gradient = GradientMode.Micro Then
+					Using lg As New LinearGradientBrush(
+						collapsedRect,
+						ControlPaint.Light(_barColor, 0.25F),   ' lighter top
+						ControlPaint.Dark(_barColor, 0.05F),    ' slightly darker bottom
+						LinearGradientMode.Vertical
+					)
+						g.FillPath(lg, path)
 					End Using
 				Else
 					Dim mode As LinearGradientMode = If(_gradient = GradientMode.Horizontal, LinearGradientMode.Horizontal, LinearGradientMode.Vertical)
@@ -658,9 +701,60 @@ Namespace UI
 					End Using
 				End If
 			End Using
+
+			' Inner Highlight (top edge)
+			If _innerHighlight Then
+				Using p As New Pen(Color.FromArgb(80, Color.White), 1)
+					Dim y As Integer = collapsedRect.Top + 1
+					Dim left As Integer = collapsedRect.Left + 1
+					Dim right As Integer = collapsedRect.Right - 1
+					' Only draw if there's enough height
+					If collapsedRect.Height > 4 Then
+						g.DrawLine(p, left, y, right, y)
+					End If
+				End Using
+			End If
+
+			' Micro-bevel (subtle shadow on leading edge)
+			If _bevel Then
+				Using bevelPen As New Pen(Color.FromArgb(60, ControlPaint.Dark(_barColor)), 1)
+					Dim inset As Integer = 1
+					' Top-right arc segment
+					g.DrawArc(bevelPen,
+					  collapsedRect.Right - radius + inset,
+					  collapsedRect.Top + inset,
+					  radius - inset * 2,
+					  radius - inset * 2,
+					  270,
+					  90)
+					' Bottom-right arc segment
+					g.DrawArc(bevelPen,
+					  collapsedRect.Right - radius + inset,
+					  collapsedRect.Bottom - radius + inset,
+					  radius - inset * 2,
+					  radius - inset * 2,
+					  0,
+					  90)
+				End Using
+			End If
+
+			' Trailing Glow (soft ellipse)
+			If _trailingGlow Then
+				' Glow size relative to bar geometry
+				Dim glowHeight As Integer = CInt(collapsedRect.Height * 0.55)
+				Dim glowWidth As Integer = CInt(radius * 0.9)
+				' Position: locked to trailing edge, centered vertically
+				Dim glowX As Integer = collapsedRect.Right - glowWidth - 1
+				Dim glowY As Integer = collapsedRect.Top + (collapsedRect.Height - glowHeight) \ 2
+				Dim glowRect As New Rectangle(glowX, glowY, glowWidth, glowHeight)
+				Using glowBrush As New SolidBrush(Color.FromArgb(40, ControlPaint.Light(_barColor)))
+					g.FillEllipse(glowBrush, glowRect)
+				End Using
+			End If
+
 		End Sub
         Private Sub DrawText(g As Graphics, barRect As Rectangle)
-            Dim txt As String
+			Dim txt As String = ""
 			If String.IsNullOrWhiteSpace(Text) Then
 				Select Case _textDisplayFormat
                     Case TextDisplayFormats.ValueOnly
@@ -686,8 +780,20 @@ Namespace UI
 						Case TextPositionMode.Centered
 							g.DrawString(txt, Font, br, rect, sf)
 						Case TextPositionMode.InsideBar
-							If barRect.Width < 10 OrElse barRect.Height < 10 Then Return
-							g.DrawString(txt, Font, br, barRect, sf)
+							Dim size As SizeF = g.MeasureString(txt, Font)
+							' Can we center inside the bar?
+							Dim canCenter As Boolean = barRect.Width >= size.Width + 8
+							If canCenter Then
+								' Center inside the bar using your existing StringFormat
+								g.DrawString(txt, Font, br, barRect, sf)
+							Else
+								' Bar too small → draw text just to the right of the bar
+								Dim x As Integer = barRect.Right + 2
+								' Clamp so text never goes off the control
+								x = Math.Min(x, Me.Width - CInt(size.Width))
+								Dim y As Integer = (Height - CInt(size.Height)) \ 2
+								g.DrawString(txt, Font, br, x, y)
+							End If
 					End Select
 				End Using
 			End Using
@@ -708,7 +814,7 @@ Namespace UI
 		End Function
 		Private Function ComputeAutoContrastColor() As Color
 			Dim c As Color
-			If _gradient = GradientMode.None Then
+			If _gradient = GradientMode.Flat Then
 				c = BarColor
 			Else
 				' midpoint of gradient (safe integer math)
