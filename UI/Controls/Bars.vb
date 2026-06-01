@@ -573,17 +573,15 @@ Namespace UI
 
 		' EVENTS
 		Public Sub New()
-            SetStyle(ControlStyles.UserPaint Or
-                 ControlStyles.AllPaintingInWmPaint Or
-                 ControlStyles.OptimizedDoubleBuffer Or
-                 ControlStyles.ResizeRedraw Or
-                 ControlStyles.SupportsTransparentBackColor, True)
+			SetStyle(ControlStyles.UserPaint Or
+				 ControlStyles.AllPaintingInWmPaint Or
+				 ControlStyles.OptimizedDoubleBuffer Or
+				 ControlStyles.ResizeRedraw Or
+				 ControlStyles.SupportsTransparentBackColor, True)
 
-            BackColor = Color.Transparent ' locked, don't allow change
-            ForeColor = Color.Transparent ' locked, don't allow change
+			BackColor = Color.Transparent ' locked, don't allow change
+			ForeColor = Color.Transparent ' locked, don't allow change
 
-            _value = 50
-			_maximum = 100
 		End Sub
 		Protected Overrides Sub OnPaint(e As PaintEventArgs)
 			MyBase.OnPaint(e)
