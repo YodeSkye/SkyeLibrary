@@ -50,4 +50,8 @@
     <Service Include="{94e38dff-614b-4cbd-b67c-f211bb35ce8b}" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="WinAPI\" />
+  </ItemGroup>
+
 </Project>
