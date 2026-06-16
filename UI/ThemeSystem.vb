@@ -370,7 +370,19 @@ Namespace UI
 			If comp Is Nothing Then Return
 			_registeredComponents.Add(comp)
 		End Sub
+		Public Function DetectWindowsTheme() As SkyeTheme
+			Const keyPath As String = "Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+			Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath)
+				Dim light As Integer = CInt(key.GetValue("AppsUseLightTheme", 1))
+				If light = 1 Then
+					Return SkyeThemes.Light
+				Else
+					Return SkyeThemes.Dark
+				End If
+			End Using
+		End Function
 		Public Sub SetTheme(theme As SkyeTheme)
+			If theme.Equals(CurrentTheme) Then Return
 			CurrentTheme = theme
 			RaiseEvent ThemeChanged(Nothing, EventArgs.Empty)
 		End Sub
@@ -437,6 +449,10 @@ Namespace UI
 						Dim cb = DirectCast(c, System.Windows.Forms.ComboBox)
 						cb.BackColor = CurrentTheme.ButtonBack
 						cb.ForeColor = CurrentTheme.ButtonFore
+					Case TypeOf c Is ListBox
+						Dim lb = DirectCast(c, ListBox)
+						lb.BackColor = CurrentTheme.TextBack
+						lb.ForeColor = CurrentTheme.TextFore
 					Case TypeOf c Is GroupBox
 						c.ForeColor = CurrentTheme.GroupBoxFore
 					Case TypeOf c Is Panel OrElse TypeOf c Is SplitContainer
