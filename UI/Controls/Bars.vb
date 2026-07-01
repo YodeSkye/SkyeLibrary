@@ -1,9 +1,8 @@
 ﻿
 Imports System.ComponentModel
 Imports System.Drawing.Drawing2D
-Imports Skye.UI.ProgressEX
 
-Namespace UI
+Namespace Skye.UI
 
 	''' <summary>
 	''' Extended Windows progress bar control.
@@ -327,10 +326,10 @@ Namespace UI
 	<ToolboxItem(True)>
 	<DesignerCategory("Code")>
 	Public Class DataBarEX
-        Inherits Control
+		Inherits Control
 
-        ' DECLARATIONS
-        Public Enum GradientMode
+		' DECLARATIONS
+		Public Enum GradientMode
 			Flat
 			Micro
 			Horizontal
@@ -341,10 +340,10 @@ Namespace UI
 			VerticalUp
 			VerticalDown
 		End Enum
-        Public Enum TextPositionMode
-            Centered
-            InsideBar
-        End Enum
+		Public Enum TextPositionMode
+			Centered
+			InsideBar
+		End Enum
 		Public Enum TextDisplayFormats
 			ValueOnly
 			ValueAndMaximum
@@ -751,13 +750,13 @@ Namespace UI
 			End If
 
 		End Sub
-        Private Sub DrawText(g As Graphics, barRect As Rectangle)
+		Private Sub DrawText(g As Graphics, barRect As Rectangle)
 			Dim txt As String = ""
 			If String.IsNullOrWhiteSpace(Text) Then
 				Select Case _textDisplayFormat
-                    Case TextDisplayFormats.ValueOnly
-                        txt = _value.ToString()
-                    Case TextDisplayFormats.ValueAndMaximum
+					Case TextDisplayFormats.ValueOnly
+						txt = _value.ToString()
+					Case TextDisplayFormats.ValueAndMaximum
 						txt = $"{_value}/{_maximum}"
 					Case TextDisplayFormats.Percentage
 						txt = $"{CInt((_value / _maximum) * 100)}%"

@@ -1,7 +1,7 @@
 ﻿
 Imports System.ComponentModel
 
-Namespace UI
+Namespace Skye.UI
 
 	''' <summary>
 	''' Extended Listview control with Insertion Line for drag/drop operations. The Insertion Line is drawn in the specified color and appears between items to indicate where a dragged item would be dropped.

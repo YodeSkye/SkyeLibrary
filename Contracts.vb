@@ -1,5 +1,5 @@
 ﻿
-Namespace Contracts
+Namespace Skye.Contracts
 
     ''' <summary>
     ''' Defines a common contract for media playback engines.

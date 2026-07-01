@@ -1,5 +1,5 @@
 ﻿
-Namespace UI.Log
+Namespace Skye.UI.Log
 
     Public Class LogViewer
 

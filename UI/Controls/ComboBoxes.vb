@@ -1,7 +1,7 @@
 ﻿
 Imports System.ComponentModel
 
-Namespace UI
+Namespace Skye.UI
 
 	''' <summary>
 	''' A ComboBox that supports custom items with text, images, and color swatches. Fixes the stock combobox dropdownlist draw background issues, making it theme-ready. Also includes hover effects for improved user experience.

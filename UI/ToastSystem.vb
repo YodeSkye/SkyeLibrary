@@ -2,7 +2,7 @@
 Imports System.Drawing.Drawing2D
 Imports System.Runtime.InteropServices
 
-Namespace UI
+Namespace Skye.UI
 
 	' Public API
 	Public NotInheritable Class Toast

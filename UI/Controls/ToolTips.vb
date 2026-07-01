@@ -1,7 +1,7 @@
 ﻿
 Imports System.ComponentModel
 
-Namespace UI
+Namespace Skye.UI
 
 	''' <summary>
 	''' ToolTip control with custom colors, fonts and image support.

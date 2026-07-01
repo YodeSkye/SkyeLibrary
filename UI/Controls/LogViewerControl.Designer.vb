@@ -1,4 +1,4 @@
-﻿Namespace UI.Log
+﻿Namespace Skye.UI.Log
 
     <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
     Partial Class LogViewerControl
@@ -130,18 +130,18 @@
             ' 
             ' Tip
             ' 
-            Tip.Font = New Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
+            Tip.Font = New Font("Segoe UI", 12.0F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
             Tip.ShadowAlpha = 0
             Tip.ShadowThickness = 0
             ' 
             ' LogViewerControl
             ' 
-            AutoScaleDimensions = New SizeF(9F, 21F)
+            AutoScaleDimensions = New SizeF(9.0F, 21.0F)
             AutoScaleMode = AutoScaleMode.Font
             Controls.Add(RTBLog)
             Controls.Add(PanelTop)
             DoubleBuffered = True
-            Font = New Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
+            Font = New Font("Segoe UI", 12.0F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
             Tip.SetImage(Me, Nothing)
             Margin = New Padding(4)
             Name = "LogViewerControl"

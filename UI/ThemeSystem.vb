@@ -1,5 +1,5 @@
 ﻿
-Namespace UI
+Namespace Skye.UI
 
 	Public Class SkyeTheme
 
@@ -45,9 +45,9 @@ Namespace UI
 
 	End Class
 
-	Public Module SkyeThemes
+	Public NotInheritable Class SkyeThemes
 
-		Public ReadOnly Light As New SkyeTheme With {
+		Public Shared ReadOnly Light As New SkyeTheme With {
 			.Name = "Light",
 			.BackColor = Color.White,
 			.ForeColor = Color.Black,
@@ -73,7 +73,7 @@ Namespace UI
 			.MenuBorder = Color.LightGray,
 			.MenuSeparator = Color.LightGray
 		}
-		Public ReadOnly Dark As New SkyeTheme With {
+		Public Shared ReadOnly Dark As New SkyeTheme With {
 			.Name = "Dark",
 			.BackColor = Color.Black,
 			.ForeColor = Color.White,
@@ -99,7 +99,7 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(80, 80, 80),
 			.MenuSeparator = Color.FromArgb(90, 90, 90)
 		}
-		Public ReadOnly Slate As New SkyeTheme With {
+		Public Shared ReadOnly Slate As New SkyeTheme With {
 			.Name = "Slate",
 			.BackColor = Color.FromArgb(245, 245, 245),
 			.ForeColor = Color.FromArgb(40, 40, 40),
@@ -125,7 +125,7 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(200, 200, 200),
 			.MenuSeparator = Color.FromArgb(200, 200, 200)
 		}
-		Public ReadOnly Graphite As New SkyeTheme With {
+		Public Shared ReadOnly Graphite As New SkyeTheme With {
 			.Name = "Graphite",
 			.BackColor = Color.FromArgb(25, 25, 25),
 			.ForeColor = Color.FromArgb(230, 230, 230),
@@ -151,7 +151,7 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(70, 70, 70),
 			.MenuSeparator = Color.FromArgb(70, 70, 70)
 		}
-		Public ReadOnly HighContrast As New SkyeTheme With {
+		Public Shared ReadOnly HighContrast As New SkyeTheme With {
 			.Name = "High Contrast",
 			.BackColor = Color.Black,
 			.ForeColor = Color.White,
@@ -177,7 +177,7 @@ Namespace UI
 			.MenuBorder = Color.White,
 			.MenuSeparator = Color.White
 		}
-		Public ReadOnly Blossom As New SkyeTheme With {
+		Public Shared ReadOnly Blossom As New SkyeTheme With {
 			.Name = "Blossom",
 			.BackColor = Color.Pink,
 			.ForeColor = Color.DeepPink,
@@ -203,7 +203,7 @@ Namespace UI
 			.MenuBorder = Color.DeepPink,
 			.MenuSeparator = Color.LightGray
 		}
-		Public ReadOnly CrimsonNight As New SkyeTheme With {
+		Public Shared ReadOnly CrimsonNight As New SkyeTheme With {
 			.Name = "Crimson Night",
 			.BackColor = Color.FromArgb(255, 35, 35, 35),
 			.ForeColor = Color.DeepPink,
@@ -229,7 +229,7 @@ Namespace UI
 			.MenuBorder = Color.DeepPink,
 			.MenuSeparator = Color.FromArgb(255, 90, 90, 90)
 		}
-		Public ReadOnly Sky As New SkyeTheme With {
+		Public Shared ReadOnly Sky As New SkyeTheme With {
 			.Name = "Sky",
 			.BackColor = Color.FromArgb(235, 245, 255),
 			.ForeColor = Color.FromArgb(20, 40, 60),
@@ -255,7 +255,7 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(180, 200, 220),
 			.MenuSeparator = Color.FromArgb(180, 200, 220)
 		}
-		Public ReadOnly MidnightBlue As New SkyeTheme With {
+		Public Shared ReadOnly MidnightBlue As New SkyeTheme With {
 			.Name = "Midnight Blue",
 			.BackColor = Color.FromArgb(15, 25, 40),
 			.ForeColor = Color.FromArgb(220, 235, 255),
@@ -281,7 +281,7 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(60, 80, 110),
 			.MenuSeparator = Color.FromArgb(60, 80, 110)
 		}
-		Public ReadOnly Mint As New SkyeTheme With {
+		Public Shared ReadOnly Mint As New SkyeTheme With {
 			.Name = "Mint",
 			.BackColor = Color.FromArgb(235, 250, 240),
 			.ForeColor = Color.FromArgb(25, 60, 45),
@@ -307,7 +307,7 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(180, 210, 195),
 			.MenuSeparator = Color.FromArgb(180, 210, 195)
 		}
-		Public ReadOnly Evergreen As New SkyeTheme With {
+		Public Shared ReadOnly Evergreen As New SkyeTheme With {
 			.Name = "Evergreen",
 			.BackColor = Color.FromArgb(15, 35, 25),
 			.ForeColor = Color.FromArgb(220, 245, 230),
@@ -333,44 +333,44 @@ Namespace UI
 			.MenuBorder = Color.FromArgb(60, 100, 80),
 			.MenuSeparator = Color.FromArgb(60, 100, 80)
 		}
-		Private ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark, HighContrast, Slate, Graphite, Blossom, CrimsonNight, Sky, MidnightBlue, Mint, Evergreen}
-		Public ReadOnly Property AllThemes As List(Of SkyeTheme)
+		Private Shared ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark, HighContrast, Slate, Graphite, Blossom, CrimsonNight, Sky, MidnightBlue, Mint, Evergreen}
+		Public Shared ReadOnly Property AllThemes As List(Of SkyeTheme)
 			Get
 				Return _themes
 			End Get
 		End Property
 
-		Public Sub AddTheme(t As SkyeTheme)
+		Public Shared Sub AddTheme(t As SkyeTheme)
 			_themes.Add(t)
 		End Sub
-		Public Sub RemoveTheme(t As SkyeTheme)
+		Public Shared Sub RemoveTheme(t As SkyeTheme)
 			If t Is Light OrElse t Is Dark Then Exit Sub
 			_themes.Remove(t)
 		End Sub
-		Public Sub RemoveTheme(name As String)
+		Public Shared Sub RemoveTheme(name As String)
 			Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
 			If t IsNot Nothing AndAlso Not (t Is Light OrElse t Is Dark) Then _themes.Remove(t)
 		End Sub
-		Public Function GetTheme(name As String) As SkyeTheme
+		Public Shared Function GetTheme(name As String) As SkyeTheme
 			Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
 			If t IsNot Nothing Then Return t
 			Return Light
 		End Function
 
-	End Module
+	End Class
 
-	Public Module ThemeManager
+	Public NotInheritable Class ThemeManager
 
-		Private ReadOnly _registeredComponents As New List(Of Object)
+		Private Shared ReadOnly _registeredComponents As New List(Of Object)
 
-		Public Property CurrentTheme As SkyeTheme = SkyeThemes.Dark
-		Public Event ThemeChanged As EventHandler
+		Public Shared Property CurrentTheme As SkyeTheme = SkyeThemes.Dark
+		Public Shared Event ThemeChanged As EventHandler
 
-		Public Sub RegisterComponent(comp As Object)
+		Public Shared Sub RegisterComponent(comp As Object)
 			If comp Is Nothing Then Return
 			_registeredComponents.Add(comp)
 		End Sub
-		Public Function DetectWindowsTheme() As SkyeTheme
+		Public Shared Function DetectWindowsTheme() As SkyeTheme
 			Const keyPath As String = "Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 			Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(keyPath)
 				Dim light As Integer = CInt(key.GetValue("AppsUseLightTheme", 1))
@@ -381,14 +381,14 @@ Namespace UI
 				End If
 			End Using
 		End Function
-		Public Sub SetTheme(theme As SkyeTheme)
+		Public Shared Sub SetTheme(theme As SkyeTheme)
 			If theme.Equals(CurrentTheme) Then Return
 			CurrentTheme = theme
 			RaiseEvent ThemeChanged(Nothing, EventArgs.Empty)
 		End Sub
 
 		' Apply theme to a single form
-		Public Sub ApplyTheme(target As Form)
+		Public Shared Sub ApplyTheme(target As Form)
 			If target Is Nothing Then Return
 
 			target.BackColor = CurrentTheme.BackColor
@@ -417,14 +417,14 @@ Namespace UI
 
 		End Sub
 		' Apply theme to all forms in the application
-		Public Sub ApplyThemeToAllOpenForms()
+		Public Shared Sub ApplyThemeToAllOpenForms()
 			For Each f As Form In Application.OpenForms
 				ApplyTheme(f)
 				f.Invalidate()
 			Next
 		End Sub
 		' Recursively theme all controls
-		Private Sub ApplyToControls(controls As Control.ControlCollection)
+		Private Shared Sub ApplyToControls(controls As Control.ControlCollection)
 			For Each c As Control In controls
 
 				' Theme any context menu attached to the control
@@ -473,7 +473,7 @@ Namespace UI
 			Next
 		End Sub
 		' DataGridView theming (generic, no app-specific assumptions)
-		Private Sub ApplyToDataGridView(dgv As DataGridView)
+		Private Shared Sub ApplyToDataGridView(dgv As DataGridView)
 			dgv.BackgroundColor = CurrentTheme.GridBack
 			dgv.BorderStyle = BorderStyle.None
 
@@ -507,7 +507,7 @@ Namespace UI
 			alt.ForeColor = CurrentTheme.GridFore
 		End Sub
 		' Theme a ListView (generic)
-		Private Sub ApplyToListView(lv As ListView)
+		Private Shared Sub ApplyToListView(lv As ListView)
 			' Only apply basic theming when OwnerDraw is False
 			If lv.OwnerDraw = False Then
 				lv.BackColor = CurrentTheme.BackColor
@@ -519,7 +519,7 @@ Namespace UI
 			End If
 		End Sub
 		' Theme a menu (generic)
-		Public Sub ApplyToMenu(menu As ContextMenuStrip)
+		Public Shared Sub ApplyToMenu(menu As ContextMenuStrip)
 			If menu Is Nothing Then Return
 
 			menu.Renderer = New SkyeMenuRenderer()
@@ -531,25 +531,25 @@ Namespace UI
 			Next
 		End Sub
 		' Theme a tooltip
-		Public Sub ApplyToTooltip(tip As System.Windows.Forms.ToolTip)
+		Public Shared Sub ApplyToTooltip(tip As System.Windows.Forms.ToolTip)
 			If tip Is Nothing Then Return
 			tip.BackColor = CurrentTheme.TooltipBack
 			tip.ForeColor = CurrentTheme.TooltipFore
 		End Sub
-		Public Sub ApplyToTooltip(tip As ToolTip)
+		Public Shared Sub ApplyToTooltip(tip As ToolTip)
 			If tip Is Nothing Then Return
 			tip.BackColor = CurrentTheme.TooltipBack
 			tip.ForeColor = CurrentTheme.TooltipFore
 			tip.BorderColor = CurrentTheme.TooltipBorder
 		End Sub
-		Public Sub ApplyToTooltip(tip As ToolTipEX)
+		Public Shared Sub ApplyToTooltip(tip As ToolTipEX)
 			If tip Is Nothing Then Return
 			tip.BackColor = CurrentTheme.TooltipBack
 			tip.ForeColor = CurrentTheme.TooltipFore
 			tip.BorderColor = CurrentTheme.TooltipBorder
 		End Sub
 
-	End Module
+	End Class
 	Public Class SkyeMenuRenderer
 		Inherits ToolStripProfessionalRenderer
 

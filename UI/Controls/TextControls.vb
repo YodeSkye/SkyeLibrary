@@ -2,7 +2,7 @@
 Imports System.ComponentModel
 Imports System.Text
 
-Namespace UI
+Namespace Skye.UI
 
 	''' <summary>
 	''' Changes basic .NET label to OPTIONALLY copy on double-click.

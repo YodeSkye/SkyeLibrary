@@ -1,4 +1,4 @@
-﻿Namespace UI.Log
+﻿Namespace Skye.UI.Log
 
     <Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
     Partial Class LogViewer
@@ -31,7 +31,7 @@
             ' LogViewerControl1
             ' 
             LogViewerControl1.Dock = DockStyle.Fill
-            LogViewerControl1.Font = New Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
+            LogViewerControl1.Font = New Font("Segoe UI", 12.0F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
             LogViewerControl1.Location = New Point(0, 0)
             LogViewerControl1.Margin = New Padding(4)
             LogViewerControl1.Name = "LogViewerControl1"
@@ -40,7 +40,7 @@
             ' 
             ' LogViewer
             ' 
-            AutoScaleDimensions = New SizeF(7F, 15F)
+            AutoScaleDimensions = New SizeF(7.0F, 15.0F)
             AutoScaleMode = AutoScaleMode.Font
             ClientSize = New Size(800, 450)
             Controls.Add(LogViewerControl1)

@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Skye</RootNamespace>
+    <RootNamespace></RootNamespace>
 	<TargetFrameworks>net8.0-windows7.0;net9.0-windows7.0;net10.0-windows7.0</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>Skye</AssemblyName>
     <OptionStrict>On</OptionStrict>
     <Title>Skye's Library</Title>
-    <AssemblyVersion>1.4.66</AssemblyVersion>
-    <FileVersion>1.4.66</FileVersion>
+    <AssemblyVersion>1.4.67</AssemblyVersion>
+    <FileVersion>1.4.67</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>SkyeLibrary</PackageId>
     <Description>Skye's .NET UI Control &amp; Windows API Library</Description>
-    <Version>1.4.66</Version>
+    <Version>1.4.67</Version>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -48,10 +48,6 @@
 
   <ItemGroup>
     <Service Include="{94e38dff-614b-4cbd-b67c-f211bb35ce8b}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="WinAPI\" />
   </ItemGroup>
 
 </Project>

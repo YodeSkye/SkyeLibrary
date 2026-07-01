@@ -2,7 +2,7 @@
 Imports System.IO
 Imports System.Text
 
-Namespace UI.Log
+Namespace Skye.UI.Log
 
     Public Class LogViewerControl
 
