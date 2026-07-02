@@ -1,10 +1,13 @@
-﻿Imports System.Runtime.InteropServices
+﻿
+Imports System.Runtime.InteropServices
 
 #Disable Warning CA1401
 Namespace Skye
 
     Partial Public Class WinAPI
 
+        ' DECLARATIONS
+        Public Const WS_EX_LAYERED As Integer = &H80000
         <StructLayout(LayoutKind.Sequential, Pack:=1)>
         Public Structure BLENDFUNCTION
             Public BlendOp As Byte
@@ -13,6 +16,7 @@ Namespace Skye
             Public AlphaFormat As Byte
         End Structure
 
+        ' API FUNCTIONS
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function UpdateLayeredWindow(
             hwnd As IntPtr,
@@ -25,8 +29,6 @@ Namespace Skye
             ByRef pblend As BLENDFUNCTION,
             dwFlags As Integer) As Boolean
         End Function
-
-        Public Const WS_EX_LAYERED As Integer = &H80000
 
     End Class
 

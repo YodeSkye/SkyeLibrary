@@ -5,6 +5,7 @@ Namespace Skye
 
     Partial Public Class WinAPI
 
+        ' DECLARATIONS
         Public Const MAX_PATH As Integer = 260
         Public Const SHGFI_ICON As Integer = 256
         Public Const SHGFI_SMALLICON As Integer = 1
@@ -13,7 +14,6 @@ Namespace Skye
         Public Const SHGFI_TYPENAME As Integer = 1024
         Public Const SHGFI_USEFILEATTRIBUTES As Integer = &H10
         Public Const FILE_ATTRIBUTE_NORMAL As Integer = &H80
-
         Public Structure SHFILEINFO
             Dim hIcon As IntPtr
             Dim iIcon As Integer
@@ -24,6 +24,7 @@ Namespace Skye
             Dim szTypeName As String
         End Structure
 
+        ' API FUNCTIONS
         <DllImport("shell32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
         Public Shared Function SHGetFileInfo(pszPath As String,
                                              dwFileAttributes As Integer,
@@ -31,11 +32,11 @@ Namespace Skye
                                              cbFileInfo As Integer,
                                              uFlags As Integer) As IntPtr
         End Function
-
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function DestroyIcon(hIcon As IntPtr) As Boolean
         End Function
 
+        ' METHODS
         ''' <summary>
         ''' Retrieves the icon associated with a file path, optionally returning the large or small version.
         ''' </summary>

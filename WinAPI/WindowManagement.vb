@@ -1,32 +1,13 @@
-﻿Imports System.Runtime.InteropServices
+﻿
+Imports System.Runtime.InteropServices
 Imports System.Text
-Imports Skye.WinAPI
 
 #Disable Warning CA1401
 Namespace Skye
 
     Partial Public Class WinAPI
 
-        ' Declarations
-        Public Delegate Function WndProcDelegate(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
-        <StructLayout(LayoutKind.Sequential)>
-        Public Structure COMBOBOXINFO
-            Public cbSize As Integer
-            Public rcItem As RECT
-            Public rcButton As RECT
-            Public stateButton As Integer
-            Public hwndCombo As IntPtr
-            Public hwndEdit As IntPtr
-            Public hwndList As IntPtr
-        End Structure
-        <DllImport("user32.dll")>
-        Public Shared Function GetComboBoxInfo(hWnd As IntPtr, ByRef pcbi As COMBOBOXINFO) As Boolean
-        End Function
-
-        'Window Functions 'Get Information About & Change Attributes Of A Window
-        'HideFormInTaskSwitcher, Customize Minimize/Maximize/Restore Functions
-        'Usage In Forms: When Custom Maximizing(to properly set the maximize icon & window menu), simply set Form.WindowState to Normal when restoring: SetWindowLong(Me.Handle, GWL_STYLE, GetWindowLong(Me.Handle, GWL_STYLE) Or WS_MAXIMIZE)
-        'Detecting if an App is in FullScreen Mode
+        ' DECLARATIONS
         Public Const GW_HWNDFIRST As UInteger = 0
         Public Const GW_HWNDLAST As UInteger = 1
         Public Const GW_HWNDNEXT As UInteger = 2
@@ -70,7 +51,24 @@ Namespace Skye
         Public Shared ReadOnly HWND_BOTTOM As New IntPtr(1)
         Public Shared ReadOnly HWND_TOPMOST As New IntPtr(-1)
         Public Shared ReadOnly HWND_NOTOPMOST As New IntPtr(-2)
+        <StructLayout(LayoutKind.Sequential)>
+        Public Structure COMBOBOXINFO
+            Public cbSize As Integer
+            Public rcItem As RECT
+            Public rcButton As RECT
+            Public stateButton As Integer
+            Public hwndCombo As IntPtr
+            Public hwndEdit As IntPtr
+            Public hwndList As IntPtr
+        End Structure
 
+        ' API FUNCTIONS
+        Public Delegate Function WndProcDelegate(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
+        <DllImport("user32.dll")>
+        Public Shared Function GetComboBoxInfo(hWnd As IntPtr, ByRef pcbi As COMBOBOXINFO) As Boolean
+        End Function
+
+        ' METHODS
         ''' <summary>
         ''' To Remove A Borderless Window From Windows TaskSwitcher
         ''' </summary>

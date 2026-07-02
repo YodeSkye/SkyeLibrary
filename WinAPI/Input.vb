@@ -1,10 +1,12 @@
-﻿Imports System.Runtime.InteropServices
+﻿
+Imports System.Runtime.InteropServices
 
 #Disable Warning CA1401
 Namespace Skye
 
     Partial Public Class WinAPI
 
+        ' DECLARATIONS
         Public Const WM_MOUSEMOVE As Integer = &H200
         Public Const WM_SETCURSOR As Integer = &H20
         Public Const WM_LBUTTONDOWN As Integer = &H201
@@ -18,7 +20,6 @@ Namespace Skye
         Public Const WM_NCRBUTTONUP As Integer = &HA5
         Public Const WM_CONTEXTMENU As Integer = &H7B
         Public Const WM_MOUSEACTIVATE As Integer = &H21
-
         Public Const VK_CAPITAL As Integer = &H14
         Public Const VK_SCROLL As Integer = &H91
         Public Const VK_NUMLOCK As Integer = &H90
@@ -26,10 +27,10 @@ Namespace Skye
         Public Const VK_MEDIA_PREV_TRACK As Integer = 177
         Public Const VK_MEDIA_STOP As Integer = 178
         Public Const VK_MEDIA_PLAY_PAUSE As Integer = 179
-
         Public Const KEYEVENTF_EXTENDEDKEY As Integer = &H1
         Public Const KEYEVENTF_KEYUP As Integer = &H2
 
+        ' API FUNCTIONS
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Sub keybd_event(bVk As Byte, bScan As Byte, dwFlags As Integer, dwExtraInfo As IntPtr)
         End Sub

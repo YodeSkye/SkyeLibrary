@@ -6,12 +6,15 @@ Namespace Skye
 
     Partial Public Class WinAPI
 
+        ' DECLARATIONS
+        Public Enum WLAN_INTF_OPCODE
+            wlan_intf_opcode_current_connection = 7
+        End Enum
         <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)>
         Public Structure WLAN_INTERFACE_INFO_LIST
             Public dwNumberOfItems As UInteger
             Public dwIndex As UInteger
         End Structure
-
         <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)>
         Public Structure WLAN_INTERFACE_INFO
             Public InterfaceGuid As Guid
@@ -19,14 +22,12 @@ Namespace Skye
             Public strInterfaceDescription As String
             Public isState As Integer
         End Structure
-
         <StructLayout(LayoutKind.Sequential)>
         Public Structure DOT11_SSID
             Public uSSIDLength As UInteger
             <MarshalAs(UnmanagedType.ByValArray, SizeConst:=32)>
             Public ucSSID As Byte()
         End Structure
-
         <StructLayout(LayoutKind.Sequential)>
         Public Structure WLAN_ASSOCIATION_ATTRIBUTES
             Public dot11Ssid As DOT11_SSID
@@ -38,7 +39,6 @@ Namespace Skye
             Public ulRxRate As UInteger
             Public ulTxRate As UInteger
         End Structure
-
         <StructLayout(LayoutKind.Sequential, CharSet:=CharSet.Unicode)>
         Public Structure WLAN_CONNECTION_ATTRIBUTES
             Public isState As Integer
@@ -49,23 +49,18 @@ Namespace Skye
             Public wlanSecurityAttributes As Integer
         End Structure
 
-        Public Enum WLAN_INTF_OPCODE
-            wlan_intf_opcode_current_connection = 7
-        End Enum
-
+        ' API FUNCTIONS
         <DllImport("wlanapi.dll")>
         Public Shared Function WlanOpenHandle(ByVal dwClientVersion As UInteger,
                                               ByVal pReserved As IntPtr,
                                               ByRef pdwNegotiatedVersion As UInteger,
                                               ByRef phClientHandle As IntPtr) As Integer
         End Function
-
         <DllImport("wlanapi.dll")>
         Public Shared Function WlanEnumInterfaces(ByVal hClientHandle As IntPtr,
                                                   ByVal pReserved As IntPtr,
                                                   ByRef ppInterfaceList As IntPtr) As Integer
         End Function
-
         <DllImport("wlanapi.dll")>
         Public Shared Function WlanQueryInterface(ByVal hClientHandle As IntPtr,
                                                   ByVal pInterfaceGuid As Guid,
@@ -75,11 +70,9 @@ Namespace Skye
                                                   ByRef ppData As IntPtr,
                                                   ByVal pWlanOpcodeValueType As UInteger) As Integer
         End Function
-
         <DllImport("wlanapi.dll")>
         Public Shared Sub WlanFreeMemory(ByVal pMemory As IntPtr)
         End Sub
-
         <DllImport("wlanapi.dll")>
         Public Shared Function WlanCloseHandle(ByVal hClientHandle As IntPtr,
                                                ByVal pReserved As IntPtr) As Integer
