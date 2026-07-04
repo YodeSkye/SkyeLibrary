@@ -1,5 +1,6 @@
 ﻿
 Imports System.ComponentModel
+Imports Skye.UI.ProgressEX
 
 Namespace Skye.UI
 
@@ -14,8 +15,14 @@ Namespace Skye.UI
 		' Declarations
 		Private _hovering As Boolean = False
 		Private _editBox As TextBox = Nothing
+		Public Enum ComboBorderStyle
+			FixedSingle = 0
+			Fixed3D = 1
+		End Enum
 
 		' Designer Properties
+		<Category("Appearance"), Browsable(True), DefaultValue(ComboBorderStyle.FixedSingle), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
+		Public Property BorderStyle As ComboBorderStyle = ComboBorderStyle.FixedSingle
 		<Browsable(False), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)>
 		Public Shadows Property DrawMode As DrawMode
 			Get
@@ -106,7 +113,7 @@ Namespace Skye.UI
 				For Each c As Control In Me.Controls
 					If TypeOf c Is TextBox Then
 						_editBox = DirectCast(c, TextBox)
-						_editBox.BorderStyle = BorderStyle.None
+						_editBox.BorderStyle = System.Windows.Forms.BorderStyle.None
 						_editBox.BackColor = Me.BackColor
 						_editBox.ForeColor = Me.ForeColor
 						Exit For
@@ -350,17 +357,48 @@ Namespace Skye.UI
 			' 4. Border
 			' ---------------------------------------------------------
 			Dim borderColor As Color = If(Me.Enabled, ControlPaint.Dark(Me.BackColor), DisabledColor(ControlPaint.Dark(Me.BackColor)))
-			Using p As New Pen(borderColor)
-				g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
-			End Using
+			Select Case BorderStyle
+				Case ComboBorderStyle.FixedSingle
+					Using p As New Pen(borderColor)
+						g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
+					End Using
+				Case ComboBorderStyle.Fixed3D
+					Dim light As Color = ControlPaint.Light(Me.BackColor)
+					Dim dark As Color = ControlPaint.Dark(Me.BackColor)
+
+					Using pLight As New Pen(light)
+						g.DrawLine(pLight, 0, 0, rc.Width - 1, 0)
+						g.DrawLine(pLight, 0, 0, 0, rc.Height - 1)
+					End Using
+					Using pDark As New Pen(dark)
+						g.DrawLine(pDark, rc.Width - 1, 0, rc.Width - 1, rc.Height - 1)
+						g.DrawLine(pDark, 0, rc.Height - 1, rc.Width - 1, rc.Height - 1)
+					End Using
+			End Select
 
 		End Sub
 		Private Sub PaintDDBorder(g As Graphics)
 			Dim rc As Rectangle = Me.ClientRectangle
 			Dim borderColor As Color = If(Me.Enabled, ControlPaint.Dark(Me.BackColor), DisabledColor(ControlPaint.Dark(Me.BackColor)))
-			Using p As New Pen(borderColor)
-				g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
-			End Using
+			Select Case BorderStyle
+				Case ComboBorderStyle.FixedSingle
+					Using p As New Pen(borderColor)
+						g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
+					End Using
+				Case ComboBorderStyle.Fixed3D
+					Dim light As Color = ControlPaint.Light(Me.BackColor)
+					Dim dark As Color = ControlPaint.Dark(Me.BackColor)
+					' Top + Left (light)
+					Using pLight As New Pen(light)
+						g.DrawLine(pLight, 0, 0, rc.Width - 1, 0)
+						g.DrawLine(pLight, 0, 0, 0, rc.Height - 1)
+					End Using
+					' Bottom + Right (dark)
+					Using pDark As New Pen(dark)
+						g.DrawLine(pDark, rc.Width - 1, 0, rc.Width - 1, rc.Height - 1)
+						g.DrawLine(pDark, 0, rc.Height - 1, rc.Width - 1, rc.Height - 1)
+					End Using
+			End Select
 		End Sub
 		Private Sub PaintDDTextBoxBackground(g As Graphics)
 			If Me.DropDownStyle <> ComboBoxStyle.DropDown Then Exit Sub
