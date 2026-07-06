@@ -257,6 +257,30 @@ Namespace Skye.UI
 
 			BeginEditSubItem(item, subIndex)
 		End Sub
+		Public Sub EnsureVisibleCentered(item As ListViewItem)
+			If item Is Nothing Then Exit Sub
+			If item.Index < 0 OrElse item.Index >= Me.Items.Count Then Exit Sub
+
+			' First ensure it's visible normally
+			Me.EnsureVisible(item.Index)
+
+			' Now center it
+			Dim itemBounds = item.Bounds
+			If itemBounds = Rectangle.Empty Then Exit Sub
+
+			Dim viewHeight = Me.ClientSize.Height
+			Dim targetY = itemBounds.Top - (viewHeight \ 2) + (itemBounds.Height \ 2)
+
+			' Clamp scroll position
+			If targetY < 0 Then targetY = 0
+
+			' Apply scroll
+			WinAPI.SendMessage(Me.Handle, WinAPI.LVM_SCROLL, 0, targetY - Me.TopItem.Bounds.Top)
+		End Sub
+		Public Sub EnsureVisibleCentered(index As Integer)
+			If index < 0 OrElse index >= Me.Items.Count Then Exit Sub
+			EnsureVisibleCentered(Me.Items(index))
+		End Sub
 		Private Sub DrawInsertionLine(g As Graphics, X1 As Integer, X2 As Integer, Y As Integer)
 			Using p As New Pen(_InsertionLineColor) With {.Width = 3}
 				g.DrawLine(p, X1, Y, X2 - 1, Y)

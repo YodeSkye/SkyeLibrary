@@ -23,6 +23,8 @@ Namespace Skye
         Public Const SC_RESTORE As UShort = 61728
         Public Const SC_RESTORE_TBAR As UShort = 61730
         Public Const SC_CLOSE As UShort = 61536
+        Public Const LVM_FIRST As Integer = &H1000
+        Public Const LVM_SCROLL As Integer = LVM_FIRST + 20
         Public Const WM_SYSCOMMAND As Integer = 274
         Public Const WM_ACTIVATE As UShort = &H6
         Public Const WM_ACTIVATEAPP As Integer = &H1C
@@ -162,6 +164,9 @@ Namespace Skye
         End Function
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function SendMessage(hWnd As IntPtr, Msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
+        End Function
+        <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function SendMessage(hWnd As IntPtr, Msg As UInteger, wParam As Integer, lParam As Integer) As IntPtr
         End Function
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function PostMessage(hWnd As IntPtr, Msg As UInteger, wParam As IntPtr, lParam As IntPtr) As Boolean
