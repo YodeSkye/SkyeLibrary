@@ -437,6 +437,9 @@ Namespace Skye.UI
 						Dim b = DirectCast(c, Button)
 						b.BackColor = CurrentTheme.ButtonBack
 						b.ForeColor = CurrentTheme.ButtonFore
+                    Case TypeOf c Is Label
+                        Dim l = DirectCast(c, Label)
+						l.ForeColor = CurrentTheme.TextFore
 					Case TypeOf c Is TextBoxBase
 						Dim t = DirectCast(c, TextBoxBase)
 						t.BackColor = CurrentTheme.TextBack
