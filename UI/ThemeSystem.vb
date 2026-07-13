@@ -598,12 +598,13 @@ Namespace Skye.UI
 		Protected Overrides Sub OnRenderItemText(e As ToolStripItemTextRenderEventArgs)
 			Dim t = ThemeManager.CurrentTheme
 			Dim g = e.Graphics
-			Dim item = e.Item
+			Dim item = TryCast(e.Item, ToolStripMenuItem)
 
 			Dim textColor As Color = If(item.Enabled,
 										t.MenuFore,
 										ControlPaint.LightLight(t.MenuFore))
 
+			' Draw main text (left)
 			TextRenderer.DrawText(
 				g,
 				item.Text,
@@ -612,6 +613,31 @@ Namespace Skye.UI
 				textColor,
 				TextFormatFlags.Left Or TextFormatFlags.VerticalCenter
 			)
+
+			' Draw shortcut text (right)
+			If item IsNot Nothing AndAlso Not String.IsNullOrEmpty(item.ShortcutKeyDisplayString) Then
+				Dim shortcut = item.ShortcutKeyDisplayString
+
+				' Compute right‑side rectangle manually
+				Dim fullRect = item.Bounds
+				Dim shortcutSize = TextRenderer.MeasureText(shortcut, e.TextFont)
+
+				Dim shortcutRect As New Rectangle(
+					fullRect.Right - shortcutSize.Width - 8,
+					e.TextRectangle.Top,
+					shortcutSize.Width,
+					e.TextRectangle.Height
+				)
+
+				TextRenderer.DrawText(
+					g,
+					shortcut,
+					e.TextFont,
+					shortcutRect,
+					textColor,
+					TextFormatFlags.Right Or TextFormatFlags.VerticalCenter
+				)
+			End If
 		End Sub
 
 	End Class
