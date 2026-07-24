@@ -714,7 +714,6 @@ Namespace Skye.UI
 		''' Gets or sets the font of the tooltip.
 		''' </summary>
 		''' <value>The <see cref="System.Drawing.Font"/> used for the tooltip background.</value>
-
 		<Category("Appearance"), Description("The font used for tooltip text."), Browsable(True), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)>
 		Public Property Font As Font = New Font("Segoe UI", 10, FontStyle.Regular)
 		''' <summary>
@@ -874,6 +873,13 @@ Namespace Skye.UI
 		Public Sub SetText(ctrl As Control, value As String)
 			Dim isNew As Boolean = Not tooltips.ContainsKey(ctrl)
 			tooltips(ctrl) = value
+
+			' If tooltip is currently visible for this control, update it live
+			If popup IsNot Nothing AndAlso popup.Visible AndAlso _hoveredcontrol Is ctrl Then
+				popup.TooltipText = value
+				popup.Invalidate()   ' force redraw
+			End If
+
 			If isNew AndAlso Not String.IsNullOrWhiteSpace(value) Then
 				AddHandler ctrl.MouseEnter, AddressOf OnMouseEnter
 				AddHandler ctrl.MouseHover, AddressOf OnMouseHover

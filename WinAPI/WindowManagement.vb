@@ -20,16 +20,6 @@ Namespace Skye
         Public Const GWLP_WNDPROC As Integer = -4
         Public Const GWLP_HINSTANCE As Integer = -6
         Public Const GWLP_ID As Integer = -12
-        Public Const WS_VISIBLE As Integer = &H10000000
-        Public Const WS_CHILD As Integer = &H40000000
-        Public Const WS_POPUP As Integer = &H80000000
-        Public Const WS_MINIMIZEBOX As Integer = 131072 '&H20000 'Turn on the WS_MINIMIZEBOX style flag for borderless windows so you can minimize/restore from the taskbar.
-        Public Const WS_MAXIMIZE As Integer = 16777216 '&H1000000
-        Public Const WS_EX_TOOLWINDOW As Integer = 128 '&H80
-        Public Const WS_EX_TOPMOST As Integer = &H8
-        Public Const WS_EX_APPWINDOW As Integer = &H40000
-        Public Const WS_EX_NOACTIVATE As Integer = &H8000000
-        Public Const WS_EX_TRANSPARENT As Integer = &H20
         Public Const RDW_INVALIDATE As UInteger = &H1
         Public Const RDW_ERASE As UInteger = &H4
         Public Const RDW_ALLCHILDREN As UInteger = &H80
@@ -61,6 +51,58 @@ Namespace Skye
             Public hwndEdit As IntPtr
             Public hwndList As IntPtr
         End Structure
+
+        ' Window Styles
+        Public Const WS_BORDER As Integer = &H800000
+        Public Const WS_CAPTION As Integer = &HC00000        ' WS_BORDER Or WS_DLGFRAME
+        Public Const WS_CHILD As Integer = &H40000000
+        Public Const WS_CHILDWINDOW As Integer = WS_CHILD
+        Public Const WS_CLIPCHILDREN As Integer = &H2000000
+        Public Const WS_CLIPSIBLINGS As Integer = &H4000000
+        Public Const WS_DISABLED As Integer = &H8000000
+        Public Const WS_DLGFRAME As Integer = &H400000
+        Public Const WS_GROUP As Integer = &H20000
+        Public Const WS_HSCROLL As Integer = &H100000
+        Public Const WS_MAXIMIZE As Integer = &H1000000
+        Public Const WS_MAXIMIZEBOX As Integer = &H10000
+        Public Const WS_MINIMIZE As Integer = &H20000000
+        Public Const WS_MINIMIZEBOX As Integer = &H20000 'Turn on the WS_MINIMIZEBOX style flag for borderless windows so you can minimize/restore from the taskbar.
+        Public Const WS_OVERLAPPED As Integer = &H0
+        Public Const WS_OVERLAPPEDWINDOW As Integer = WS_OVERLAPPED Or WS_CAPTION Or WS_SYSMENU Or WS_THICKFRAME Or WS_MINIMIZEBOX Or WS_MAXIMIZEBOX
+        Public Const WS_POPUP As Integer = &H80000000
+        Public Const WS_POPUPWINDOW As Integer = WS_POPUP Or WS_BORDER Or WS_SYSMENU
+        Public Const WS_SIZEBOX As Integer = &H40000
+        Public Const WS_SYSMENU As Integer = &H80000
+        Public Const WS_TABSTOP As Integer = &H10000
+        Public Const WS_THICKFRAME As Integer = &H40000
+        Public Const WS_VISIBLE As Integer = &H10000000
+        Public Const WS_VSCROLL As Integer = &H200000
+
+        ' Extended Window Styles
+        Public Const WS_EX_DLGMODALFRAME As Integer = &H1
+        Public Const WS_EX_NOPARENTNOTIFY As Integer = &H4
+        Public Const WS_EX_TOPMOST As Integer = &H8
+        Public Const WS_EX_ACCEPTFILES As Integer = &H10
+        Public Const WS_EX_TRANSPARENT As Integer = &H20
+        Public Const WS_EX_MDICHILD As Integer = &H40
+        Public Const WS_EX_TOOLWINDOW As Integer = &H80
+        Public Const WS_EX_WINDOWEDGE As Integer = &H100
+        Public Const WS_EX_CLIENTEDGE As Integer = &H200
+        Public Const WS_EX_CONTEXTHELP As Integer = &H400
+        Public Const WS_EX_RIGHT As Integer = &H1000
+        Public Const WS_EX_LEFT As Integer = &H0
+        Public Const WS_EX_RTLREADING As Integer = &H2000
+        Public Const WS_EX_LTRREADING As Integer = &H0
+        Public Const WS_EX_LEFTSCROLLBAR As Integer = &H4000
+        Public Const WS_EX_RIGHTSCROLLBAR As Integer = &H0
+        Public Const WS_EX_CONTROLPARENT As Integer = &H10000
+        Public Const WS_EX_STATICEDGE As Integer = &H20000
+        Public Const WS_EX_APPWINDOW As Integer = &H40000
+        Public Const WS_EX_NOINHERITLAYOUT As Integer = &H100000
+        Public Const WS_EX_NOREDIRECTIONBITMAP As Integer = &H200000
+        Public Const WS_EX_LAYOUTRTL As Integer = &H400000
+        Public Const WS_EX_COMPOSITED As Integer = &H2000000
+        Public Const WS_EX_NOACTIVATE As Integer = &H8000000
 
         ' API FUNCTIONS
         Public Delegate Function WndProcDelegate(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
@@ -141,6 +183,38 @@ Namespace Skye
             Else
                 Return SetWindowLongPtr(hWnd, nIndex, dwNewLong)
             End If
+        End Function
+
+        ' Window Style Helpers
+        Public Function GetStyle(hWnd As IntPtr) As Integer
+            Return WinAPI.GetWindowLong(hWnd, WinAPI.GWL_STYLE)
+        End Function
+        Public Sub AddStyle(hWnd As IntPtr, style As Integer)
+            Dim current = GetStyle(hWnd)
+            WinAPI.SetWindowLong(hWnd, WinAPI.GWL_STYLE, current Or style)
+        End Sub
+        Public Sub RemoveStyle(hWnd As IntPtr, style As Integer)
+            Dim current = GetStyle(hWnd)
+            WinAPI.SetWindowLong(hWnd, WinAPI.GWL_STYLE, current And Not style)
+        End Sub
+        Public Function HasStyle(hWnd As IntPtr, style As Integer) As Boolean
+            Return (GetStyle(hWnd) And style) = style
+        End Function
+
+        ' Extended Window Style Helpers
+        Public Function GetStyleEx(hWnd As IntPtr) As Integer
+            Return WinAPI.GetWindowLong(hWnd, WinAPI.GWL_EXSTYLE)
+        End Function
+        Public Sub AddStyleEx(hWnd As IntPtr, style As Integer)
+            Dim current = GetStyleEx(hWnd)
+            WinAPI.SetWindowLong(hWnd, WinAPI.GWL_EXSTYLE, current Or style)
+        End Sub
+        Public Sub RemoveStyleEx(hWnd As IntPtr, style As Integer)
+            Dim current = GetStyleEx(hWnd)
+            WinAPI.SetWindowLong(hWnd, WinAPI.GWL_EXSTYLE, current And Not style)
+        End Sub
+        Public Function HasStyleEx(hWnd As IntPtr, style As Integer) As Boolean
+            Return (GetStyleEx(hWnd) And style) = style
         End Function
 
     End Class
