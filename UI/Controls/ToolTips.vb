@@ -1047,6 +1047,10 @@ Namespace Skye.UI
 				End If
 
 			End Sub
+			Protected Overrides Sub OnMouseEnter(e As EventArgs)
+				MyBase.OnMouseEnter(e)
+				HideTooltip()
+			End Sub
 			Private Sub Form_Click(sender As Object, e As EventArgs) Handles MyBase.Click
 				HideTooltip()
 			End Sub
