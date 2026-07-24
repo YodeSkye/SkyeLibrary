@@ -653,8 +653,8 @@ Namespace Skye.UI
 			Else
 				pos = GetCursorPositionWithOffset()
 			End If
-			If pos.X + totalSize.Width > Screen.GetWorkingArea(pos).Right Then pos.X = Screen.GetWorkingArea(pos).Right - totalSize.Width - 2
-			If pos.Y + totalSize.Height > Screen.GetWorkingArea(pos).Bottom Then pos.Y = Screen.GetWorkingArea(pos).Bottom - totalSize.Height - 2
+			If pos.X + totalSize.Width > Screen.GetWorkingArea(pos).Right Then pos.X = Screen.GetWorkingArea(pos).Right - totalSize.Width - ShadowThickness
+			If pos.Y + totalSize.Height > Screen.GetWorkingArea(pos).Bottom Then pos.Y = Screen.GetWorkingArea(pos).Bottom - totalSize.Height - ShadowThickness
 
 			popup.Size = totalSize
 			popup.TooltipText = request.Text
