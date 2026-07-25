@@ -8,6 +8,7 @@ Namespace Skye
 
         ' DECLARATIONS
         Public Const WS_EX_LAYERED As Integer = &H80000
+        Public Const LWA_ALPHA As Integer = &H2
         <StructLayout(LayoutKind.Sequential, Pack:=1)>
         Public Structure BLENDFUNCTION
             Public BlendOp As Byte
@@ -28,6 +29,9 @@ Namespace Skye
             crKey As Integer,
             ByRef pblend As BLENDFUNCTION,
             dwFlags As Integer) As Boolean
+        End Function
+        <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function SetLayeredWindowAttributes(hWnd As IntPtr, crKey As Integer, bAlpha As Byte, dwFlags As Integer) As Boolean
         End Function
 
     End Class
