@@ -109,6 +109,12 @@ Namespace Skye
         <DllImport("user32.dll")>
         Public Shared Function GetComboBoxInfo(hWnd As IntPtr, ByRef pcbi As COMBOBOXINFO) As Boolean
         End Function
+        <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function MoveWindow(ByVal hWnd As IntPtr, ByVal X As Integer, ByVal Y As Integer, ByVal nWidth As Integer, ByVal nHeight As Integer, ByVal bRepaint As Boolean) As Boolean
+        End Function
+        <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function UpdateWindow(ByVal hWnd As IntPtr) As Boolean
+        End Function
 
         ' METHODS
         ''' <summary>

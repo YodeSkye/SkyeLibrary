@@ -35,6 +35,9 @@ Namespace Skye
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function DestroyIcon(hIcon As IntPtr) As Boolean
         End Function
+        <DllImport("dwmapi.dll", SetLastError:=True)>
+        Public Shared Function DwmSetWindowAttribute(ByVal hWnd As IntPtr, ByVal dwAttribute As Integer, ByRef pvAttribute As Integer, ByVal cbAttribute As Integer) As Integer
+        End Function
 
         ' METHODS
         ''' <summary>

@@ -31,7 +31,9 @@ Namespace Skye
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function SetWindowRgn(hWnd As IntPtr, hRgn As IntPtr, bRedraw As Boolean) As Integer
         End Function
-
+        <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function GetClientRect(ByVal hWnd As IntPtr, ByRef lpRect As RECT) As Boolean
+        End Function
     End Class
 
 End Namespace
