@@ -1,5 +1,4 @@
-﻿
-Imports System.IO
+﻿Imports System.IO
 Imports System.Reflection
 Imports System.Threading
 
@@ -83,28 +82,38 @@ Namespace Skye
                     Dim legacyRootPath As String = Path.Combine(docsPath, PUBLISHER_FOLDER)
 
                     If Directory.Exists(legacyRootPath) Then
-                        Directory.CreateDirectory(newPath) ' Retry directory creation for target path if needed
+                        Directory.CreateDirectory(newPath)
+
+                        ' Grab candidate files starting with appName (e.g., "SkyeClip*.*")
                         Dim searchPattern As String = $"{appName}*.*"
                         Dim legacyFiles As String() = Directory.GetFiles(legacyRootPath, searchPattern, SearchOption.TopDirectoryOnly)
 
                         For Each filePath In legacyFiles
                             Dim fileName As String = Path.GetFileName(filePath)
+
+#If DEBUG Then
+                            ' IN DEBUG MODE: Only migrate DEV files (skips live production files)
+                            If Not fileName.Contains("DEV", StringComparison.OrdinalIgnoreCase) Then Continue For
+#Else
+                            ' IN RELEASE MODE: Ignore DEV files completely (leaves your debug data alone)
+                            If fileName.Contains("DEV", StringComparison.OrdinalIgnoreCase) Then Continue For
+#End If
+
                             Dim destinationPath As String = Path.Combine(newPath, fileName)
 
                             If Not File.Exists(destinationPath) Then
                                 File.Move(filePath, destinationPath)
-                                Skye.Common.SafeLogWrite($"Storage Manager Moved {fileName} -> {destinationPath}")
+                                Debug.WriteLine($"[Skye Migration] Moved {fileName} -> {destinationPath}")
                             End If
                         Next
 
-                        ' Clean up root Documents\Skye if empty
+                        ' Clean up legacy folder only if completely empty
                         If Directory.GetFiles(legacyRootPath).Length = 0 AndAlso Directory.GetDirectories(legacyRootPath).Length = 0 Then
                             Directory.Delete(legacyRootPath)
                         End If
-
                     End If
                 Catch ex As Exception
-                    Skye.Common.SafeLogWrite($"Storage Manager Migration Warning] {ex.Message}")
+                    Skye.Common.SafeLogWrite($"[Skye Migration Warning] {ex.Message}")
                 End Try
             End Sub
 
