@@ -89,26 +89,30 @@ Namespace Skye
                     If Directory.Exists(legacyRootPath) Then
                         Directory.CreateDirectory(newPath)
 
-                        ' Grab candidate files starting with appName (e.g., "SkyeClip*.*")
+                        ' Grab ALL files starting with appName (with or without extensions)
                         Dim searchPattern As String = $"{appName}*"
                         Dim legacyFiles As String() = Directory.GetFiles(legacyRootPath, searchPattern, SearchOption.TopDirectoryOnly)
 
+                        ' RUNTIME CHECK: Detect if the calling/entry application is a Debug build
+                        Dim isCallingAppDebug As Boolean = IsAssemblyDebug(Assembly.GetEntryAssembly())
+
                         For Each filePath In legacyFiles
                             Dim fileName As String = Path.GetFileName(filePath)
+                            Dim hasDevInName As Boolean = fileName.Contains("DEV", StringComparison.OrdinalIgnoreCase)
 
-#If DEBUG Then
-                            ' IN DEBUG MODE: Only migrate DEV files (skips live production files)
-                            If Not fileName.Contains("DEV", StringComparison.OrdinalIgnoreCase) Then Continue For
-#Else
-                            ' IN RELEASE MODE: Ignore DEV files completely (leaves your debug data alone)
-                            If fileName.Contains("DEV", StringComparison.OrdinalIgnoreCase) Then Continue For
-#End If
+                            If isCallingAppDebug Then
+                                ' RUNNING IN DEBUG MODE: Only migrate files containing "DEV"
+                                If Not hasDevInName Then Continue For
+                            Else
+                                ' RUNNING IN RELEASE MODE: Ignore "DEV" files completely
+                                If hasDevInName Then Continue For
+                            End If
 
                             Dim destinationPath As String = Path.Combine(newPath, fileName)
 
-                            If Not File.Exists(destinationPath) Then
+                            If File.Exists(filePath) AndAlso Not File.Exists(destinationPath) Then
                                 File.Move(filePath, destinationPath)
-                                Debug.WriteLine($"[Skye Migration] Moved {fileName} -> {destinationPath}")
+                                Debug.WriteLine($"Storage Manager Moved {fileName} -> {destinationPath}")
                             End If
                         Next
 
@@ -118,9 +122,27 @@ Namespace Skye
                         End If
                     End If
                 Catch ex As Exception
-                    Skye.Common.SafeLogWrite($"[Skye Migration Warning] {ex.Message}")
+                    Skye.Common.SafeLogWrite($"Storage Manager Migration Warning] {ex.Message}")
                 End Try
             End Sub
+            ''' <summary>
+            ''' Inspects an assembly at runtime to see if it was built in Debug mode.
+            ''' </summary>
+            Private Shared Function IsAssemblyDebug(asm As Assembly) As Boolean
+                If asm Is Nothing Then Return False
+
+                Try
+                    Dim attribs = asm.GetCustomAttributes(GetType(System.Diagnostics.DebuggableAttribute), False)
+                    If attribs IsNot Nothing AndAlso attribs.Length > 0 Then
+                        Dim debugAttr = CType(attribs(0), System.Diagnostics.DebuggableAttribute)
+                        ' Checks if JIT tracking/optimization is configured for Debugging
+                        Return debugAttr.IsJITTrackingEnabled OrElse debugAttr.DebuggingFlags.HasFlag(System.Diagnostics.DebuggableAttribute.DebuggingModes.DisableOptimizations)
+                    End If
+                Catch
+                End Try
+
+                Return False
+            End Function
 
         End Class
 
