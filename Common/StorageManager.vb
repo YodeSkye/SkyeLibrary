@@ -20,6 +20,11 @@ Namespace Skye
                 Dim appName As String = GetExecutingAppName()
                 Dim primaryPath As String = GetPrimaryPath(appName)
 
+                ' Ensure path ends with a trailing backslash so "UserPath & fileName" works cleanly
+                If Not primaryPath.EndsWith(Path.DirectorySeparatorChar) Then
+                    primaryPath &= Path.DirectorySeparatorChar
+                End If
+
                 ' Step 1: Migrate legacy Documents\Skye files for this app if present
                 MigrateLegacyData(primaryPath, appName)
 
@@ -85,7 +90,7 @@ Namespace Skye
                         Directory.CreateDirectory(newPath)
 
                         ' Grab candidate files starting with appName (e.g., "SkyeClip*.*")
-                        Dim searchPattern As String = $"{appName}*.*"
+                        Dim searchPattern As String = $"{appName}*"
                         Dim legacyFiles As String() = Directory.GetFiles(legacyRootPath, searchPattern, SearchOption.TopDirectoryOnly)
 
                         For Each filePath In legacyFiles
