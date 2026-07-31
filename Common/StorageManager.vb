@@ -112,7 +112,7 @@ Namespace Skye
 
                             If File.Exists(filePath) AndAlso Not File.Exists(destinationPath) Then
                                 File.Move(filePath, destinationPath)
-                                Debug.WriteLine($"Storage Manager Moved {fileName} -> {destinationPath}")
+                                Skye.Common.SafeLogWrite($"Storage Manager Moved {fileName} -> {destinationPath}")
                             End If
                         Next
 
