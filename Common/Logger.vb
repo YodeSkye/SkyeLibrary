@@ -197,7 +197,7 @@ Namespace Skye
         Friend Shared Sub SafeLogWrite(message As String)
             If String.IsNullOrWhiteSpace(Log.LogFilePath) Then Return ' Logging not initialized, so we can't log this message. Just return.
             Try
-                Log.Write("SKYELIBRARY --> " & message)
+                Log.Write("SkyeLibrary --> " & message)
             Catch
                 ' Swallow any exceptions to ensure this method is safe to call from anywhere
             End Try
