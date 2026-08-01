@@ -118,11 +118,27 @@ Namespace Skye
 
                         ' Clean up legacy folder only if completely empty
                         If Directory.GetFiles(legacyRootPath).Length = 0 AndAlso Directory.GetDirectories(legacyRootPath).Length = 0 Then
-                            Directory.Delete(legacyRootPath)
+                            Try
+                                ' 1. Ensure our process isn't holding current directory lock
+                                Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory)
+                                ' 2. Wait for any locks to clear
+                                System.Threading.Thread.Sleep(100)
+                                ' 3. Clear attributes on the folder
+                                Dim dirInfo As New DirectoryInfo(legacyRootPath)
+                                dirInfo.Attributes = FileAttributes.Normal
+                                ' 4. Attempt removal
+                                dirInfo.Delete(False)
+                                Skye.Common.SafeLogWrite($"Storage Manager Migration removed empty legacy directory: {legacyRootPath}")
+                            Catch ex As IOException
+                                ' Folder either wasn't empty yet (other app files remain) or OS handle was briefly busy.
+                                ' Non-critical — leaves it alone.
+                            Catch ex As Exception
+                                ' Handles permission or unexpected exceptions silently
+                            End Try
                         End If
                     End If
                 Catch ex As Exception
-                    Skye.Common.SafeLogWrite($"Storage Manager Migration Warning] {ex.Message}")
+                    Skye.Common.SafeLogWrite($"Storage Manager Migration Warning {ex.Message}")
                 End Try
             End Sub
             ''' <summary>
