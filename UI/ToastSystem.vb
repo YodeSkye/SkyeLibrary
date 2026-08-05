@@ -122,6 +122,7 @@ Namespace Skye.UI
 		Public _height As Integer
 		Private _titleHeight As Integer
 		Private _messageHeight As Integer
+		Private _cachedIconBmp As Bitmap = Nothing
 		Private _iconSize As Integer = 0
 		Private _opacity As Byte = 0
 
@@ -172,6 +173,11 @@ Namespace Skye.UI
 
 			' Now that window exists, measure text and compute final height
 			AutoSizeToast()
+
+			' Convert once on creation
+			If _opts.Icon IsNot Nothing Then
+				_cachedIconBmp = _opts.Icon.ToBitmap()
+			End If
 		End Sub
 		Private Sub RegisterWindowClass()
 			Dim wc As New WinAPI.WNDCLASSEX()
@@ -208,6 +214,12 @@ Namespace Skye.UI
 		End Sub
 		' ------------- IDisposable -----------------------
 		Public Sub Dispose() Implements IDisposable.Dispose
+
+			If _cachedIconBmp IsNot Nothing Then
+				_cachedIconBmp.Dispose()
+				_cachedIconBmp = Nothing
+			End If
+
 			If _hwnd <> IntPtr.Zero Then
 				WinAPI.DestroyWindow(_hwnd)
 				_hwnd = IntPtr.Zero
@@ -336,16 +348,16 @@ Namespace Skye.UI
 		}
 
 				Dim ok = WinAPI.UpdateLayeredWindow(
-			_hwnd,
-			hdcScreen,
-			dstPoint,
-			size,
-			hdcMem,
-			srcPoint,
-			0,
-			blend,
-			WinAPI.ULW_ALPHA
-		)
+					_hwnd,
+					hdcScreen,
+					dstPoint,
+					size,
+					hdcMem,
+					srcPoint,
+					0,
+					blend,
+					WinAPI.ULW_ALPHA
+				)
 
 				WinAPI.SelectObject(hdcMem, oldObj)
 				WinAPI.DeleteObject(hBitmap)
@@ -457,26 +469,17 @@ Namespace Skye.UI
 
 				textX = iconRect.Right + padding
 
-			ElseIf _opts.Icon IsNot Nothing Then
+			ElseIf _cachedIconBmp IsNot Nothing Then
 				Dim size As Integer = ICON_SIZE
-
-				' Center the icon square vertically
-				Dim iconY As Integer = padding + (h - padding * 2 - size) \ 2
+				Dim iconY As Integer = padding + ((h - (padding * 2) - size) \ 2)
 				iconRect = New Rectangle(padding, iconY, size, size)
 
-				Using bmp As Bitmap = _opts.Icon.ToBitmap()
-					Dim bmpW As Integer = bmp.Width
-					Dim bmpH As Integer = bmp.Height
+				Dim bmpW As Integer = _cachedIconBmp.Width
+				Dim bmpH As Integer = _cachedIconBmp.Height
+				Dim offsetX As Integer = iconRect.X + ((size - bmpW) \ 2)
+				Dim offsetY As Integer = iconRect.Y + ((size - bmpH) \ 2)
 
-					' Center the bitmap INSIDE iconRect
-					Dim offsetX As Integer = iconRect.X + (size - bmpW) \ 2
-					Dim offsetY As Integer = iconRect.Y + (size - bmpH) \ 2
-
-					Dim centeredRect As New Rectangle(offsetX, offsetY, bmpW, bmpH)
-
-					g.DrawImage(bmp, centeredRect)
-				End Using
-
+				g.DrawImage(_cachedIconBmp, New Rectangle(offsetX, offsetY, bmpW, bmpH))
 				textX = iconRect.Right + 2
 			Else
 				' No icon, no image → add horizontal inset
