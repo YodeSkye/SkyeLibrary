@@ -18,6 +18,7 @@ Namespace Skye
         ''' </summary>
         Public Class RegistryHelper
 
+            ' Declarations
             Private Shared _baseKey As String = Nothing
             Public Shared Property BaseKey As String
                 Get
@@ -35,11 +36,6 @@ Namespace Skye
             End Property
 
             ' Methods
-            'Public Shared Function GetInt(name As String, defaultValue As Integer) As Integer
-            '    Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
-            '        Return CInt(key.GetValue(name, defaultValue))
-            '    End Using
-            'End Function
             Public Shared Function GetInt(name As String, defaultValue As Integer) As Integer
                 Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     If key Is Nothing Then Return defaultValue
@@ -65,9 +61,6 @@ Namespace Skye
                 End Using
             End Sub
 
-            'Public Shared Function GetBool(name As String, defaultValue As Boolean) As Boolean
-            '    Return GetInt(name, If(defaultValue, 1, 0)) = 1
-            'End Function
             Public Shared Function GetBool(name As String, defaultValue As Boolean) As Boolean
                 Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     If key Is Nothing Then Return defaultValue
@@ -132,15 +125,6 @@ Namespace Skye
                 End Using
             End Sub
 
-            'Public Shared Function GetLong(name As String, defaultValue As Long) As Long
-            '    Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
-            '        Dim obj = key.GetValue(name, Nothing)
-            '        If TypeOf obj Is Long Then
-            '            Return CType(obj, Long)
-            '        End If
-            '        Return defaultValue
-            '    End Using
-            'End Function
             Public Shared Function GetLong(name As String, defaultValue As Long) As Long
                 Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     If key Is Nothing Then Return defaultValue
