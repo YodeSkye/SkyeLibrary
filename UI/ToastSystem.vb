@@ -366,6 +366,172 @@ Namespace Skye.UI
 			WinAPI.DeleteDC(hdcMem)
 			hresult = WinAPI.ReleaseDC(IntPtr.Zero, hdcScreen)
 		End Sub
+		'Private Sub RenderToast(g As Graphics)
+		'	Dim w = _width
+		'	Dim h = _height
+
+		'	Dim bgColor = _opts.BackColor
+		'	Dim borderColor = _opts.BorderColor
+		'	Dim foreColor = _opts.ForeColor
+		'	Dim radius = _opts.CornerRadius
+
+		'	g.Clear(Color.Transparent)
+
+		'	' Outer rect
+		'	Dim inset As Single = 0.5F
+		'	Dim rect As New RectangleF(inset, inset, w - 1 - inset, h - 1 - inset)
+
+		'	'-----------------------------------------
+		'	' SHADOW
+		'	'-----------------------------------------
+		'	If _opts.Shadow Then
+		'		Dim shadowOffset As Integer = 4
+		'		Dim shadowRect As New RectangleF(rect.X + shadowOffset, rect.Y + shadowOffset, rect.Width, rect.Height)
+
+		'		For i As Integer = 1 To 6
+		'			Dim alpha As Integer = 30 - (i * 4)
+		'			If alpha < 0 Then alpha = 0
+
+		'			Using shadowBrush As New SolidBrush(Color.FromArgb(alpha, 0, 0, 0))
+		'				Dim shadowRadius As Integer = radius + i
+
+		'				If shadowRadius > 0 Then
+		'					Using shadowPath As New GraphicsPath()
+		'						shadowPath.AddArc(shadowRect.X, shadowRect.Y, shadowRadius, shadowRadius, 180, 90)
+		'						shadowPath.AddArc(shadowRect.Right - shadowRadius, shadowRect.Y, shadowRadius, shadowRadius, 270, 90)
+		'						shadowPath.AddArc(shadowRect.Right - shadowRadius, shadowRect.Bottom - shadowRadius, shadowRadius, shadowRadius, 0, 90)
+		'						shadowPath.AddArc(shadowRect.X, shadowRect.Bottom - shadowRadius, shadowRadius, shadowRadius, 90, 90)
+		'						shadowPath.CloseFigure()
+		'						g.FillPath(shadowBrush, shadowPath)
+		'					End Using
+		'				Else
+		'					g.FillRectangle(shadowBrush, shadowRect)
+		'				End If
+		'			End Using
+
+		'			shadowRect.Inflate(1, 1)
+		'		Next
+		'	End If
+
+		'	'-----------------------------------------
+		'	' BACKGROUND
+		'	'-----------------------------------------
+		'	If radius <= 0 Then
+		'		Using bgBrush As New SolidBrush(bgColor)
+		'			g.FillRectangle(bgBrush, rect)
+		'		End Using
+		'		Using pen As New Pen(borderColor, _opts.BorderWidth)
+		'			g.DrawRectangle(pen, Rectangle.Round(rect))
+		'		End Using
+		'	Else
+		'		Using path As New GraphicsPath()
+		'			path.AddArc(rect.X, rect.Y, radius, radius, 180, 90)
+		'			path.AddArc(rect.Right - radius, rect.Y, radius, radius, 270, 90)
+		'			path.AddArc(rect.Right - radius, rect.Bottom - radius, radius, radius, 0, 90)
+		'			path.AddArc(rect.X, rect.Bottom - radius, radius, radius, 90, 90)
+		'			path.CloseFigure()
+
+		'			Using bgBrush As New SolidBrush(bgColor)
+		'				g.FillPath(bgBrush, path)
+		'			End Using
+		'			Using pen As New Pen(borderColor, _opts.BorderWidth)
+		'				g.DrawPath(pen, path)
+		'			End Using
+		'		End Using
+		'	End If
+
+		'	'-----------------------------------------
+		'	' ICON / IMAGE
+		'	'-----------------------------------------
+		'	Dim padding As Integer = TOAST_PADDING
+		'	Dim textX As Integer
+		'	Dim iconRect As Rectangle
+
+		'	If _opts.Image IsNot Nothing Then
+		'		Dim size As Integer = h - padding * 2
+		'		iconRect = New Rectangle(padding, padding, size, size)
+
+		'		If radius > 0 Then
+		'			Using path As New GraphicsPath()
+		'				path.AddArc(iconRect.X, iconRect.Y, radius, radius, 180, 90)
+		'				path.AddArc(iconRect.Right - radius, iconRect.Y, radius, radius, 270, 90)
+		'				path.AddArc(iconRect.Right - radius, iconRect.Bottom - radius, radius, radius, 0, 90)
+		'				path.AddArc(iconRect.X, iconRect.Bottom - radius, radius, radius, 90, 90)
+		'				path.CloseFigure()
+
+		'				g.SetClip(path)
+		'				g.DrawImage(_opts.Image, iconRect)
+		'				g.ResetClip()
+		'			End Using
+		'		Else
+		'			g.DrawImage(_opts.Image, iconRect)
+		'		End If
+
+		'		textX = iconRect.Right + padding
+
+		'	ElseIf _cachedIconBmp IsNot Nothing Then
+		'		Dim size As Integer = ICON_SIZE
+		'		Dim iconY As Integer = padding + ((h - (padding * 2) - size) \ 2)
+		'		iconRect = New Rectangle(padding, iconY, size, size)
+
+		'		Dim bmpW As Integer = _cachedIconBmp.Width
+		'		Dim bmpH As Integer = _cachedIconBmp.Height
+		'		Dim offsetX As Integer = iconRect.X + ((size - bmpW) \ 2)
+		'		Dim offsetY As Integer = iconRect.Y + ((size - bmpH) \ 2)
+
+		'		g.DrawImage(_cachedIconBmp, New Rectangle(offsetX, offsetY, bmpW, bmpH))
+		'		textX = iconRect.Right + 2
+		'	Else
+		'		' No icon, no image → add horizontal inset
+		'		textX = padding + 2
+		'	End If
+
+		'	Dim wAvail As Integer = w - textX - padding
+
+		'	'-----------------------------------------
+		'	' TITLE (TextRenderer)
+		'	'-----------------------------------------
+		'	Dim titleY As Integer = padding + TEXT_TOP_OFFSET
+
+		'	If Not String.IsNullOrEmpty(_opts.Title) AndAlso _titleHeight > 0 Then
+		'		Dim titleRectF As New RectangleF(textX, padding + 2, wAvail, _titleHeight)
+		'		Using brush As New SolidBrush(foreColor)
+		'			g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+		'			Using sf As New StringFormat(StringFormatFlags.LineLimit)
+		'				sf.Trimming = StringTrimming.EllipsisCharacter
+		'				g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRectF, sf)
+		'			End Using
+		'		End Using
+		'	End If
+
+		'	'-----------------------------------------
+		'	' MESSAGE (TextRenderer)
+		'	'-----------------------------------------
+		'	Dim messageY As Integer
+
+		'	If String.IsNullOrEmpty(_opts.Title) Then
+		'		' No title: message starts at the normal text top area
+		'		messageY = padding + TEXT_TOP_OFFSET + 3
+		'	Else
+		'		' Normal layout when title exists: message under the title
+		'		messageY = padding + TEXT_TOP_OFFSET + _titleHeight + TITLE_MESSAGE_GAP
+		'	End If
+
+		'	If Not String.IsNullOrEmpty(_opts.Message) AndAlso _messageHeight > 0 Then
+		'		Dim messageRectF As New RectangleF(textX, padding + _titleHeight + TITLE_MESSAGE_GAP, wAvail, _messageHeight)
+		'		Using brush As New SolidBrush(foreColor)
+		'			g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+		'			Using sf As New StringFormat(StringFormatFlags.LineLimit)
+		'				sf.Trimming = StringTrimming.EllipsisWord
+		'				g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRectF, sf)
+		'			End Using
+		'		End Using
+		'	End If
+		'	'Debug.WriteLine($"HEIGHT = {_height}")
+		'	'Debug.WriteLine($"MESSAGEHEIGHT = {_messageHeight}")
+		'	'Debug.WriteLine($"ICONSIZE = {_iconSize}")
+		'	'Debug.WriteLine($"PADDING = {TOAST_PADDING}")
+		'End Sub
 		Private Sub RenderToast(g As Graphics)
 			Dim w = _width
 			Dim h = _height
@@ -375,6 +541,8 @@ Namespace Skye.UI
 			Dim foreColor = _opts.ForeColor
 			Dim radius = _opts.CornerRadius
 
+			' ClearTypeGridFit works best on dark/solid backdrops, but on transparent/layered windows, AntiAliasGridFit or AntiAlias prevents fuzzy gray halo artifacts on the edges.
+			g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
 			g.Clear(Color.Transparent)
 
 			' Outer rect
@@ -448,26 +616,53 @@ Namespace Skye.UI
 			Dim iconRect As Rectangle
 
 			If _opts.Image IsNot Nothing Then
-				Dim size As Integer = h - padding * 2
-				iconRect = New Rectangle(padding, padding, size, size)
+				Dim maxContainerSize As Integer = h - (padding * 2)
+
+				' Scale down ONLY if image dimensions exceed container slot
+				Dim drawW As Integer = Math.Min(_opts.Image.Width, maxContainerSize)
+				Dim drawH As Integer = Math.Min(_opts.Image.Height, maxContainerSize)
+
+				' Preserve aspect ratio if image is non-square
+				If _opts.Image.Width <> _opts.Image.Height AndAlso _opts.Image.Width > 0 AndAlso _opts.Image.Height > 0 Then
+					Dim ratio As Double = Math.Min(maxContainerSize / CDbl(_opts.Image.Width), maxContainerSize / CDbl(_opts.Image.Height))
+					If ratio < 1.0 Then
+						drawW = CInt(_opts.Image.Width * ratio)
+						drawH = CInt(_opts.Image.Height * ratio)
+					Else
+						drawW = _opts.Image.Width
+						drawH = _opts.Image.Height
+					End If
+				End If
+
+				' Center the image inside the left slot vertically and horizontally
+				Dim imgX As Integer = padding + ((maxContainerSize - drawW) \ 2)
+				Dim imgY As Integer = padding + ((maxContainerSize - drawH) \ 2)
+				iconRect = New Rectangle(imgX, imgY, drawW, drawH)
 
 				If radius > 0 Then
-					Using path As New GraphicsPath()
-						path.AddArc(iconRect.X, iconRect.Y, radius, radius, 180, 90)
-						path.AddArc(iconRect.Right - radius, iconRect.Y, radius, radius, 270, 90)
-						path.AddArc(iconRect.Right - radius, iconRect.Bottom - radius, radius, radius, 0, 90)
-						path.AddArc(iconRect.X, iconRect.Bottom - radius, radius, radius, 90, 90)
-						path.CloseFigure()
+					' Clip rounded corners proportional to image dimensions
+					Dim imgRadius As Integer = Math.Min(radius, Math.Min(drawW, drawH) \ 2)
+					If imgRadius > 0 Then
+						Using path As New GraphicsPath()
+							path.AddArc(iconRect.X, iconRect.Y, imgRadius, imgRadius, 180, 90)
+							path.AddArc(iconRect.Right - imgRadius, iconRect.Y, imgRadius, imgRadius, 270, 90)
+							path.AddArc(iconRect.Right - imgRadius, iconRect.Bottom - imgRadius, imgRadius, imgRadius, 0, 90)
+							path.AddArc(iconRect.X, iconRect.Bottom - imgRadius, imgRadius, imgRadius, 90, 90)
+							path.CloseFigure()
 
-						g.SetClip(path)
+							g.SetClip(path)
+							g.DrawImage(_opts.Image, iconRect)
+							g.ResetClip()
+						End Using
+					Else
 						g.DrawImage(_opts.Image, iconRect)
-						g.ResetClip()
-					End Using
+					End If
 				Else
 					g.DrawImage(_opts.Image, iconRect)
 				End If
 
-				textX = iconRect.Right + padding
+				' Keep text boundary fixed relative to full image area so text alignment stays uniform
+				textX = padding + maxContainerSize + padding
 
 			ElseIf _cachedIconBmp IsNot Nothing Then
 				Dim size As Integer = ICON_SIZE
@@ -489,48 +684,47 @@ Namespace Skye.UI
 			Dim wAvail As Integer = w - textX - padding
 
 			'-----------------------------------------
-			' TITLE (TextRenderer)
+			' TITLE & MESSAGE RENDERING
 			'-----------------------------------------
-			Dim titleY As Integer = padding + TEXT_TOP_OFFSET
+			Dim hasTitle As Boolean = Not String.IsNullOrEmpty(_opts.Title) AndAlso _titleHeight > 0
+			Dim hasMessage As Boolean = Not String.IsNullOrEmpty(_opts.Message) AndAlso _messageHeight > 0
 
-			If Not String.IsNullOrEmpty(_opts.Title) AndAlso _titleHeight > 0 Then
-				Dim titleRectF As New RectangleF(textX, padding + 2, wAvail, _titleHeight)
-				Using brush As New SolidBrush(foreColor)
-					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
-					Using sf As New StringFormat(StringFormatFlags.LineLimit)
-						sf.Trimming = StringTrimming.EllipsisCharacter
-						g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRectF, sf)
+			If hasTitle OrElse hasMessage Then
+				Dim totalTextHeight As Integer = 0
+
+				If hasTitle AndAlso hasMessage Then
+					totalTextHeight = _titleHeight + TITLE_MESSAGE_GAP + _messageHeight
+				ElseIf hasTitle Then
+					totalTextHeight = _titleHeight
+				ElseIf hasMessage Then
+					totalTextHeight = _messageHeight
+				End If
+
+				' Vertically center the text (whether it's a single title, single message, or combined block)
+				Dim startY As Integer = Math.Max(padding, (h - totalTextHeight) \ 2)
+
+				If hasTitle Then
+					Dim titleRectF As New RectangleF(textX, startY, wAvail, _titleHeight)
+					Using brush As New SolidBrush(foreColor)
+						Using sf As New StringFormat(StringFormatFlags.LineLimit)
+							sf.Trimming = StringTrimming.EllipsisCharacter
+							g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRectF, sf)
+						End Using
 					End Using
-				End Using
-			End If
+				End If
 
-			'-----------------------------------------
-			' MESSAGE (TextRenderer)
-			'-----------------------------------------
-			Dim messageY As Integer
+				If hasMessage Then
+					Dim messageY As Integer = If(hasTitle, startY + _titleHeight + TITLE_MESSAGE_GAP, startY)
+					Dim messageRectF As New RectangleF(textX, messageY, wAvail, _messageHeight)
 
-			If String.IsNullOrEmpty(_opts.Title) Then
-				' No title: message starts at the normal text top area
-				messageY = padding + TEXT_TOP_OFFSET + 3
-			Else
-				' Normal layout when title exists: message under the title
-				messageY = padding + TEXT_TOP_OFFSET + _titleHeight + TITLE_MESSAGE_GAP
-			End If
-
-			If Not String.IsNullOrEmpty(_opts.Message) AndAlso _messageHeight > 0 Then
-				Dim messageRectF As New RectangleF(textX, padding + _titleHeight + TITLE_MESSAGE_GAP, wAvail, _messageHeight)
-				Using brush As New SolidBrush(foreColor)
-					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
-					Using sf As New StringFormat(StringFormatFlags.LineLimit)
-						sf.Trimming = StringTrimming.EllipsisWord
-						g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRectF, sf)
+					Using brush As New SolidBrush(foreColor)
+						Using sf As New StringFormat(StringFormatFlags.LineLimit)
+							sf.Trimming = StringTrimming.EllipsisWord
+							g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRectF, sf)
+						End Using
 					End Using
-				End Using
+				End If
 			End If
-			'Debug.WriteLine($"HEIGHT = {_height}")
-			'Debug.WriteLine($"MESSAGEHEIGHT = {_messageHeight}")
-			'Debug.WriteLine($"ICONSIZE = {_iconSize}")
-			'Debug.WriteLine($"PADDING = {TOAST_PADDING}")
 		End Sub
 		Private Sub AutoSizeToast()
 			Dim padding As Integer = TOAST_PADDING
