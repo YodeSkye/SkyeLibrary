@@ -35,9 +35,28 @@ Namespace Skye
             End Property
 
             ' Methods
+            'Public Shared Function GetInt(name As String, defaultValue As Integer) As Integer
+            '    Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+            '        Return CInt(key.GetValue(name, defaultValue))
+            '    End Using
+            'End Function
             Public Shared Function GetInt(name As String, defaultValue As Integer) As Integer
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
-                    Return CInt(key.GetValue(name, defaultValue))
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
+                    If key Is Nothing Then Return defaultValue
+                    Dim obj = key.GetValue(name, Nothing)
+                    If obj Is Nothing Then Return defaultValue
+
+                    ' Handle native Registry DWord / Integer
+                    If TypeOf obj Is Integer Then Return CInt(obj)
+
+                    ' Handle legacy String values safely
+                    Dim strVal = obj.ToString()
+                    Dim result As Integer
+                    If Integer.TryParse(strVal, result) Then
+                        Return result
+                    End If
+
+                    Return defaultValue
                 End Using
             End Function
             Public Shared Sub SetInt(name As String, value As Integer)
@@ -46,15 +65,32 @@ Namespace Skye
                 End Using
             End Sub
 
+            'Public Shared Function GetBool(name As String, defaultValue As Boolean) As Boolean
+            '    Return GetInt(name, If(defaultValue, 1, 0)) = 1
+            'End Function
             Public Shared Function GetBool(name As String, defaultValue As Boolean) As Boolean
-                Return GetInt(name, If(defaultValue, 1, 0)) = 1
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
+                    If key Is Nothing Then Return defaultValue
+                    Dim obj = key.GetValue(name, Nothing)
+                    If obj Is Nothing Then Return defaultValue
+
+                    ' Handle native Registry types
+                    If TypeOf obj Is Integer Then Return CInt(obj) <> 0
+
+                    ' Handle legacy String values ("True", "False", "1", "0")
+                    Dim strVal = obj.ToString().Trim()
+                    If strVal = "1" OrElse strVal.Equals("True", StringComparison.OrdinalIgnoreCase) Then Return True
+                    If strVal = "0" OrElse strVal.Equals("False", StringComparison.OrdinalIgnoreCase) Then Return False
+
+                    Return defaultValue
+                End Using
             End Function
             Public Shared Sub SetBool(name As String, value As Boolean)
                 SetInt(name, If(value, 1, 0))
             End Sub
 
             Public Shared Function GetString(name As String, defaultValue As String) As String
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Return CStr(key.GetValue(name, defaultValue))
                 End Using
             End Function
@@ -65,7 +101,7 @@ Namespace Skye
             End Sub
 
             Public Shared Function GetDateTime(name As String, defaultValue As DateTime) As DateTime
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Dim obj = key.GetValue(name, Nothing)
 
                     If TypeOf obj Is Long Then
@@ -82,7 +118,7 @@ Namespace Skye
             End Sub
 
             Public Shared Function GetBytes(name As String) As Byte()
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Dim obj = key.GetValue(name)
                     If TypeOf obj Is Byte() Then
                         Return CType(obj, Byte())
@@ -96,12 +132,30 @@ Namespace Skye
                 End Using
             End Sub
 
+            'Public Shared Function GetLong(name As String, defaultValue As Long) As Long
+            '    Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+            '        Dim obj = key.GetValue(name, Nothing)
+            '        If TypeOf obj Is Long Then
+            '            Return CType(obj, Long)
+            '        End If
+            '        Return defaultValue
+            '    End Using
+            'End Function
             Public Shared Function GetLong(name As String, defaultValue As Long) As Long
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
+                    If key Is Nothing Then Return defaultValue
                     Dim obj = key.GetValue(name, Nothing)
-                    If TypeOf obj Is Long Then
-                        Return CType(obj, Long)
+                    If obj Is Nothing Then Return defaultValue
+
+                    If TypeOf obj Is Long OrElse TypeOf obj Is Integer Then Return CLng(obj)
+
+                    ' Handle legacy String values safely
+                    Dim strVal = obj.ToString()
+                    Dim result As Long
+                    If Long.TryParse(strVal, result) Then
+                        Return result
                     End If
+
                     Return defaultValue
                 End Using
             End Function
@@ -112,7 +166,7 @@ Namespace Skye
             End Sub
 
             Public Shared Function GetStringArray(name As String, defaultValue As String()) As String()
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Dim obj = key.GetValue(name, Nothing)
                     If TypeOf obj Is String() Then
                         Return CType(obj, String())
@@ -127,17 +181,17 @@ Namespace Skye
             End Sub
 
             Public Shared Function ValueExists(name As String) As Boolean
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Return key.GetValue(name) IsNot Nothing
                 End Using
             End Function
             Public Shared Function GetValueNames() As String()
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Return key.GetValueNames()
                 End Using
             End Function
             Public Shared Function GetValuesWithPrefix(prefix As String) As IEnumerable(Of String)
-                Using key = Registry.CurrentUser.CreateSubKey(BaseKey)
+                Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Return key.GetValueNames().Where(Function(n) n.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToArray()
                 End Using
             End Function
@@ -148,7 +202,7 @@ Namespace Skye
             End Sub
 
             Public Shared Function GetStringFromHKCU(subKey As String, valueName As String, defaultValue As String) As String
-                Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(subKey, writable:=False)
+                Using key = Registry.CurrentUser.OpenSubKey(subKey, False)
                     If key Is Nothing Then Return defaultValue
                     Dim v = key.GetValue(valueName)
                     If v Is Nothing Then Return defaultValue
@@ -161,8 +215,8 @@ Namespace Skye
                 End Using
             End Sub
             Public Shared Sub DeleteValueInHKCU(subKey As String, valueName As String)
-                Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(subKey, writable:=True)
-                    key?.DeleteValue(valueName, throwOnMissingValue:=False)
+                Using key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(subKey, True)
+                    key?.DeleteValue(valueName, False)
                 End Using
             End Sub
 
