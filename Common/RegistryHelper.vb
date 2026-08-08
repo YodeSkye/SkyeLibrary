@@ -164,6 +164,15 @@ Namespace Skye
                 End Using
             End Sub
 
+            Public Shared Function GetEnum(Of T As Structure)(key As String, defaultValue As T) As T
+                Dim rawValue As String = GetString(key, defaultValue.ToString())
+                Dim result As T = Nothing
+                If [Enum].TryParse(rawValue, True, result) Then
+                    Return result
+                End If
+                Return defaultValue
+            End Function
+
             Public Shared Function ValueExists(name As String) As Boolean
                 Using key = Registry.CurrentUser.OpenSubKey(BaseKey, False)
                     Return key.GetValue(name) IsNot Nothing
