@@ -324,6 +324,25 @@ Namespace Skye
             rtb.SelectionLength = length
         End Sub
 
+        ''' <summary>
+        ''' Converts a Bitmap to an Icon with no scaling, ensuring proper memory management by destroying the unmanaged icon handle after use.
+        ''' </summary>
+        ''' <param name="sourceBitmap"></param>
+        ''' <returns></returns>
+        Public Shared Function ConvertBitmapToIcon(sourceBitmap As Bitmap) As Icon
+
+            ' Obtain an unmanaged icon handle from the Bitmap
+            Dim hIcon As IntPtr = sourceBitmap.GetHicon()
+
+            ' Create a managed Icon object from the handle
+            Dim newIcon = CType(Icon.FromHandle(hIcon).Clone(), Icon)
+
+            ' Destroy the original unmanaged handle to avoid memory leaks
+            WinAPI.DestroyIcon(hIcon)
+
+            Return newIcon
+        End Function
+
     End Class
 
 End Namespace
