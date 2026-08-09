@@ -33,6 +33,7 @@
             TxtBoxSearch = New TextBox()
             RTBLog = New RichTextBox()
             Tip = New ToolTipEX(components)
+            CMEmptyForTxtBox = New ContextMenuStrip(components)
             PanelTop.SuspendLayout()
             SuspendLayout()
             ' 
@@ -103,6 +104,7 @@
             ' 
             ' TxtBoxSearch
             ' 
+            TxtBoxSearch.ContextMenuStrip = CMEmptyForTxtBox
             Tip.SetImage(TxtBoxSearch, Nothing)
             TxtBoxSearch.Location = New Point(4, 14)
             TxtBoxSearch.Margin = New Padding(4)
@@ -130,18 +132,25 @@
             ' 
             ' Tip
             ' 
-            Tip.Font = New Font("Segoe UI", 12.0F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
+            Tip.Font = New Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
             Tip.ShadowAlpha = 0
             Tip.ShadowThickness = 0
             ' 
+            ' CMEmptyForTxtBox
+            ' 
+            Tip.SetImage(CMEmptyForTxtBox, Nothing)
+            CMEmptyForTxtBox.Name = "CMEmptyForTxtBox"
+            CMEmptyForTxtBox.Size = New Size(61, 4)
+            Tip.SetText(CMEmptyForTxtBox, Nothing)
+            ' 
             ' LogViewerControl
             ' 
-            AutoScaleDimensions = New SizeF(9.0F, 21.0F)
+            AutoScaleDimensions = New SizeF(9F, 21F)
             AutoScaleMode = AutoScaleMode.Font
             Controls.Add(RTBLog)
             Controls.Add(PanelTop)
             DoubleBuffered = True
-            Font = New Font("Segoe UI", 12.0F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
+            Font = New Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, CByte(0))
             Tip.SetImage(Me, Nothing)
             Margin = New Padding(4)
             Name = "LogViewerControl"
@@ -160,6 +169,7 @@
         Friend WithEvents RTBLog As RichTextBox
         Friend WithEvents BtnHighlightAll As Button
         Public WithEvents Tip As ToolTipEX
+        Friend WithEvents CMEmptyForTxtBox As ContextMenuStrip
 
     End Class
 
