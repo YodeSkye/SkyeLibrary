@@ -1,5 +1,6 @@
 ﻿
 Imports System.Drawing.Drawing2D
+Imports System.IO
 Imports System.Runtime.InteropServices
 
 Namespace Skye.UI
@@ -118,7 +119,7 @@ Namespace Skye.UI
 		Private ReadOnly _wndProc As WinAPI.WndProcDelegate
 		Private ReadOnly _opts As ToastOptions
 
-		Public ReadOnly _width As Integer
+		Public _width As Integer
 		Public _height As Integer
 		Private _titleHeight As Integer
 		Private _messageHeight As Integer
@@ -131,8 +132,6 @@ Namespace Skye.UI
 		Private Const TITLE_MESSAGE_GAP As Integer = 5
 		Private Const ICON_SIZE As Integer = 48
 		Private Const MAX_HEIGHT_PADDING As Integer = 40
-		Private Const TEXT_TOP_OFFSET As Integer = 7
-
 
 		Private _lastPos As System.Drawing.Point
 		Private _hasInitialPosition As Boolean = False
@@ -163,7 +162,6 @@ Namespace Skye.UI
 		' ------------- Constructor -------------------------------
 		Public Sub New(opts As ToastOptions)
 			_opts = opts
-			_width = opts.Width
 
 			_className = "LayeredToast_" & Guid.NewGuid().ToString("N")
 			_wndProc = AddressOf Me.WindowProc
@@ -171,13 +169,15 @@ Namespace Skye.UI
 			RegisterWindowClass()
 			CreateLayeredWindow()
 
-			' Now that window exists, measure text and compute final height
-			AutoSizeToast()
-
 			' Convert once on creation
 			If _opts.Icon IsNot Nothing Then
 				_cachedIconBmp = _opts.Icon.ToBitmap()
 			End If
+
+			' Now that window exists, measure text and compute final height
+			AutoWidthToast()
+			AutoSizeToast()
+
 		End Sub
 		Private Sub RegisterWindowClass()
 			Dim wc As New WinAPI.WNDCLASSEX()
@@ -703,8 +703,10 @@ Namespace Skye.UI
 				' Vertically center the text (whether it's a single title, single message, or combined block)
 				Dim startY As Integer = Math.Max(padding, (h - totalTextHeight) \ 2)
 
+				' Title
 				If hasTitle Then
-					Dim titleRectF As New RectangleF(textX, startY, wAvail, _titleHeight)
+					' Give titleRectF a slight width cushion (wAvail + 8)
+					Dim titleRectF As New RectangleF(textX, startY, wAvail + 8, _titleHeight)
 					Using brush As New SolidBrush(foreColor)
 						Using sf As New StringFormat(StringFormatFlags.LineLimit)
 							sf.Trimming = StringTrimming.EllipsisCharacter
@@ -713,9 +715,11 @@ Namespace Skye.UI
 					End Using
 				End If
 
+				' Message
 				If hasMessage Then
 					Dim messageY As Integer = If(hasTitle, startY + _titleHeight + TITLE_MESSAGE_GAP, startY)
-					Dim messageRectF As New RectangleF(textX, messageY, wAvail, _messageHeight)
+					' Give messageRectF a slight width cushion (wAvail + 8)
+					Dim messageRectF As New RectangleF(textX, messageY, wAvail + 8, _messageHeight)
 
 					Using brush As New SolidBrush(foreColor)
 						Using sf As New StringFormat(StringFormatFlags.LineLimit)
@@ -724,7 +728,42 @@ Namespace Skye.UI
 						End Using
 					End Using
 				End If
+
 			End If
+		End Sub
+		Private Sub AutoWidthToast()
+            Dim padding As Integer = TOAST_PADDING
+			Dim minWidth As Integer = _opts.Width 'defaulted to 300 in ToastOptions definition
+			Dim maxWidth As Integer = 900
+
+			Dim iconSpace As Integer = 0
+			If _opts.Image IsNot Nothing OrElse _opts.Icon IsNot Nothing Then
+				iconSpace = ICON_SIZE + padding
+			End If
+
+			Dim nonTextWidth As Integer = padding + iconSpace + padding
+			Dim titleWidth As Single = 0
+			Dim messageWidth As Single = 0
+
+			Using bmp As New Bitmap(1, 1)
+				Using g As Graphics = Graphics.FromImage(bmp)
+					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
+
+					If Not String.IsNullOrEmpty(_opts.Title) Then
+						titleWidth = g.MeasureString(_opts.Title, _opts.TitleFont).Width
+					End If
+
+					If Not String.IsNullOrEmpty(_opts.Message) Then
+						messageWidth = g.MeasureString(_opts.Message, _opts.MessageFont).Width
+					End If
+				End Using
+			End Using
+
+			' ADD FUDGE FACTOR: +16px prevents GDI+ subpixel boundary clipping
+			Dim requiredTextWidth As Integer = CInt(Math.Ceiling(Math.Max(titleWidth, messageWidth))) + 16
+			Dim calculatedWidth As Integer = requiredTextWidth + nonTextWidth
+
+			_width = Math.Max(minWidth, Math.Min(calculatedWidth, maxWidth))
 		End Sub
 		Private Sub AutoSizeToast()
 			Dim padding As Integer = TOAST_PADDING
@@ -732,76 +771,68 @@ Namespace Skye.UI
 			_titleHeight = 0
 			_messageHeight = 0
 
-			' Compute icon size FIRST
-			If _opts.Image IsNot Nothing Then
-				_iconSize = Math.Max(24, Math.Min(_messageHeight, 96))
-			ElseIf _opts.Icon IsNot Nothing Then
+			' Determine icon/image slot width
+			If _opts.Image IsNot Nothing OrElse _opts.Icon IsNot Nothing Then
 				_iconSize = ICON_SIZE
 			Else
 				_iconSize = 0
 			End If
 
-			' Compute textX
 			Dim textX As Integer = padding
 			If _iconSize > 0 Then
 				textX = padding + _iconSize + padding
 			End If
 
+			' Available width for text rendering
 			Dim wAvail As Integer = _width - textX - padding
 
-			' Measure using DrawString-compatible metrics
 			Using bmp As New Bitmap(1, 1)
 				Using g As Graphics = Graphics.FromImage(bmp)
 					g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
 
-					' Title
+					' Measure Title Height with typographic precision
 					If Not String.IsNullOrEmpty(_opts.Title) Then
-						Using sf As New StringFormat(StringFormatFlags.LineLimit)
+						Using sf As StringFormat = CType(StringFormat.GenericTypographic.Clone(), StringFormat)
+							sf.FormatFlags = StringFormatFlags.LineLimit
 							sf.Trimming = StringTrimming.EllipsisCharacter
 							Dim sizeF As SizeF = g.MeasureString(_opts.Title, _opts.TitleFont, wAvail, sf)
-							_titleHeight = CInt(Math.Ceiling(sizeF.Height))
+							' Add +2px height safety buffer so DrawString never clips the bottom
+							_titleHeight = CInt(Math.Ceiling(sizeF.Height)) + 2
 						End Using
 					End If
 
-					' Message
+					' Measure Message Height with typographic precision
 					If Not String.IsNullOrEmpty(_opts.Message) Then
-						Using sf As New StringFormat(StringFormatFlags.LineLimit)
+						Using sf As StringFormat = CType(StringFormat.GenericTypographic.Clone(), StringFormat)
+							sf.FormatFlags = StringFormatFlags.LineLimit
 							sf.Trimming = StringTrimming.EllipsisWord
 							Dim sizeF As SizeF = g.MeasureString(_opts.Message, _opts.MessageFont, wAvail, sf)
-							_messageHeight = CInt(Math.Ceiling(sizeF.Height))
+							' Add +2px height safety buffer so DrawString never clips the bottom
+							_messageHeight = CInt(Math.Ceiling(sizeF.Height)) + 2
 						End Using
 					End If
 				End Using
 			End Using
 
-			' NEW: Clean DrawString-based height math
-			Dim totalHeight As Integer =
-				padding +
-				_titleHeight +
-				TITLE_MESSAGE_GAP +
-				_messageHeight +
-				padding
+			' Calculate Total Height
+			Dim gap As Integer = If(Not String.IsNullOrEmpty(_opts.Title) AndAlso Not String.IsNullOrEmpty(_opts.Message), TITLE_MESSAGE_GAP, 0)
+			Dim totalHeight As Integer = padding + _titleHeight + gap + _messageHeight + padding
 
-			' Clamp
+			' Clamp to screen working area
 			Dim wa As Rectangle = Screen.PrimaryScreen.WorkingArea
 			Dim maxHeight As Integer = wa.Height - MAX_HEIGHT_PADDING
 
 			If totalHeight > maxHeight Then
 				totalHeight = maxHeight
-				Dim availableForMessage As Integer =
-					totalHeight - padding - _titleHeight - TITLE_MESSAGE_GAP - padding
+				Dim availableForMessage As Integer = totalHeight - padding - _titleHeight - gap - padding
 				_messageHeight = Math.Max(availableForMessage, 0)
 			End If
 
 			_height = totalHeight
 
-			' Final icon size
+			' Assign final image size based on calculated height
 			If _opts.Image IsNot Nothing Then
-				_iconSize = _height - TOAST_PADDING * 2
-			ElseIf _opts.Icon IsNot Nothing Then
-				_iconSize = ICON_SIZE
-			Else
-				_iconSize = 0
+				_iconSize = _height - (TOAST_PADDING * 2)
 			End If
 		End Sub
 
