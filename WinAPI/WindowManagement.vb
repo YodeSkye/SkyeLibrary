@@ -115,6 +115,7 @@ Namespace Skye
 
         ' API FUNCTIONS
         Public Delegate Function WndProcDelegate(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
+        Public Delegate Function UTypedWndProcDelegate(hWnd As IntPtr, msg As Skye.WinAPI.UType, wParam As IntPtr, lParam As IntPtr) As IntPtr
         <DllImport("user32.dll")>
         Public Shared Function GetComboBoxInfo(hWnd As IntPtr, ByRef pcbi As COMBOBOXINFO) As Boolean
         End Function
