@@ -9,6 +9,20 @@ Namespace Skye
 
         ' DECLARATIONS
         ' Core Constants & Messages
+        Public Enum UType As UInteger
+            WM_CREATE = &H1
+            WM_DESTROY = &H2
+            WM_PAINT = &HF
+            WM_TIMER = &H113
+            WM_SETCURSOR = &H20
+            WM_MOUSEMOVE = &H200
+            WM_LBUTTONDOWN = &H201
+            WM_LBUTTONUP = &H202
+            WM_RBUTTONUP = &H205
+            WM_CANCELMODE = &H1F
+            WM_DISPLAYCHANGE = &H7E
+            WM_WORKAREA = &H2A
+        End Enum
         Public Const HWND_BROADCAST As Integer = 65535
         Public Const HTCLIENT As Integer = 1
         Public Const HTCAPTION As Integer = 2

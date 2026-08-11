@@ -41,6 +41,7 @@ Namespace Skye
         Public Shared ReadOnly HWND_BOTTOM As New IntPtr(1)
         Public Shared ReadOnly HWND_TOPMOST As New IntPtr(-1)
         Public Shared ReadOnly HWND_NOTOPMOST As New IntPtr(-2)
+        Public Const IDC_ARROW As Integer = 32512
         <StructLayout(LayoutKind.Sequential)>
         Public Structure COMBOBOXINFO
             Public cbSize As Integer
@@ -104,6 +105,14 @@ Namespace Skye
         Public Const WS_EX_COMPOSITED As Integer = &H2000000
         Public Const WS_EX_NOACTIVATE As Integer = &H8000000
 
+        ' DWM Window Attributes
+        Public Const DWMWA_USE_IMMERSIVE_DARK_MODE As Integer = 20
+        Public Const DWMWA_WINDOW_CORNER_PREFERENCE As Integer = 33
+        Public Const DWMWCP_DEFAULT As Integer = 0
+        Public Const DWMWCP_DONOTROUND As Integer = 1
+        Public Const DWMWCP_ROUND As Integer = 2
+        Public Const DWMWCP_ROUNDSMALL As Integer = 3
+
         ' API FUNCTIONS
         Public Delegate Function WndProcDelegate(hWnd As IntPtr, msg As UInteger, wParam As IntPtr, lParam As IntPtr) As IntPtr
         <DllImport("user32.dll")>
@@ -114,6 +123,9 @@ Namespace Skye
         End Function
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function UpdateWindow(ByVal hWnd As IntPtr) As Boolean
+        End Function
+        <DllImport("user32.dll")>
+        Public Shared Function LoadCursor(hInstance As IntPtr, lpCursorName As Integer) As IntPtr
         End Function
 
         ' METHODS

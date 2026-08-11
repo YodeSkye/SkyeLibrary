@@ -27,6 +27,9 @@ Namespace Skye
         <DllImport("user32.dll")>
         Public Shared Function EndPaint(hWnd As IntPtr, ByRef lpPaint As PAINTSTRUCT) As Boolean
         End Function
+        <DllImport("user32.dll")>
+        Public Shared Function InvalidateRect(hWnd As IntPtr, lpRect As IntPtr, bErase As Boolean) As Boolean
+        End Function
 
     End Class
 
