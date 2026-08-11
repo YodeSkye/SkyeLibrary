@@ -604,13 +604,18 @@ Namespace Skye.UI
 
                 ' Vertically center the text (whether it's a single title, single message, or combined block)
                 Dim startY As Integer = Math.Max(padding, (h - totalTextHeight) \ 2)
+                ' Shift down by 1px if displaying only a title or only a message
+                If hasTitle Xor hasMessage Then
+                    startY += 1
+                End If
 
                 ' Title
                 If hasTitle Then
                     Dim titleRectF As New RectangleF(textX, startY, wAvail, _titleHeight)
                     Using brush As New SolidBrush(foreColor)
-                        Using sf As New StringFormat(StringFormatFlags.LineLimit)
-                            sf.Trimming = StringTrimming.EllipsisCharacter
+                        Using sf As New StringFormat()
+                            sf.Trimming = StringTrimming.None
+                            sf.FormatFlags = StringFormatFlags.NoWrap
                             g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRectF, sf)
                         End Using
                     End Using
@@ -621,8 +626,9 @@ Namespace Skye.UI
                     Dim messageY As Integer = If(hasTitle, startY + _titleHeight + TITLE_MESSAGE_GAP, startY)
                     Dim messageRectF As New RectangleF(textX, messageY, wAvail, _messageHeight)
                     Using brush As New SolidBrush(foreColor)
-                        Using sf As New StringFormat(StringFormatFlags.LineLimit)
-                            sf.Trimming = StringTrimming.EllipsisWord
+                        Using sf As New StringFormat()
+                            sf.Trimming = StringTrimming.None
+                            sf.FormatFlags = StringFormatFlags.NoWrap ' Explicitly prevent line-wrapping onto a second line
                             g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRectF, sf)
                         End Using
                     End Using
@@ -646,14 +652,19 @@ Namespace Skye.UI
                 textX += iconSpace
             End If
 
-            ' 2. Measure actual text width without arbitrary inflation
+            ' 2. Measure actual text width using Standard StringFormat + NoWrap
             Dim titleWidth As Single = 0
             Dim messageWidth As Single = 0
 
             Using bmp As New Bitmap(1, 1)
                 Using g As Graphics = Graphics.FromImage(bmp)
                     g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
-                    Using sf As StringFormat = CType(StringFormat.GenericTypographic.Clone(), StringFormat)
+
+                    ' Use standard StringFormat with NoWrap instead of GenericTypographic
+                    Using sf As New StringFormat()
+                        sf.FormatFlags = StringFormatFlags.NoWrap
+                        sf.Trimming = StringTrimming.None
+
                         If Not String.IsNullOrEmpty(_opts.Title) Then
                             titleWidth = g.MeasureString(_opts.Title, _opts.TitleFont, PointF.Empty, sf).Width
                         End If
@@ -664,15 +675,15 @@ Namespace Skye.UI
                 End Using
             End Using
 
-            ' Tight 4px subpixel buffer instead of large extra width
-            Dim requiredTextWidth As Integer = CInt(Math.Ceiling(Math.Max(titleWidth, messageWidth))) + 4
+            ' Ceiling to integer and add a tiny +2px subpixel safety margin
+            Dim requiredTextWidth As Integer = CInt(Math.Ceiling(Math.Max(titleWidth, messageWidth))) + 2
 
             ' 3. Total width = left spacing + text width + right padding
             Dim calculatedWidth As Integer = textX + requiredTextWidth + padding + borderInset
 
             ' Clamp between minimum option width and max allowable screen width
             Dim minWidth As Integer = _opts.Width
-            Dim maxWidth As Integer = 500
+            Dim maxWidth As Integer = 900
 
             _width = Math.Max(minWidth, Math.Min(calculatedWidth, maxWidth))
         End Sub
@@ -701,25 +712,21 @@ Namespace Skye.UI
                 Using g As Graphics = Graphics.FromImage(bmp)
                     g.TextRenderingHint = Drawing.Text.TextRenderingHint.AntiAliasGridFit
 
-                    ' Measure Title Height with typographic precision
                     If Not String.IsNullOrEmpty(_opts.Title) Then
-                        Using sf As StringFormat = CType(StringFormat.GenericTypographic.Clone(), StringFormat)
-                            sf.FormatFlags = StringFormatFlags.LineLimit
-                            sf.Trimming = StringTrimming.EllipsisCharacter
+                        Using sf As New StringFormat()
+                            sf.Trimming = StringTrimming.None
+                            sf.FormatFlags = StringFormatFlags.NoWrap
                             Dim sizeF As SizeF = g.MeasureString(_opts.Title, _opts.TitleFont, wAvail, sf)
-                            ' Add +2px height safety buffer so DrawString never clips the bottom
-                            _titleHeight = CInt(Math.Ceiling(sizeF.Height)) + 2
+                            _titleHeight = CInt(Math.Ceiling(sizeF.Height))
                         End Using
                     End If
 
-                    ' Measure Message Height with typographic precision
                     If Not String.IsNullOrEmpty(_opts.Message) Then
-                        Using sf As StringFormat = CType(StringFormat.GenericTypographic.Clone(), StringFormat)
-                            sf.FormatFlags = StringFormatFlags.LineLimit
-                            sf.Trimming = StringTrimming.EllipsisWord
+                        Using sf As New StringFormat()
+                            sf.Trimming = StringTrimming.None
+                            sf.FormatFlags = StringFormatFlags.NoWrap
                             Dim sizeF As SizeF = g.MeasureString(_opts.Message, _opts.MessageFont, wAvail, sf)
-                            ' Add +2px height safety buffer so DrawString never clips the bottom
-                            _messageHeight = CInt(Math.Ceiling(sizeF.Height)) + 2
+                            _messageHeight = CInt(Math.Ceiling(sizeF.Height))
                         End Using
                     End If
                 End Using
