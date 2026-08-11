@@ -14,6 +14,7 @@ Namespace Skye
             WM_DESTROY = &H2
             WM_PAINT = &HF
             WM_TIMER = &H113
+            WM_ERASEBKGND = &H14
             WM_SETCURSOR = &H20
             WM_MOUSEMOVE = &H200
             WM_LBUTTONDOWN = &H201
