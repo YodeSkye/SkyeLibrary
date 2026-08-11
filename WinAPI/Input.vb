@@ -35,6 +35,12 @@ Namespace Skye
         Public Shared Sub keybd_event(bVk As Byte, bScan As Byte, dwFlags As Integer, dwExtraInfo As IntPtr)
         End Sub
         <DllImport("user32.dll")>
+        Public Shared Function SetCapture(hWnd As IntPtr) As IntPtr
+        End Function
+        <DllImport("user32.dll")>
+        Public Shared Function ReleaseCapture() As Boolean
+        End Function
+        <DllImport("user32.dll")>
         Public Shared Function GetCursorPos(ByRef lpPoint As POINT) As Boolean
         End Function
 
