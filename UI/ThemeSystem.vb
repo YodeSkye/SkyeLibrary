@@ -43,6 +43,25 @@ Namespace Skye.UI
 		Public Property TooltipFore As Color
 		Public Property TooltipBorder As Color
 
+		''' <summary>
+		''' Returns True if the theme's background is dark (luminance below 50%).
+		''' </summary>
+		Public ReadOnly Property IsDark As Boolean
+			Get
+				' Standard perceived luminance formula (ITU-R BT.601)
+				Dim luminance As Double = (0.299 * BackColor.R + 0.587 * BackColor.G + 0.114 * BackColor.B) / 255.0
+				Return luminance < 0.5
+			End Get
+		End Property
+		''' <summary>
+		''' Returns True if the theme's background is light.
+		''' </summary>
+		Public ReadOnly Property IsLight As Boolean
+			Get
+				Return Not IsDark
+			End Get
+		End Property
+
 	End Class
 
 	Public NotInheritable Class SkyeThemes
