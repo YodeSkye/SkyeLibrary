@@ -20,7 +20,6 @@ Namespace Skye
         <DllImport("user32.dll")>
         Public Shared Function GetSysColor(nIndex As Integer) As Integer
         End Function
-        ' --- Functions ---
         <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function SetTimer(hWnd As IntPtr, nIDEvent As IntPtr, uElapse As UInteger, lpTimerFunc As IntPtr) As IntPtr
         End Function

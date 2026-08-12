@@ -9,7 +9,7 @@ Namespace Skye
 
         ' DECLARATIONS
         ' Core Constants & Messages
-        Public Enum UType As UInteger
+        Public Enum UType As UInteger ' Used by SkyeTools Clock
             WM_CREATE = &H1
             WM_DESTROY = &H2
             WM_PAINT = &HF
