@@ -161,6 +161,9 @@ Namespace Skye
         Public Shared Function RegisterClassEx(ByRef wc As WinAPI.WNDCLASSEX) As UShort
         End Function
         <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+        Public Shared Function UnregisterClass(ByVal lpClassName As String, ByVal hInstance As IntPtr) As Boolean
+        End Function
+        <DllImport("user32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
         Public Shared Function CreateWindowEx(dwExStyle As Integer,
                                               lpClassName As String,
                                               lpWindowName As String,
@@ -270,6 +273,9 @@ Namespace Skye
         <DllImport("dwmapi.dll", EntryPoint:="#127", PreserveSig:=False)>
         Public Shared Sub DwmGetColorizationParameters(<Out> ByRef parameters As DWMCOLORIZATIONPARAMS)
         End Sub
+        <DllImport("kernel32.dll", CharSet:=CharSet.Unicode, SetLastError:=True)>
+        Public Shared Function GetModuleHandle(ByVal lpModuleName As String) As IntPtr
+        End Function
 
         ' METHODS
         ''' <summary>
