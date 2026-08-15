@@ -110,6 +110,9 @@ Namespace Skye
         ' DWM Colorization
         Public Const WM_DWMCOLORIZATIONCOLORCHANGED As Integer = &H320
 
+        ' ListView Messages
+        Public Const LVM_SETICONSPACING As Integer = &H1035
+
         ' Structs
         <StructLayout(LayoutKind.Sequential)>
         Public Structure RECT
@@ -266,6 +269,22 @@ Namespace Skye
         End Function
         <DllImport("dwmapi.dll", EntryPoint:="#127", PreserveSig:=False)>
         Public Shared Sub DwmGetColorizationParameters(<Out> ByRef parameters As DWMCOLORIZATIONPARAMS)
+        End Sub
+
+        ' METHODS
+        ''' <summary>
+        ''' Sets the spacing between items in a ListView control.
+        ''' </summary>
+        ''' <param name="lv">The ListView control.</param>
+        ''' <param name="cx">The horizontal spacing between columns. (e.g. try 90 to 120)</param>
+        ''' <param name="cy">The vertical spacing between rows. (e.g. try 80 to 100)</param>
+        Public Shared Sub SetListViewSpacing(lv As ListView, cx As Integer, cy As Integer)
+            Dim lParam As IntPtr = CType((CInt(cy) << 16) Or (CInt(cx) And &HFFFF), IntPtr)
+
+            Skye.WinAPI.SendMessage(lv.Handle, LVM_SETICONSPACING, IntPtr.Zero, lParam)
+
+            ' Force the ListView to rearrange items with the new grid spacing
+            lv.ArrangeIcons()
         End Sub
 
     End Class
