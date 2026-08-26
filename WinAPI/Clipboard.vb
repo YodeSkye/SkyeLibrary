@@ -44,6 +44,9 @@ Namespace Skye
         Public Shared Function AddClipboardFormatListener(hwnd As IntPtr) As Boolean
         End Function
         <DllImport("user32.dll", SetLastError:=True)>
+        Public Shared Function RemoveClipboardFormatListener(hwnd As IntPtr) As Boolean
+        End Function
+        <DllImport("user32.dll", SetLastError:=True)>
         Public Shared Function SetClipboardViewer(hWndNewViewer As IntPtr) As IntPtr
         End Function
         <DllImport("user32.dll", SetLastError:=True)>
