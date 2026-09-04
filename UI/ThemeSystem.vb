@@ -575,6 +575,11 @@ Namespace Skye.UI
 	Public Class SkyeMenuRenderer
 		Inherits ToolStripProfessionalRenderer
 
+		' Delegate definition: takes the ToolStripItem and returns an optional overlay Image
+		Public Delegate Function GetItemOverlayHandler(item As ToolStripItem) As Image
+		' Property to hold the callback
+		Public Property OverlayCallback As GetItemOverlayHandler
+
 		Protected Overrides Sub OnRenderToolStripBackground(e As ToolStripRenderEventArgs)
 			Using b As New SolidBrush(ThemeManager.CurrentTheme.MenuBack)
 				e.Graphics.FillRectangle(b, e.AffectedBounds)
@@ -592,6 +597,7 @@ Namespace Skye.UI
 			Using b As New SolidBrush(backColor)
 				g.FillRectangle(b, rect)
 			End Using
+			RenderItemImages(g, e.Item)
 		End Sub
 		Protected Overrides Sub OnRenderToolStripBorder(e As ToolStripRenderEventArgs)
 			Dim t = ThemeManager.CurrentTheme
@@ -656,6 +662,78 @@ Namespace Skye.UI
 					textColor,
 					TextFormatFlags.Right Or TextFormatFlags.VerticalCenter
 				)
+			End If
+		End Sub
+		Protected Overrides Sub OnRenderItemImage(e As ToolStripItemImageRenderEventArgs)
+			' Intentionally left blank to avoid double-drawing
+		End Sub
+		Protected Overrides Sub OnRenderItemCheck(e As ToolStripItemImageRenderEventArgs)
+			Dim t = ThemeManager.CurrentTheme
+			Dim g = e.Graphics
+			Dim rect = e.ImageRectangle ' This is already scoped to the Check Margin box by WinForms
+
+			' Enable anti-aliasing for clean vector lines
+			g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias
+
+			' 1. Optional background highlight box for the check area
+			Dim backColor As Color = If(t.IsDark, Color.FromArgb(40, 255, 255, 255), Color.FromArgb(40, 0, 0, 0))
+			Using b As New SolidBrush(backColor)
+				Dim highlightRect As New Rectangle(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2)
+				g.FillRectangle(b, highlightRect)
+			End Using
+
+			' 2. Draw custom checkmark or radio bullet using Theme ForeColor
+			Dim item = TryCast(e.Item, ToolStripMenuItem)
+			If item IsNot Nothing AndAlso item.CheckState = CheckState.Checked Then
+
+				Using p As New Pen(t.MenuFore, 2.0F)
+					' Coordinates offset relative to e.ImageRectangle to center a 16x16 check mark
+					Dim points As Point() = {
+				New Point(rect.X + 4, rect.Y + 8),
+				New Point(rect.X + 7, rect.Y + 11),
+				New Point(rect.X + 12, rect.Y + 5)
+			}
+					g.DrawLines(p, points)
+				End Using
+
+			End If
+		End Sub
+
+		Private Sub RenderItemImages(g As Graphics, item As ToolStripItem)
+			' 1. Determine target rectangle for the Image Margin
+			Dim imageRect As Rectangle = Rectangle.Empty
+
+			' Check if parent menu has explicit check/image margin properties
+			Dim parentMenu = TryCast(item.Owner, ToolStripDropDownMenu)
+
+			If parentMenu IsNot Nothing Then
+				' If Check Margin is visible, shift image rightward into the Image Margin
+				Dim xOffset As Integer = item.ContentRectangle.X + 2
+				If parentMenu.ShowCheckMargin Then
+					' Standard check margin width in WinForms is ~24px
+					xOffset += 22
+				End If
+
+				Dim imgSize As Size = parentMenu.ImageScalingSize
+				Dim yOffset As Integer = item.ContentRectangle.Y + (item.ContentRectangle.Height - imgSize.Height) \ 2
+				imageRect = New Rectangle(xOffset, yOffset, imgSize.Width, imgSize.Height)
+			Else
+				' Fallback for standalone ToolStrips or unknown parent controls
+				Dim imgSize As Size = If(item.Owner IsNot Nothing, item.Owner.ImageScalingSize, New Size(16, 16))
+				imageRect = New Rectangle(item.ContentRectangle.X + 2, item.ContentRectangle.Y + (item.ContentRectangle.Height - imgSize.Height) \ 2, imgSize.Width, imgSize.Height)
+			End If
+
+			' 2. Draw base image if present
+			If item.Image IsNot Nothing Then
+				g.DrawImage(item.Image, imageRect)
+			End If
+
+			' 3. Draw overlay if callback provides one
+			If OverlayCallback IsNot Nothing Then
+				Dim overlayImg As Image = OverlayCallback(item)
+				If overlayImg IsNot Nothing Then
+					g.DrawImage(overlayImg, imageRect)
+				End If
 			End If
 		End Sub
 
