@@ -590,13 +590,26 @@ Namespace Skye.UI
 			Dim g = e.Graphics
 			Dim rect = New Rectangle(Point.Empty, e.Item.Size)
 
-			Dim backColor As Color = If(e.Item.Selected OrElse e.Item.Pressed,
-										t.MenuHover,
-										t.MenuBack)
-
+			' 1. Draw base menu item background (Hover/Pressed > Normal)
+			Dim backColor As Color = If(e.Item.Selected OrElse e.Item.Pressed, t.MenuHover, t.MenuBack)
 			Using b As New SolidBrush(backColor)
 				g.FillRectangle(b, rect)
 			End Using
+
+			' 2. Draw highlighted box ONLY in the check margin if the item is checked
+			Dim item = TryCast(e.Item, ToolStripMenuItem)
+			If item IsNot Nothing AndAlso item.Checked Then
+				' Standard check margin box size on the far left
+				Dim marginWidth As Integer = 22
+				Dim checkRect As New Rectangle(1, 1, marginWidth, rect.Height - 2)
+
+				Dim checkedMarginColor As Color = If(t.IsDark, Color.FromArgb(60, 255, 255, 255), Color.FromArgb(40, 0, 0, 0))
+				Using b As New SolidBrush(checkedMarginColor)
+					g.FillRectangle(b, checkRect)
+				End Using
+			End If
+
+			' 3. Draw Base Icon + Overlay
 			RenderItemImages(g, e.Item)
 		End Sub
 		Protected Overrides Sub OnRenderToolStripBorder(e As ToolStripRenderEventArgs)
@@ -668,35 +681,7 @@ Namespace Skye.UI
 			' Intentionally left blank to avoid double-drawing
 		End Sub
 		Protected Overrides Sub OnRenderItemCheck(e As ToolStripItemImageRenderEventArgs)
-			Dim t = ThemeManager.CurrentTheme
-			Dim g = e.Graphics
-			Dim rect = e.ImageRectangle ' This is already scoped to the Check Margin box by WinForms
-
-			' Enable anti-aliasing for clean vector lines
-			g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias
-
-			' 1. Optional background highlight box for the check area
-			Dim backColor As Color = If(t.IsDark, Color.FromArgb(40, 255, 255, 255), Color.FromArgb(40, 0, 0, 0))
-			Using b As New SolidBrush(backColor)
-				Dim highlightRect As New Rectangle(rect.X + 1, rect.Y + 1, rect.Width - 2, rect.Height - 2)
-				g.FillRectangle(b, highlightRect)
-			End Using
-
-			' 2. Draw custom checkmark or radio bullet using Theme ForeColor
-			Dim item = TryCast(e.Item, ToolStripMenuItem)
-			If item IsNot Nothing AndAlso item.CheckState = CheckState.Checked Then
-
-				Using p As New Pen(t.MenuFore, 2.0F)
-					' Coordinates offset relative to e.ImageRectangle to center a 16x16 check mark
-					Dim points As Point() = {
-				New Point(rect.X + 4, rect.Y + 8),
-				New Point(rect.X + 7, rect.Y + 11),
-				New Point(rect.X + 12, rect.Y + 5)
-			}
-					g.DrawLines(p, points)
-				End Using
-
-			End If
+			' Intentionally left blank to suppress standard checkmark icon rendering
 		End Sub
 
 		Private Sub RenderItemImages(g As Graphics, item As ToolStripItem)
