@@ -1046,7 +1046,6 @@ Namespace Skye.UI
 			If Not Me.DesignMode Then
 				Try
 					Dim result As Integer = WinAPI.SetWindowTheme(Me.Handle, "", "")
-					Debug.WriteLine($"SetWindowTheme result: {result}")
 				Catch
 				End Try
 			End If

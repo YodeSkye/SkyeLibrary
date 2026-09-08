@@ -66,314 +66,352 @@ Namespace Skye.UI
 
 	Public NotInheritable Class SkyeThemes
 
+		Private Sub New()
+			' Private constructor prevents class instantiation
+		End Sub
+
 		Public Shared ReadOnly Light As New SkyeTheme With {
-			.Name = "Light",
-			.BackColor = Color.White,
-			.ForeColor = Color.Black,
-			.AccentColor = Color.DeepSkyBlue,
-			.BorderColor = Color.LightGray,
-			.ButtonBack = Color.Gainsboro,
-			.ButtonFore = Color.Black,
-			.TextBack = Color.White,
-			.TextFore = Color.Black,
-			.GroupBoxFore = Color.Black,
-			.GridBack = Color.White,
-			.GridFore = Color.Black,
-			.GridHeaderBack = Color.Gainsboro,
-			.GridHeaderFore = Color.Black,
-			.GridBorder = Color.LightGray,
-			.GridAlternateRowBack = Color.FromArgb(245, 245, 245),
-			.TooltipBack = Color.White,
-			.TooltipFore = Color.Black,
-			.TooltipBorder = Color.LightGray,
-			.MenuBack = Color.White,
-			.MenuFore = Color.Black,
-			.MenuHover = Color.FromArgb(230, 230, 230),
-			.MenuBorder = Color.LightGray,
-			.MenuSeparator = Color.LightGray
-		}
+		.Name = "Light",
+		.BackColor = Color.White,
+		.ForeColor = Color.Black,
+		.AccentColor = Color.DeepSkyBlue,
+		.BorderColor = Color.LightGray,
+		.ButtonBack = Color.Gainsboro,
+		.ButtonFore = Color.Black,
+		.TextBack = Color.White,
+		.TextFore = Color.Black,
+		.GroupBoxFore = Color.Black,
+		.GridBack = Color.White,
+		.GridFore = Color.Black,
+		.GridHeaderBack = Color.Gainsboro,
+		.GridHeaderFore = Color.Black,
+		.GridBorder = Color.LightGray,
+		.GridAlternateRowBack = Color.FromArgb(245, 245, 245),
+		.TooltipBack = Color.White,
+		.TooltipFore = Color.Black,
+		.TooltipBorder = Color.LightGray,
+		.MenuBack = Color.White,
+		.MenuFore = Color.Black,
+		.MenuHover = Color.FromArgb(230, 230, 230),
+		.MenuBorder = Color.LightGray,
+		.MenuSeparator = Color.LightGray
+	}
+
 		Public Shared ReadOnly Dark As New SkyeTheme With {
-			.Name = "Dark",
-			.BackColor = Color.Black,
-			.ForeColor = Color.White,
-			.AccentColor = Color.DeepSkyBlue,
-			.BorderColor = Color.FromArgb(64, 64, 64),
-			.ButtonBack = Color.FromArgb(45, 45, 45),
-			.ButtonFore = Color.White,
-			.TextBack = Color.FromArgb(40, 40, 40),
-			.TextFore = Color.White,
-			.GroupBoxFore = Color.White,
-			.GridBack = Color.Black,
-			.GridFore = Color.White,
-			.GridHeaderBack = Color.FromArgb(32, 32, 32),
-			.GridHeaderFore = Color.White,
-			.GridBorder = Color.FromArgb(70, 70, 70),
-			.GridAlternateRowBack = Color.FromArgb(40, 40, 40),
-			.TooltipBack = Color.Black,
-			.TooltipFore = Color.White,
-			.TooltipBorder = Color.FromArgb(80, 80, 80),
-			.MenuBack = Color.Black,
-			.MenuFore = Color.White,
-			.MenuHover = Color.FromArgb(60, 60, 60),
-			.MenuBorder = Color.FromArgb(80, 80, 80),
-			.MenuSeparator = Color.FromArgb(90, 90, 90)
-		}
+		.Name = "Dark",
+		.BackColor = Color.Black,
+		.ForeColor = Color.White,
+		.AccentColor = Color.DeepSkyBlue,
+		.BorderColor = Color.FromArgb(64, 64, 64),
+		.ButtonBack = Color.FromArgb(45, 45, 45),
+		.ButtonFore = Color.White,
+		.TextBack = Color.FromArgb(40, 40, 40),
+		.TextFore = Color.White,
+		.GroupBoxFore = Color.White,
+		.GridBack = Color.Black,
+		.GridFore = Color.White,
+		.GridHeaderBack = Color.FromArgb(32, 32, 32),
+		.GridHeaderFore = Color.White,
+		.GridBorder = Color.FromArgb(70, 70, 70),
+		.GridAlternateRowBack = Color.FromArgb(40, 40, 40),
+		.TooltipBack = Color.Black,
+		.TooltipFore = Color.White,
+		.TooltipBorder = Color.FromArgb(80, 80, 80),
+		.MenuBack = Color.Black,
+		.MenuFore = Color.White,
+		.MenuHover = Color.FromArgb(60, 60, 60),
+		.MenuBorder = Color.FromArgb(80, 80, 80),
+		.MenuSeparator = Color.FromArgb(90, 90, 90)
+	}
+
 		Public Shared ReadOnly Slate As New SkyeTheme With {
-			.Name = "Slate",
-			.BackColor = Color.FromArgb(245, 245, 245),
-			.ForeColor = Color.FromArgb(40, 40, 40),
-			.AccentColor = Color.FromArgb(100, 140, 180),
-			.BorderColor = Color.FromArgb(200, 200, 200),
-			.ButtonBack = Color.FromArgb(230, 230, 230),
-			.ButtonFore = Color.FromArgb(40, 40, 40),
-			.TextBack = Color.White,
-			.TextFore = Color.FromArgb(40, 40, 40),
-			.GroupBoxFore = Color.FromArgb(40, 40, 40),
-			.GridBack = Color.White,
-			.GridFore = Color.FromArgb(40, 40, 40),
-			.GridHeaderBack = Color.FromArgb(225, 225, 225),
-			.GridHeaderFore = Color.FromArgb(40, 40, 40),
-			.GridBorder = Color.FromArgb(200, 200, 200),
-			.GridAlternateRowBack = Color.FromArgb(240, 240, 240),
-			.TooltipBack = Color.FromArgb(245, 245, 245),
-			.TooltipFore = Color.FromArgb(40, 40, 40),
-			.TooltipBorder = Color.FromArgb(200, 200, 200),
-			.MenuBack = Color.FromArgb(245, 245, 245),
-			.MenuFore = Color.FromArgb(40, 40, 40),
-			.MenuHover = Color.FromArgb(230, 230, 230),
-			.MenuBorder = Color.FromArgb(200, 200, 200),
-			.MenuSeparator = Color.FromArgb(200, 200, 200)
-		}
+		.Name = "Slate",
+		.BackColor = Color.FromArgb(245, 245, 245),
+		.ForeColor = Color.FromArgb(40, 40, 40),
+		.AccentColor = Color.FromArgb(100, 140, 180),
+		.BorderColor = Color.FromArgb(200, 200, 200),
+		.ButtonBack = Color.FromArgb(230, 230, 230),
+		.ButtonFore = Color.FromArgb(40, 40, 40),
+		.TextBack = Color.White,
+		.TextFore = Color.FromArgb(40, 40, 40),
+		.GroupBoxFore = Color.FromArgb(40, 40, 40),
+		.GridBack = Color.White,
+		.GridFore = Color.FromArgb(40, 40, 40),
+		.GridHeaderBack = Color.FromArgb(225, 225, 225),
+		.GridHeaderFore = Color.FromArgb(40, 40, 40),
+		.GridBorder = Color.FromArgb(200, 200, 200),
+		.GridAlternateRowBack = Color.FromArgb(240, 240, 240),
+		.TooltipBack = Color.FromArgb(245, 245, 245),
+		.TooltipFore = Color.FromArgb(40, 40, 40),
+		.TooltipBorder = Color.FromArgb(200, 200, 200),
+		.MenuBack = Color.FromArgb(245, 245, 245),
+		.MenuFore = Color.FromArgb(40, 40, 40),
+		.MenuHover = Color.FromArgb(230, 230, 230),
+		.MenuBorder = Color.FromArgb(200, 200, 200),
+		.MenuSeparator = Color.FromArgb(200, 200, 200)
+	}
+
 		Public Shared ReadOnly Graphite As New SkyeTheme With {
-			.Name = "Graphite",
-			.BackColor = Color.FromArgb(25, 25, 25),
-			.ForeColor = Color.FromArgb(230, 230, 230),
-			.AccentColor = Color.FromArgb(120, 160, 200),
-			.BorderColor = Color.FromArgb(70, 70, 70),
-			.ButtonBack = Color.FromArgb(40, 40, 40),
-			.ButtonFore = Color.FromArgb(230, 230, 230),
-			.TextBack = Color.FromArgb(40, 40, 40),
-			.TextFore = Color.FromArgb(230, 230, 230),
-			.GroupBoxFore = Color.FromArgb(230, 230, 230),
-			.GridBack = Color.FromArgb(30, 30, 30),
-			.GridFore = Color.FromArgb(230, 230, 230),
-			.GridHeaderBack = Color.FromArgb(50, 50, 50),
-			.GridHeaderFore = Color.FromArgb(230, 230, 230),
-			.GridBorder = Color.FromArgb(70, 70, 70),
-			.GridAlternateRowBack = Color.FromArgb(35, 35, 35),
-			.TooltipBack = Color.FromArgb(40, 40, 40),
-			.TooltipFore = Color.FromArgb(230, 230, 230),
-			.TooltipBorder = Color.FromArgb(70, 70, 70),
-			.MenuBack = Color.FromArgb(30, 30, 30),
-			.MenuFore = Color.FromArgb(230, 230, 230),
-			.MenuHover = Color.FromArgb(50, 50, 50),
-			.MenuBorder = Color.FromArgb(70, 70, 70),
-			.MenuSeparator = Color.FromArgb(70, 70, 70)
-		}
+		.Name = "Graphite",
+		.BackColor = Color.FromArgb(25, 25, 25),
+		.ForeColor = Color.FromArgb(230, 230, 230),
+		.AccentColor = Color.FromArgb(120, 160, 200),
+		.BorderColor = Color.FromArgb(70, 70, 70),
+		.ButtonBack = Color.FromArgb(40, 40, 40),
+		.ButtonFore = Color.FromArgb(230, 230, 230),
+		.TextBack = Color.FromArgb(40, 40, 40),
+		.TextFore = Color.FromArgb(230, 230, 230),
+		.GroupBoxFore = Color.FromArgb(230, 230, 230),
+		.GridBack = Color.FromArgb(30, 30, 30),
+		.GridFore = Color.FromArgb(230, 230, 230),
+		.GridHeaderBack = Color.FromArgb(50, 50, 50),
+		.GridHeaderFore = Color.FromArgb(230, 230, 230),
+		.GridBorder = Color.FromArgb(70, 70, 70),
+		.GridAlternateRowBack = Color.FromArgb(35, 35, 35),
+		.TooltipBack = Color.FromArgb(40, 40, 40),
+		.TooltipFore = Color.FromArgb(230, 230, 230),
+		.TooltipBorder = Color.FromArgb(70, 70, 70),
+		.MenuBack = Color.FromArgb(30, 30, 30),
+		.MenuFore = Color.FromArgb(230, 230, 230),
+		.MenuHover = Color.FromArgb(50, 50, 50),
+		.MenuBorder = Color.FromArgb(70, 70, 70),
+		.MenuSeparator = Color.FromArgb(70, 70, 70)
+	}
+
 		Public Shared ReadOnly HighContrast As New SkyeTheme With {
-			.Name = "High Contrast",
-			.BackColor = Color.Black,
-			.ForeColor = Color.White,
-			.AccentColor = Color.Yellow,
-			.BorderColor = Color.White,
-			.ButtonBack = Color.Black,
-			.ButtonFore = Color.White,
-			.TextBack = Color.Black,
-			.TextFore = Color.White,
-			.GroupBoxFore = Color.White,
-			.GridBack = Color.Black,
-			.GridFore = Color.White,
-			.GridHeaderBack = Color.White,
-			.GridHeaderFore = Color.Black,
-			.GridBorder = Color.White,
-			.GridAlternateRowBack = Color.FromArgb(32, 32, 32),
-			.TooltipBack = Color.Black,
-			.TooltipFore = Color.White,
-			.TooltipBorder = Color.White,
-			.MenuBack = Color.Black,
-			.MenuFore = Color.White,
-			.MenuHover = Color.Yellow,
-			.MenuBorder = Color.White,
-			.MenuSeparator = Color.White
-		}
+		.Name = "High Contrast",
+		.BackColor = Color.Black,
+		.ForeColor = Color.White,
+		.AccentColor = Color.Yellow,
+		.BorderColor = Color.White,
+		.ButtonBack = Color.Black,
+		.ButtonFore = Color.White,
+		.TextBack = Color.Black,
+		.TextFore = Color.White,
+		.GroupBoxFore = Color.White,
+		.GridBack = Color.Black,
+		.GridFore = Color.White,
+		.GridHeaderBack = Color.White,
+		.GridHeaderFore = Color.Black,
+		.GridBorder = Color.White,
+		.GridAlternateRowBack = Color.FromArgb(32, 32, 32),
+		.TooltipBack = Color.Black,
+		.TooltipFore = Color.White,
+		.TooltipBorder = Color.White,
+		.MenuBack = Color.Black,
+		.MenuFore = Color.White,
+		.MenuHover = Color.Yellow,
+		.MenuBorder = Color.White,
+		.MenuSeparator = Color.White
+	}
+
 		Public Shared ReadOnly Blossom As New SkyeTheme With {
-			.Name = "Blossom",
-			.BackColor = Color.Pink,
-			.ForeColor = Color.DeepPink,
-			.AccentColor = Color.White,
-			.BorderColor = ControlPaint.Light(Color.DeepPink, 0.75F),
-			.ButtonBack = Color.HotPink,
-			.ButtonFore = Color.White,
-			.TextBack = Color.Pink,
-			.TextFore = Color.DeepPink,
-			.GroupBoxFore = Color.DeepPink,
-			.GridBack = Color.Pink,
-			.GridFore = Color.DeepPink,
-			.GridHeaderBack = Color.Pink,
-			.GridHeaderFore = Color.DeepPink,
-			.GridBorder = ControlPaint.Light(Color.DeepPink, 0.75F),
-			.GridAlternateRowBack = ControlPaint.Light(Color.Pink, 0.25F),
-			.TooltipBack = Color.Pink,
-			.TooltipFore = Color.DeepPink,
-			.TooltipBorder = ControlPaint.Light(Color.DeepPink, 0.75F),
-			.MenuBack = Color.Pink,
-			.MenuFore = Color.DeepPink,
-			.MenuHover = Color.LightPink,
-			.MenuBorder = Color.DeepPink,
-			.MenuSeparator = Color.LightGray
-		}
+		.Name = "Blossom",
+		.BackColor = Color.Pink,
+		.ForeColor = Color.DeepPink,
+		.AccentColor = Color.White,
+		.BorderColor = ControlPaint.Light(Color.DeepPink, 0.75F),
+		.ButtonBack = Color.HotPink,
+		.ButtonFore = Color.White,
+		.TextBack = Color.Pink,
+		.TextFore = Color.DeepPink,
+		.GroupBoxFore = Color.DeepPink,
+		.GridBack = Color.Pink,
+		.GridFore = Color.DeepPink,
+		.GridHeaderBack = Color.Pink,
+		.GridHeaderFore = Color.DeepPink,
+		.GridBorder = ControlPaint.Light(Color.DeepPink, 0.75F),
+		.GridAlternateRowBack = ControlPaint.Light(Color.Pink, 0.25F),
+		.TooltipBack = Color.Pink,
+		.TooltipFore = Color.DeepPink,
+		.TooltipBorder = ControlPaint.Light(Color.DeepPink, 0.75F),
+		.MenuBack = Color.Pink,
+		.MenuFore = Color.DeepPink,
+		.MenuHover = Color.LightPink,
+		.MenuBorder = Color.DeepPink,
+		.MenuSeparator = Color.LightGray
+	}
+
 		Public Shared ReadOnly CrimsonNight As New SkyeTheme With {
-			.Name = "Crimson Night",
-			.BackColor = Color.FromArgb(255, 35, 35, 35),
-			.ForeColor = Color.DeepPink,
-			.AccentColor = Color.White,
-			.BorderColor = ControlPaint.Dark(Color.DeepPink, 0.25F),
-			.ButtonBack = Color.DeepPink,
-			.ButtonFore = Color.White,
-			.TextBack = Color.FromArgb(255, 35, 35, 35),
-			.TextFore = Color.DeepPink,
-			.GroupBoxFore = Color.White,
-			.GridBack = Color.FromArgb(255, 35, 35, 35),
-			.GridFore = Color.DeepPink,
-			.GridHeaderBack = Color.FromArgb(255, 35, 35, 35),
-			.GridHeaderFore = Color.White,
-			.GridBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
-			.GridAlternateRowBack = Color.FromArgb(255, 40, 40, 40),
-			.TooltipBack = Color.FromArgb(255, 35, 35, 35),
-			.TooltipFore = Color.DeepPink,
-			.TooltipBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
-			.MenuBack = Color.FromArgb(255, 35, 35, 35),
-			.MenuFore = Color.DeepPink,
-			.MenuHover = Color.HotPink,
-			.MenuBorder = Color.DeepPink,
-			.MenuSeparator = Color.FromArgb(255, 90, 90, 90)
-		}
+		.Name = "Crimson Night",
+		.BackColor = Color.FromArgb(255, 35, 35, 35),
+		.ForeColor = Color.DeepPink,
+		.AccentColor = Color.White,
+		.BorderColor = ControlPaint.Dark(Color.DeepPink, 0.25F),
+		.ButtonBack = Color.DeepPink,
+		.ButtonFore = Color.White,
+		.TextBack = Color.FromArgb(255, 35, 35, 35),
+		.TextFore = Color.DeepPink,
+		.GroupBoxFore = Color.White,
+		.GridBack = Color.FromArgb(255, 35, 35, 35),
+		.GridFore = Color.DeepPink,
+		.GridHeaderBack = Color.FromArgb(255, 35, 35, 35),
+		.GridHeaderFore = Color.White,
+		.GridBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
+		.GridAlternateRowBack = Color.FromArgb(255, 40, 40, 40),
+		.TooltipBack = Color.FromArgb(255, 35, 35, 35),
+		.TooltipFore = Color.DeepPink,
+		.TooltipBorder = ControlPaint.Dark(Color.DeepPink, 0.25F),
+		.MenuBack = Color.FromArgb(255, 35, 35, 35),
+		.MenuFore = Color.DeepPink,
+		.MenuHover = Color.HotPink,
+		.MenuBorder = Color.DeepPink,
+		.MenuSeparator = Color.FromArgb(255, 90, 90, 90)
+	}
+
 		Public Shared ReadOnly Sky As New SkyeTheme With {
-			.Name = "Sky",
-			.BackColor = Color.FromArgb(235, 245, 255),
-			.ForeColor = Color.FromArgb(20, 40, 60),
-			.AccentColor = Color.FromArgb(70, 140, 220),
-			.BorderColor = Color.FromArgb(180, 200, 220),
-			.ButtonBack = Color.FromArgb(220, 235, 250),
-			.ButtonFore = Color.FromArgb(20, 40, 60),
-			.TextBack = Color.FromArgb(235, 245, 255),
-			.TextFore = Color.FromArgb(20, 40, 60),
-			.GroupBoxFore = Color.FromArgb(20, 40, 60),
-			.GridBack = Color.White,
-			.GridFore = Color.FromArgb(20, 40, 60),
-			.GridHeaderBack = Color.FromArgb(210, 225, 245),
-			.GridHeaderFore = Color.FromArgb(20, 40, 60),
-			.GridBorder = Color.FromArgb(180, 200, 220),
-			.GridAlternateRowBack = Color.FromArgb(245, 250, 255),
-			.TooltipBack = Color.FromArgb(235, 245, 255),
-			.TooltipFore = Color.FromArgb(20, 40, 60),
-			.TooltipBorder = Color.FromArgb(180, 200, 220),
-			.MenuBack = Color.FromArgb(235, 245, 255),
-			.MenuFore = Color.FromArgb(20, 40, 60),
-			.MenuHover = Color.FromArgb(220, 235, 250),
-			.MenuBorder = Color.FromArgb(180, 200, 220),
-			.MenuSeparator = Color.FromArgb(180, 200, 220)
-		}
+		.Name = "Sky",
+		.BackColor = Color.FromArgb(235, 245, 255),
+		.ForeColor = Color.FromArgb(20, 40, 60),
+		.AccentColor = Color.FromArgb(70, 140, 220),
+		.BorderColor = Color.FromArgb(180, 200, 220),
+		.ButtonBack = Color.FromArgb(220, 235, 250),
+		.ButtonFore = Color.FromArgb(20, 40, 60),
+		.TextBack = Color.FromArgb(235, 245, 255),
+		.TextFore = Color.FromArgb(20, 40, 60),
+		.GroupBoxFore = Color.FromArgb(20, 40, 60),
+		.GridBack = Color.White,
+		.GridFore = Color.FromArgb(20, 40, 60),
+		.GridHeaderBack = Color.FromArgb(210, 225, 245),
+		.GridHeaderFore = Color.FromArgb(20, 40, 60),
+		.GridBorder = Color.FromArgb(180, 200, 220),
+		.GridAlternateRowBack = Color.FromArgb(245, 250, 255),
+		.TooltipBack = Color.FromArgb(235, 245, 255),
+		.TooltipFore = Color.FromArgb(20, 40, 60),
+		.TooltipBorder = Color.FromArgb(180, 200, 220),
+		.MenuBack = Color.FromArgb(235, 245, 255),
+		.MenuFore = Color.FromArgb(20, 40, 60),
+		.MenuHover = Color.FromArgb(220, 235, 250),
+		.MenuBorder = Color.FromArgb(180, 200, 220),
+		.MenuSeparator = Color.FromArgb(180, 200, 220)
+	}
+
 		Public Shared ReadOnly MidnightBlue As New SkyeTheme With {
-			.Name = "Midnight Blue",
-			.BackColor = Color.FromArgb(15, 25, 40),
-			.ForeColor = Color.FromArgb(220, 235, 255),
-			.AccentColor = Color.FromArgb(90, 160, 255),
-			.BorderColor = Color.FromArgb(60, 80, 110),
-			.ButtonBack = Color.FromArgb(25, 40, 60),
-			.ButtonFore = Color.FromArgb(220, 235, 255),
-			.TextBack = Color.FromArgb(25, 40, 60),
-			.TextFore = Color.FromArgb(220, 235, 255),
-			.GroupBoxFore = Color.FromArgb(220, 235, 255),
-			.GridBack = Color.FromArgb(20, 30, 45),
-			.GridFore = Color.FromArgb(220, 235, 255),
-			.GridHeaderBack = Color.FromArgb(35, 50, 75),
-			.GridHeaderFore = Color.FromArgb(220, 235, 255),
-			.GridBorder = Color.FromArgb(60, 80, 110),
-			.GridAlternateRowBack = Color.FromArgb(25, 35, 55),
-			.TooltipBack = Color.FromArgb(25, 40, 60),
-			.TooltipFore = Color.FromArgb(220, 235, 255),
-			.TooltipBorder = Color.FromArgb(60, 80, 110),
-			.MenuBack = Color.FromArgb(20, 30, 45),
-			.MenuFore = Color.FromArgb(220, 235, 255),
-			.MenuHover = Color.FromArgb(35, 50, 75),
-			.MenuBorder = Color.FromArgb(60, 80, 110),
-			.MenuSeparator = Color.FromArgb(60, 80, 110)
-		}
+		.Name = "Midnight Blue",
+		.BackColor = Color.FromArgb(15, 25, 40),
+		.ForeColor = Color.FromArgb(220, 235, 255),
+		.AccentColor = Color.FromArgb(90, 160, 255),
+		.BorderColor = Color.FromArgb(60, 80, 110),
+		.ButtonBack = Color.FromArgb(25, 40, 60),
+		.ButtonFore = Color.FromArgb(220, 235, 255),
+		.TextBack = Color.FromArgb(25, 40, 60),
+		.TextFore = Color.FromArgb(220, 235, 255),
+		.GroupBoxFore = Color.FromArgb(220, 235, 255),
+		.GridBack = Color.FromArgb(20, 30, 45),
+		.GridFore = Color.FromArgb(220, 235, 255),
+		.GridHeaderBack = Color.FromArgb(35, 50, 75),
+		.GridHeaderFore = Color.FromArgb(220, 235, 255),
+		.GridBorder = Color.FromArgb(60, 80, 110),
+		.GridAlternateRowBack = Color.FromArgb(25, 35, 55),
+		.TooltipBack = Color.FromArgb(25, 40, 60),
+		.TooltipFore = Color.FromArgb(220, 235, 255),
+		.TooltipBorder = Color.FromArgb(60, 80, 110),
+		.MenuBack = Color.FromArgb(20, 30, 45),
+		.MenuFore = Color.FromArgb(220, 235, 255),
+		.MenuHover = Color.FromArgb(35, 50, 75),
+		.MenuBorder = Color.FromArgb(60, 80, 110),
+		.MenuSeparator = Color.FromArgb(60, 80, 110)
+	}
+
 		Public Shared ReadOnly Mint As New SkyeTheme With {
-			.Name = "Mint",
-			.BackColor = Color.FromArgb(235, 250, 240),
-			.ForeColor = Color.FromArgb(25, 60, 45),
-			.AccentColor = Color.FromArgb(80, 180, 140),
-			.BorderColor = Color.FromArgb(180, 210, 195),
-			.ButtonBack = Color.FromArgb(220, 240, 230),
-			.ButtonFore = Color.FromArgb(25, 60, 45),
-			.TextBack = Color.FromArgb(235, 250, 240),
-			.TextFore = Color.FromArgb(25, 60, 45),
-			.GroupBoxFore = Color.FromArgb(25, 60, 45),
-			.GridBack = Color.White,
-			.GridFore = Color.FromArgb(25, 60, 45),
-			.GridHeaderBack = Color.FromArgb(210, 235, 225),
-			.GridHeaderFore = Color.FromArgb(25, 60, 45),
-			.GridBorder = Color.FromArgb(180, 210, 195),
-			.GridAlternateRowBack = Color.FromArgb(240, 250, 245),
-			.TooltipBack = Color.FromArgb(235, 250, 240),
-			.TooltipFore = Color.FromArgb(25, 60, 45),
-			.TooltipBorder = Color.FromArgb(180, 210, 195),
-			.MenuBack = Color.FromArgb(235, 250, 240),
-			.MenuFore = Color.FromArgb(25, 60, 45),
-			.MenuHover = Color.FromArgb(220, 240, 230),
-			.MenuBorder = Color.FromArgb(180, 210, 195),
-			.MenuSeparator = Color.FromArgb(180, 210, 195)
-		}
+		.Name = "Mint",
+		.BackColor = Color.FromArgb(235, 250, 240),
+		.ForeColor = Color.FromArgb(25, 60, 45),
+		.AccentColor = Color.FromArgb(80, 180, 140),
+		.BorderColor = Color.FromArgb(180, 210, 195),
+		.ButtonBack = Color.FromArgb(220, 240, 230),
+		.ButtonFore = Color.FromArgb(25, 60, 45),
+		.TextBack = Color.FromArgb(235, 250, 240),
+		.TextFore = Color.FromArgb(25, 60, 45),
+		.GroupBoxFore = Color.FromArgb(25, 60, 45),
+		.GridBack = Color.White,
+		.GridFore = Color.FromArgb(25, 60, 45),
+		.GridHeaderBack = Color.FromArgb(210, 235, 225),
+		.GridHeaderFore = Color.FromArgb(25, 60, 45),
+		.GridBorder = Color.FromArgb(180, 210, 195),
+		.GridAlternateRowBack = Color.FromArgb(240, 250, 245),
+		.TooltipBack = Color.FromArgb(235, 250, 240),
+		.TooltipFore = Color.FromArgb(25, 60, 45),
+		.TooltipBorder = Color.FromArgb(180, 210, 195),
+		.MenuBack = Color.FromArgb(235, 250, 240),
+		.MenuFore = Color.FromArgb(25, 60, 45),
+		.MenuHover = Color.FromArgb(220, 240, 230),
+		.MenuBorder = Color.FromArgb(180, 210, 195),
+		.MenuSeparator = Color.FromArgb(180, 210, 195)
+	}
+
 		Public Shared ReadOnly Evergreen As New SkyeTheme With {
-			.Name = "Evergreen",
-			.BackColor = Color.FromArgb(15, 35, 25),
-			.ForeColor = Color.FromArgb(220, 245, 230),
-			.AccentColor = Color.FromArgb(90, 200, 150),
-			.BorderColor = Color.FromArgb(60, 100, 80),
-			.ButtonBack = Color.FromArgb(25, 55, 40),
-			.ButtonFore = Color.FromArgb(220, 245, 230),
-			.TextBack = Color.FromArgb(25, 55, 40),
-			.TextFore = Color.FromArgb(220, 245, 230),
-			.GroupBoxFore = Color.FromArgb(220, 245, 230),
-			.GridBack = Color.FromArgb(20, 45, 30),
-			.GridFore = Color.FromArgb(220, 245, 230),
-			.GridHeaderBack = Color.FromArgb(35, 70, 50),
-			.GridHeaderFore = Color.FromArgb(220, 245, 230),
-			.GridBorder = Color.FromArgb(60, 100, 80),
-			.GridAlternateRowBack = Color.FromArgb(25, 60, 40),
-			.TooltipBack = Color.FromArgb(25, 55, 40),
-			.TooltipFore = Color.FromArgb(220, 245, 230),
-			.TooltipBorder = Color.FromArgb(60, 100, 80),
-			.MenuBack = Color.FromArgb(20, 45, 30),
-			.MenuFore = Color.FromArgb(220, 245, 230),
-			.MenuHover = Color.FromArgb(35, 70, 50),
-			.MenuBorder = Color.FromArgb(60, 100, 80),
-			.MenuSeparator = Color.FromArgb(60, 100, 80)
-		}
-		Private Shared ReadOnly _themes As New List(Of SkyeTheme) From {Light, Dark, HighContrast, Slate, Graphite, Blossom, CrimsonNight, Sky, MidnightBlue, Mint, Evergreen}
-		Public Shared ReadOnly Property AllThemes As List(Of SkyeTheme)
+		.Name = "Evergreen",
+		.BackColor = Color.FromArgb(15, 35, 25),
+		.ForeColor = Color.FromArgb(220, 245, 230),
+		.AccentColor = Color.FromArgb(90, 200, 150),
+		.BorderColor = Color.FromArgb(60, 100, 80),
+		.ButtonBack = Color.FromArgb(25, 55, 40),
+		.ButtonFore = Color.FromArgb(220, 245, 230),
+		.TextBack = Color.FromArgb(25, 55, 40),
+		.TextFore = Color.FromArgb(220, 245, 230),
+		.GroupBoxFore = Color.FromArgb(220, 245, 230),
+		.GridBack = Color.FromArgb(20, 45, 30),
+		.GridFore = Color.FromArgb(220, 245, 230),
+		.GridHeaderBack = Color.FromArgb(35, 70, 50),
+		.GridHeaderFore = Color.FromArgb(220, 245, 230),
+		.GridBorder = Color.FromArgb(60, 100, 80),
+		.GridAlternateRowBack = Color.FromArgb(25, 60, 40),
+		.TooltipBack = Color.FromArgb(25, 55, 40),
+		.TooltipFore = Color.FromArgb(220, 245, 230),
+		.TooltipBorder = Color.FromArgb(60, 100, 80),
+		.MenuBack = Color.FromArgb(20, 45, 30),
+		.MenuFore = Color.FromArgb(220, 245, 230),
+		.MenuHover = Color.FromArgb(35, 70, 50),
+		.MenuBorder = Color.FromArgb(60, 100, 80),
+		.MenuSeparator = Color.FromArgb(60, 100, 80)
+	}
+
+		Private Shared ReadOnly _syncLock As New Object()
+		Private Shared ReadOnly _themes As New List(Of SkyeTheme) From {
+		Light, Dark, HighContrast, Slate, Graphite, Blossom, CrimsonNight, Sky, MidnightBlue, Mint, Evergreen
+	}
+
+		Public Shared ReadOnly Property AllThemes As ObjectModel.ReadOnlyCollection(Of SkyeTheme)
 			Get
-				Return _themes
+				SyncLock _syncLock
+					Return _themes.AsReadOnly()
+				End SyncLock
 			End Get
 		End Property
 
 		Public Shared Sub AddTheme(t As SkyeTheme)
-			_themes.Add(t)
+			If t Is Nothing Then Return
+			SyncLock _syncLock
+				' Prevent duplicate names in registry
+				If Not _themes.Any(Function(x) String.Equals(x.Name, t.Name, StringComparison.OrdinalIgnoreCase)) Then
+					_themes.Add(t)
+				End If
+			End SyncLock
 		End Sub
+
 		Public Shared Sub RemoveTheme(t As SkyeTheme)
-			If t Is Light OrElse t Is Dark Then Exit Sub
-			_themes.Remove(t)
+			If t Is Nothing OrElse t Is Light OrElse t Is Dark Then Return
+			SyncLock _syncLock
+				_themes.Remove(t)
+			End SyncLock
 		End Sub
+
 		Public Shared Sub RemoveTheme(name As String)
-			Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
-			If t IsNot Nothing AndAlso Not (t Is Light OrElse t Is Dark) Then _themes.Remove(t)
+			If String.IsNullOrWhiteSpace(name) Then Return
+			SyncLock _syncLock
+				Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+				If t IsNot Nothing AndAlso Not (t Is Light OrElse t Is Dark) Then
+					_themes.Remove(t)
+				End If
+			End SyncLock
 		End Sub
+
 		Public Shared Function GetTheme(name As String) As SkyeTheme
-			Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
-			If t IsNot Nothing Then Return t
-			Return Light
+			SyncLock _syncLock
+				Dim t = _themes.FirstOrDefault(Function(x) String.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+				Return If(t, Light)
+			End SyncLock
 		End Function
 
 	End Class
@@ -456,8 +494,8 @@ Namespace Skye.UI
 						Dim b = DirectCast(c, Button)
 						b.BackColor = CurrentTheme.ButtonBack
 						b.ForeColor = CurrentTheme.ButtonFore
-                    Case TypeOf c Is Label
-                        Dim l = DirectCast(c, Label)
+					Case TypeOf c Is Label
+						Dim l = DirectCast(c, Label)
 						l.ForeColor = CurrentTheme.TextFore
 					Case TypeOf c Is TextBoxBase
 						Dim t = DirectCast(c, TextBoxBase)
@@ -486,6 +524,29 @@ Namespace Skye.UI
 					Case TypeOf c Is StatusStrip
 						c.BackColor = CurrentTheme.BackColor
 						c.ForeColor = CurrentTheme.ForeColor
+					Case TypeOf c Is ProgressBar
+						ApplyToProgressBar(DirectCast(c, ProgressBar))
+					Case TypeOf c Is DataBar
+						c.ForeColor = CurrentTheme.AccentColor
+						c.BackColor = CurrentTheme.ButtonBack
+					Case TypeOf c Is DataBarEX
+						Dim db = DirectCast(c, DataBarEX)
+						db.BarBackColor = CurrentTheme.ButtonBack
+						db.BarColor = CurrentTheme.AccentColor
+						db.TextColor = CurrentTheme.TextFore
+						db.GradientStart = ControlPaint.Light(CurrentTheme.AccentColor, 0.1F)
+						db.GradientEnd = ControlPaint.Dark(CurrentTheme.AccentColor, 0.2F)
+					Case TypeOf c Is ProgressEX
+						Dim p = DirectCast(c, ProgressEX)
+						p.DrawingColor = CurrentTheme.AccentColor
+						p.ForeColor = CurrentTheme.TextFore
+					Case Else ' Default baseline for any custom or unrecognized controls
+						Try
+							c.BackColor = CurrentTheme.BackColor
+							c.ForeColor = CurrentTheme.TextFore
+						Catch
+							' Silently ignore controls that throw exceptions when setting colors
+						End Try
 				End Select
 
 				If c.HasChildren Then
@@ -569,6 +630,14 @@ Namespace Skye.UI
 			tip.BackColor = CurrentTheme.TooltipBack
 			tip.ForeColor = CurrentTheme.TooltipFore
 			tip.BorderColor = CurrentTheme.TooltipBorder
+		End Sub
+
+		Private Shared Sub ApplyToProgressBar(pb As ProgressBar)
+			' Turn off standard Windows UXTheme visual styles for this control
+			Dim HResult = Skye.WinAPI.SetWindowTheme(pb.Handle, "", "")
+			' Set track and bar colors using your existing SkyeTheme palette
+			Skye.WinAPI.SendMessage(pb.Handle, Skye.WinAPI.PBM_SETBACKCOLOR, 0, ColorTranslator.ToWin32(CurrentTheme.ButtonBack))
+			Skye.WinAPI.SendMessage(pb.Handle, Skye.WinAPI.PBM_SETBARCOLOR, 0, ColorTranslator.ToWin32(CurrentTheme.AccentColor))
 		End Sub
 
 	End Class

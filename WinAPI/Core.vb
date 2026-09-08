@@ -61,6 +61,8 @@ Namespace Skye
         Public Const WM_NCHITTEST As Integer = &H84
         Public Const WM_CLOSE As Integer = &H10
         Public Const WM_DESTROY As Integer = &H2
+        Public Const PBM_SETBARCOLOR As Integer = &H409
+        Public Const PBM_SETBACKCOLOR As Integer = &H2001
 
         ' Class Styles
         Public Const CS_VREDRAW As Integer = &H1
