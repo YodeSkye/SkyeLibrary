@@ -2,6 +2,7 @@
 Imports System.ComponentModel.Design
 Imports System.Drawing.Drawing2D
 Imports System.IO
+Imports System.Media
 Imports System.Runtime.InteropServices
 
 Namespace Skye.UI
@@ -133,7 +134,7 @@ Namespace Skye.UI
             _margin = opts.Margin
 
             If opts.PlaySound Then
-                System.Media.SystemSounds.Hand.Play()
+                ToastAudio.PlaySound(Resources.SoundToast)
             End If
 
             ' Close previous toast immediately
@@ -928,5 +929,48 @@ Namespace Skye.UI
         End Function
 
     End Class
+
+    ' Provides a thread-safe mechanism to play a WAV sound stream asynchronously for toast notifications. It ensures that if a sound is already playing, additional requests are dropped to prevent audio popping and queuing.
+    Friend Module ToastAudio
+
+        ' Thread-safe flag (0 = idle, 1 = playing sound)
+        Private IsPlaying As Integer = 0
+
+        ''' <summary>
+        ''' Plays a WAV sound stream asynchronously. If a sound is already playing, 
+        ''' additional requests are immediately dropped to prevent popping and audio queuing.
+        ''' </summary>
+        ''' <param name="wavStream">The WAV stream to play (e.g., My.Resources.ToastChime).</param>
+        Public Sub PlaySound(wavStream As Stream)
+            If wavStream Is Nothing Then Return
+
+            ' Try to acquire the playing lock (0 -> 1).
+            ' If already 1 (playing), CompareExchange returns 1 and we exit immediately.
+            If System.Threading.Interlocked.CompareExchange(IsPlaying, 1, 0) <> 0 Then
+                Return
+            End If
+
+            Task.Run(Sub()
+                         Try
+                             ' Reset stream position if supported
+                             If wavStream.CanSeek Then
+                                 wavStream.Seek(0, SeekOrigin.Begin)
+                             End If
+
+                             ' PlaySync on background thread blocks only this task until complete,
+                             ' ensuring accurate timing for the IsPlaying lock.
+                             Using player As New SoundPlayer(wavStream)
+                                 player.PlaySync()
+                             End Using
+                         Catch
+                             ' Suppress audio playback exceptions (e.g., corrupted WAV buffer)
+                         Finally
+                             ' Release the lock so subsequent toasts can chime
+                             System.Threading.Interlocked.Exchange(IsPlaying, 0)
+                         End Try
+                     End Sub)
+        End Sub
+
+    End Module
 
 End Namespace
