@@ -283,11 +283,19 @@ Namespace Skye.UI
         ' ------------- IDisposable -----------------------
         Public Sub Dispose() Implements IDisposable.Dispose
 
+            ' Dispose cached icon bitmap if it exists
             If _cachedIconBmp IsNot Nothing Then
                 _cachedIconBmp.Dispose()
                 _cachedIconBmp = Nothing
             End If
 
+            ' Clean up the image passed in options
+            If _opts IsNot Nothing AndAlso _opts.Image IsNot Nothing Then
+                _opts.Image.Dispose()
+                _opts.Image = Nothing
+            End If
+
+            ' Clean up native window handle
             If _hwnd <> IntPtr.Zero Then
                 WinAPI.DestroyWindow(_hwnd)
                 _hwnd = IntPtr.Zero
@@ -519,50 +527,51 @@ Namespace Skye.UI
 
             If _opts.Image IsNot Nothing Then
                 Dim maxContainerSize As Integer = h - (padding * 2)
+                Try
+                    ' Scale down ONLY if image dimensions exceed container slot
+                    Dim drawW As Integer = Math.Min(_opts.Image.Width, maxContainerSize)
+                    Dim drawH As Integer = Math.Min(_opts.Image.Height, maxContainerSize)
 
-                ' Scale down ONLY if image dimensions exceed container slot
-                Dim drawW As Integer = Math.Min(_opts.Image.Width, maxContainerSize)
-                Dim drawH As Integer = Math.Min(_opts.Image.Height, maxContainerSize)
-
-                ' Preserve aspect ratio if image is non-square
-                If _opts.Image.Width <> _opts.Image.Height AndAlso _opts.Image.Width > 0 AndAlso _opts.Image.Height > 0 Then
-                    Dim ratio As Double = Math.Min(maxContainerSize / CDbl(_opts.Image.Width), maxContainerSize / CDbl(_opts.Image.Height))
-                    If ratio < 1.0 Then
-                        drawW = CInt(_opts.Image.Width * ratio)
-                        drawH = CInt(_opts.Image.Height * ratio)
-                    Else
-                        drawW = _opts.Image.Width
-                        drawH = _opts.Image.Height
+                    ' Preserve aspect ratio if image is non-square
+                    If _opts.Image.Width <> _opts.Image.Height AndAlso _opts.Image.Width > 0 AndAlso _opts.Image.Height > 0 Then
+                        Dim ratio As Double = Math.Min(maxContainerSize / CDbl(_opts.Image.Width), maxContainerSize / CDbl(_opts.Image.Height))
+                        If ratio < 1.0 Then
+                            drawW = CInt(_opts.Image.Width * ratio)
+                            drawH = CInt(_opts.Image.Height * ratio)
+                        Else
+                            drawW = _opts.Image.Width
+                            drawH = _opts.Image.Height
+                        End If
                     End If
-                End If
 
-                ' Center the image inside the left slot vertically and horizontally
-                Dim imgX As Integer = padding + ((maxContainerSize - drawW) \ 2)
-                Dim imgY As Integer = padding + ((maxContainerSize - drawH) \ 2)
-                iconRect = New Rectangle(imgX, imgY, drawW, drawH)
+                    ' Center the image inside the left slot vertically and horizontally
+                    Dim imgX As Integer = padding + ((maxContainerSize - drawW) \ 2)
+                    Dim imgY As Integer = padding + ((maxContainerSize - drawH) \ 2)
+                    iconRect = New Rectangle(imgX, imgY, drawW, drawH)
 
-                If radius > 0 Then
-                    ' Clip rounded corners proportional to image dimensions
-                    Dim imgRadius As Integer = Math.Min(radius, Math.Min(drawW, drawH) \ 2)
-                    If imgRadius > 0 Then
-                        Using path As New GraphicsPath()
-                            path.AddArc(iconRect.X, iconRect.Y, imgRadius, imgRadius, 180, 90)
-                            path.AddArc(iconRect.Right - imgRadius, iconRect.Y, imgRadius, imgRadius, 270, 90)
-                            path.AddArc(iconRect.Right - imgRadius, iconRect.Bottom - imgRadius, imgRadius, imgRadius, 0, 90)
-                            path.AddArc(iconRect.X, iconRect.Bottom - imgRadius, imgRadius, imgRadius, 90, 90)
-                            path.CloseFigure()
+                    If radius > 0 Then
+                        ' Clip rounded corners proportional to image dimensions
+                        Dim imgRadius As Integer = Math.Min(radius, Math.Min(drawW, drawH) \ 2)
+                        If imgRadius > 0 Then
+                            Using path As New GraphicsPath()
+                                path.AddArc(iconRect.X, iconRect.Y, imgRadius, imgRadius, 180, 90)
+                                path.AddArc(iconRect.Right - imgRadius, iconRect.Y, imgRadius, imgRadius, 270, 90)
+                                path.AddArc(iconRect.Right - imgRadius, iconRect.Bottom - imgRadius, imgRadius, imgRadius, 0, 90)
+                                path.AddArc(iconRect.X, iconRect.Bottom - imgRadius, imgRadius, imgRadius, 90, 90)
+                                path.CloseFigure()
 
-                            g.SetClip(path)
+                                g.SetClip(path)
+                                g.DrawImage(_opts.Image, iconRect)
+                                g.ResetClip()
+                            End Using
+                        Else
                             g.DrawImage(_opts.Image, iconRect)
-                            g.ResetClip()
-                        End Using
+                        End If
                     Else
                         g.DrawImage(_opts.Image, iconRect)
                     End If
-                Else
-                    g.DrawImage(_opts.Image, iconRect)
-                End If
-
+                Catch
+                End Try
                 ' Keep text boundary fixed relative to full image area so text alignment stays uniform
                 textX = padding + maxContainerSize + padding
 
@@ -616,7 +625,7 @@ Namespace Skye.UI
                     Using brush As New SolidBrush(foreColor)
                         Using sf As New StringFormat()
                             sf.Trimming = StringTrimming.None
-                            sf.FormatFlags = StringFormatFlags.NoWrap
+                            sf.FormatFlags = StringFormatFlags.NoWrap Or StringFormatFlags.MeasureTrailingSpaces
                             g.DrawString(_opts.Title, _opts.TitleFont, brush, titleRectF, sf)
                         End Using
                     End Using
@@ -629,7 +638,7 @@ Namespace Skye.UI
                     Using brush As New SolidBrush(foreColor)
                         Using sf As New StringFormat()
                             sf.Trimming = StringTrimming.None
-                            sf.FormatFlags = StringFormatFlags.NoWrap ' Explicitly prevent line-wrapping onto a second line
+                            sf.FormatFlags = StringFormatFlags.NoWrap Or StringFormatFlags.MeasureTrailingSpaces
                             g.DrawString(_opts.Message, _opts.MessageFont, brush, messageRectF, sf)
                         End Using
                     End Using
@@ -643,7 +652,13 @@ Namespace Skye.UI
 
             ' 1. Calculate space required for icon/image on the left
             Dim iconSpace As Integer = 0
-            If _opts.Image IsNot Nothing OrElse _opts.Icon IsNot Nothing Then
+            If _opts.Image IsNot Nothing Then
+                ' Image takes up full available height minus padding
+                ' Estimate using expected height or max height slot
+                Dim estimatedHeight As Integer = _opts.Height
+                Dim maxContainerSize As Integer = estimatedHeight - (padding * 2)
+                iconSpace = maxContainerSize + padding
+            ElseIf _opts.Icon IsNot Nothing Then
                 iconSpace = ICON_SIZE + padding
             End If
 
@@ -760,6 +775,7 @@ Namespace Skye.UI
     ' WinForms Window
     Friend Class ToastWindow
         Inherits LayeredToastWindow
+        Implements IDisposable
 
         ' Declarations
         Private ReadOnly _opts As ToastOptions
@@ -767,6 +783,7 @@ Namespace Skye.UI
         Private ReadOnly LifeTimer As Timer
         Private _opacity As Double = 0.0
         Private _fadingOut As Boolean = False
+        Private _isDisposed As Boolean = False
         Public ReadOnly Property IsFadingOut As Boolean
             Get
                 Return _fadingOut
@@ -784,6 +801,31 @@ Namespace Skye.UI
             AddHandler FadeTimer.Tick, AddressOf FadeTick
             LifeTimer = New Timer() With {.Interval = _opts.Duration}
             AddHandler LifeTimer.Tick, AddressOf BeginFadeOut
+        End Sub
+        Public Shadows Sub Dispose() Implements IDisposable.Dispose
+            If _isDisposed Then Return
+            _isDisposed = True
+
+            If _opts IsNot Nothing Then
+                _opts.ClickAction = Nothing
+            End If
+
+            ' Clean up FadeTimer
+            If FadeTimer IsNot Nothing Then
+                FadeTimer.Stop()
+                RemoveHandler FadeTimer.Tick, AddressOf FadeTick
+                FadeTimer.Dispose()
+            End If
+
+            ' Clean up LifeTimer
+            If LifeTimer IsNot Nothing Then
+                LifeTimer.Stop()
+                RemoveHandler LifeTimer.Tick, AddressOf BeginFadeOut
+                LifeTimer.Dispose()
+            End If
+
+            ' Cascade cleanup to base class (handles HWND, _cachedIconBmp, _opts.Image)
+            MyBase.Dispose()
         End Sub
 
         Protected Overrides Sub OnToastClicked()
@@ -823,8 +865,10 @@ Namespace Skye.UI
             ' Notify manager
             RaiseEvent ToastClosed()
 
+            Dispose()
+
             ' Destroy window
-            MyBase.Destroy()
+            'MyBase.Destroy()
 
         End Sub
 
@@ -837,7 +881,6 @@ Namespace Skye.UI
                     MyBase.SetOpacity(_opacity)
                 Else
                     FadeTimer.Stop()
-
                 End If
 
             Else
@@ -848,7 +891,8 @@ Namespace Skye.UI
                 Else
                     FadeTimer.Stop()
                     RaiseEvent ToastClosed()
-                    MyBase.Destroy()
+                    Dispose()
+                    'MyBase.Destroy()
                 End If
             End If
         End Sub
