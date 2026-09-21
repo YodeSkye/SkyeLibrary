@@ -11,6 +11,7 @@ Namespace Skye
         Public Const WM_SETCURSOR As Integer = &H20
         Public Const WM_LBUTTONDOWN As Integer = &H201
         Public Const WM_LBUTTONDBLCLK As Integer = &H203
+        Public Const WM_LBUTTONDOWN_CLIENT As Integer = &H201
         Public Const WM_LBUTTONUP As Integer = &H202
         Public Const WM_RBUTTONUP As Integer = &H205
         Public Const WM_RBUTTONDOWN As Integer = &H204
@@ -20,6 +21,7 @@ Namespace Skye
         Public Const WM_NCRBUTTONUP As Integer = &HA5
         Public Const WM_CONTEXTMENU As Integer = &H7B
         Public Const WM_MOUSEACTIVATE As Integer = &H21
+        Public Const HT_CAPTION As Integer = &H2
         Public Const VK_CAPITAL As Integer = &H14
         Public Const VK_SCROLL As Integer = &H91
         Public Const VK_NUMLOCK As Integer = &H90
