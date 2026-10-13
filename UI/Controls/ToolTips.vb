@@ -1008,14 +1008,16 @@ Namespace Skye.UI
 				'Draw Border
 				If _owner.ShowBorder Then
 					Dim thickness As Integer
-					If _owner.BorderThickness = 0 Then
-						thickness = CInt(_owner.Font.Size / 4) 'Scale border thickness with font
-					Else
-						thickness = _owner.BorderThickness
-					End If
+                    If _owner.BorderThickness = 0 Then
+                        thickness = CInt(_owner.Font.Size / 4) 'Scale border thickness with font
+                    Else
+                        thickness = _owner.BorderThickness
+                    End If
+					Dim width As Integer = Me.Width - _owner.ShadowThickness - If(thickness = 1, 1, 0)
+					Dim height As Integer = Me.Height - _owner.ShadowThickness - If(thickness = 1, 1, 0)
 					Using p As New Pen(_owner.BorderColor, thickness)
 						p.Alignment = Drawing2D.PenAlignment.Inset
-						g.DrawRectangle(p, 0, 0, Me.Width - _owner.ShadowThickness, Me.Height - _owner.ShadowThickness)
+						g.DrawRectangle(p, 0, 0, width, height)
 					End Using
 				End If
 
