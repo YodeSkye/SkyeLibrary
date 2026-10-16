@@ -18,6 +18,7 @@ Namespace Skye.UI
 		Public Enum ComboBorderStyle
 			FixedSingle = 0
 			Fixed3D = 1
+			None = 2
 		End Enum
 
 		' Designer Properties
@@ -358,6 +359,10 @@ Namespace Skye.UI
 			' ---------------------------------------------------------
 			Dim borderColor As Color = If(Me.Enabled, ControlPaint.Dark(Me.BackColor), DisabledColor(ControlPaint.Dark(Me.BackColor)))
 			Select Case BorderStyle
+				Case ComboBorderStyle.None
+					Using p As New Pen(Me.BackColor)
+						g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
+					End Using
 				Case ComboBorderStyle.FixedSingle
 					Using p As New Pen(borderColor)
 						g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
@@ -381,6 +386,10 @@ Namespace Skye.UI
 			Dim rc As Rectangle = Me.ClientRectangle
 			Dim borderColor As Color = If(Me.Enabled, ControlPaint.Dark(Me.BackColor), DisabledColor(ControlPaint.Dark(Me.BackColor)))
 			Select Case BorderStyle
+				Case ComboBorderStyle.None
+					Using p As New Pen(Me.BackColor)
+						g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
+					End Using
 				Case ComboBorderStyle.FixedSingle
 					Using p As New Pen(borderColor)
 						g.DrawRectangle(p, 0, 0, rc.Width - 1, rc.Height - 1)
